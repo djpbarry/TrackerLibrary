@@ -1,6 +1,5 @@
 package VirusTracker;
 
-import AnaMorf.Utilities;
 import EMSeg.Utils;
 import EMSeg.FractalEstimator;
 import ij.IJ;
@@ -23,7 +22,6 @@ import java.awt.Font;
 import java.awt.Rectangle;
 import java.awt.Scrollbar;
 import java.awt.Toolkit;
-import java.io.File;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
