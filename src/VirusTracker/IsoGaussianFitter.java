@@ -1,10 +1,5 @@
 package VirusTracker;
 
-import ij.IJ;
-import ij.ImagePlus;
-import ij.process.FloatProcessor;
-import ij.process.ImageProcessor;
-
 /**
  * 2D Gaussian Curve Fitter based on ImageJ's
  * <code>CurveFitter</code>.
@@ -40,39 +35,38 @@ public class IsoGaussianFitter {
     protected int nRestarts;  // the number of restarts that occurred
     private static double maxError = 1e-10;    // maximum error tolerance
     private double x0, y0, mag, xsig, ysig;
-    private double hgu[] = {10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100};
 
-    public static void main(String args[]) {
-        ImagePlus imp = new ImagePlus("C:\\Users\\Dave\\Desktop\\lac.tif");
-        int width = imp.getWidth();
-        int height = imp.getHeight();
-        double xvals[] = new double[width];
-        double yvals[] = new double[height];
-        double zvals[][] = new double[width][height];
-        ImageProcessor ip = imp.getProcessor();
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                xvals[x] = x;
-                yvals[y] = y;
-                zvals[x][y] = ip.getPixelValue(x, y);
-            }
-        }
-        IsoGaussianFitter igf = new IsoGaussianFitter(xvals, yvals, zvals);
-        igf.doFit();
-        double params[] = igf.getParams();
-        /*
-         * System.out.println("MinZ: " + params[0]); System.out.println("MaxZ: "
-         * + params[1]); System.out.println("X: " + params[2]);
-         * System.out.println("Y: " + params[3]); System.out.println("Sigma: " +
-         * params[4]);
-         */
-        System.out.println("alpha: " + params[0]);
-        System.out.println("a: " + params[1]);
-        System.out.println("b: " + params[2]);
-        System.out.println("R^2: " + igf.getRSquared());
-
-        System.exit(0);
-    }
+//    public static void main(String args[]) {
+//        ImagePlus imp = new ImagePlus("C:\\Users\\Dave\\Desktop\\lac.tif");
+//        int width = imp.getWidth();
+//        int height = imp.getHeight();
+//        double xvals[] = new double[width];
+//        double yvals[] = new double[height];
+//        double zvals[][] = new double[width][height];
+//        ImageProcessor ip = imp.getProcessor();
+//        for (int x = 0; x < width; x++) {
+//            for (int y = 0; y < height; y++) {
+//                xvals[x] = x;
+//                yvals[y] = y;
+//                zvals[x][y] = ip.getPixelValue(x, y);
+//            }
+//        }
+//        IsoGaussianFitter igf = new IsoGaussianFitter(xvals, yvals, zvals);
+//        igf.doFit();
+//        double params[] = igf.getParams();
+//        /*
+//         * System.out.println("MinZ: " + params[0]); System.out.println("MaxZ: "
+//         * + params[1]); System.out.println("X: " + params[2]);
+//         * System.out.println("Y: " + params[3]); System.out.println("Sigma: " +
+//         * params[4]);
+//         */
+//        System.out.println("alpha: " + params[0]);
+//        System.out.println("a: " + params[1]);
+//        System.out.println("b: " + params[2]);
+//        System.out.println("R^2: " + igf.getRSquared());
+//
+//        System.exit(0);
+//    }
     /*
      * public static void main(String args[]) { int iterations = 100000000; int
      * dim = (int) Math.sqrt(iterations); double[] p = {0.0, 1.0, dim / 2.0, dim
@@ -83,7 +77,6 @@ public class IsoGaussianFitter {
      * System.out.println("Analysis Time: " + (System.currentTimeMillis() -
      * startTime) + " ms"); }
      */
-
     public IsoGaussianFitter() {
     }
 
@@ -91,7 +84,7 @@ public class IsoGaussianFitter {
      * Construct a new CurveFitter.
      */
     public IsoGaussianFitter(double[] xVals, double[] yVals, double[][] zVals) {
-        numParams = 3;
+        numParams = 4;
         this.xData = xVals;
         this.yData = yVals;
         this.zData = new double[xData.length * yData.length];
@@ -114,11 +107,11 @@ public class IsoGaussianFitter {
         }
     }
 
-    public boolean doFit() {
+    public boolean doFit(double xySigEst) {
         if (xData == null || yData == null || zData == null) {
             return false;
         }
-        initialize();
+        initialize(xySigEst);
         restart(0);
 
         numIter = 0;
@@ -196,29 +189,18 @@ public class IsoGaussianFitter {
                 }
             }
         }
-
-//        mag = simp[best][1];
-//        x0 = simp[best][2];
-//        y0 = simp[best][3];
-
-        int width = xData.length, height = yData.length;
-        FloatProcessor output = new FloatProcessor(width, height);
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                output.putPixelValue(x, y, evaluate(simp[best], x, y));
-            }
-        }
-
-        IJ.saveAs(new ImagePlus("", output), "TIF", "C:\\Users\\Dave\\Desktop\\output.tif");
+        mag = simp[best][1];
+        x0 = simp[best][2];
+        y0 = simp[best][3];
+        
         //TODO Add offsets back on to x and y coordinates
-
         return true;
     }
 
     /**
      * Initialise the simplex
      */
-    boolean initialize() {
+    boolean initialize(double xySigEst) {
         if (xData == null || yData == null || zData == null) {
             return false;
         }
@@ -227,26 +209,38 @@ public class IsoGaussianFitter {
         simp = new double[numVertices][numVertices];
         next = new double[numVertices];
 
-        /*
-         * double firstx = xData[0]; double firsty = yData[0]; double firstz =
-         * zData[0]; double lastx = xData[xData.length - 1]; double lasty =
-         * yData[yData.length - 1]; double xmean = (firstx + lastx) / 2.0;
-         * double ymean = (firsty + lasty) / 2.0; double minz = firstz, maxz =
-         * firstz; for (int x = 1; x < xData.length; x++) { for (int y = 1; y <
-         * yData.length; y++) { if (zData[x + xData.length * y] > maxz) { maxz =
-         * zData[x + xData.length * y]; } if (zData[x + xData.length * y] <
-         * minz) { minz = zData[x + xData.length * y]; } } }
-         */
+        double firstx = xData[0];
+        double firsty = yData[0];
+        double firstz =
+                zData[0];
+        double lastx = xData[xData.length - 1];
+        double lasty =
+                yData[yData.length - 1];
+        double xmean = (firstx + lastx) / 2.0;
+        double ymean = (firsty + lasty) / 2.0;
+        double minz = firstz, maxz =
+                firstz;
+        for (int x = 1; x < xData.length; x++) {
+            for (int y = 1; y
+                    < yData.length; y++) {
+                if (zData[x + xData.length * y] > maxz) {
+                    maxz =
+                            zData[x + xData.length * y];
+                }
+                if (zData[x + xData.length * y]
+                        < minz) {
+                    minz = zData[x + xData.length * y];
+                }
+            }
+        }
         maxIter = IterFactor * numParams * numParams;  // Where does this estimate come from?
         restarts = defaultRestarts;
         nRestarts = 0;
-        /*
-         * simp[0][0] = minz; // a simp[0][1] = maxz; // b simp[0][2] = xmean;
-         * // c simp[0][3] = ymean; // d xsig = ysig = xySigEst;
-         */
-        simp[0][0] = 0.000001;   // a
-        simp[0][1] = 0.000001;   // b
-        simp[0][2] = 0.000001;   // alpha
+        simp[0][0] = minz; // a
+        simp[0][1] = maxz; // b
+        simp[0][2] = xmean;          // c
+        simp[0][3] = ymean; // d
+        xsig = ysig = xySigEst;
         return true;
     }
 
@@ -296,16 +290,12 @@ public class IsoGaussianFitter {
      * Returns 'fit' formula value for parameters "p" at "x"
      */
     public double evaluate(double[] p, double x, double y) {
-        //return evaluate(x, y, p[0], p[1], p[2], p[3], p[4]);
-        /*
-         * if (p == null) { return Double.NaN; } return p[0] + p[1] *
-         * Math.exp(-(((x - p[2]) * (x - p[2])) + ((y - p[3]) * (y - p[3]))) /
-         * (2 * xsig * xsig));
-         */
-        int inty = (int) Math.round(y);
-        double c = p[0] * Math.exp(p[1] * hgu[inty] * Math.exp(x));
-        double e = (p[2] * hgu[inty] - c) / (p[2] * hgu[inty] - c + 1.0);
-        return e;
+
+        if (p == null) {
+            return Double.NaN;
+        }
+        return p[0] + p[1] * Math.exp(-(((x - p[2]) * (x - p[2])) + ((y - p[3])
+                * (y - p[3]))) / (2 * xsig * xsig));
     }
 
     /**

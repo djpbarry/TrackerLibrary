@@ -21,9 +21,9 @@ public class SuperResAnalyser extends Co_Localise {
 
     private int scaleFactor = 10;
 
-    public static void main(String args[]) {
-        (new SuperResAnalyser(new ImagePlus("C:\\Users\\barry05\\Desktop\\SuperResTest.tif"))).run(null);
-    }
+//    public static void main(String args[]) {
+//        (new SuperResAnalyser(new ImagePlus("C:\\Users\\barry05\\Desktop\\SuperResTest.tif"))).run(null);
+//    }
 
     public SuperResAnalyser(ImagePlus imp) {
         super(imp);

@@ -60,7 +60,7 @@ public class Timelapse_Analysis implements PlugIn {
             LAMBDA = 650.0, //Wavelength of light
             NUM_AP = 1.4; //Numerical aperture of system
     protected final static double curveFitTol = 0.8d; //Tolerance used in determining fit of IsoGaussian curves
-    //protected static double c1SigmaTol = 3.0, c2SigmaTol = 3.0;
+    protected static double c1SigmaTol = 3.0, c2SigmaTol = 3.0;
     protected ArrayList<ParticleTrajectory> trajectories = new ArrayList<ParticleTrajectory>(); //Trajectories of the detected particles
     protected ImagePlus imp; //The active image stack
     protected ImageStack stack;
@@ -73,15 +73,16 @@ public class Timelapse_Analysis implements PlugIn {
     protected boolean monoChrome;
     private double noiseTol = 0.2;
 
-    /*
-     * public static void main(String args[]) { File image =
-     * Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Tracking Test
-     * Sequences")); ImageStack stack = Utils.buildStack(image); ImagePlus imp =
-     * new ImagePlus("Stack", stack); Timelapse_Analysis instance = new
-     * Timelapse_Analysis(imp); if (instance.showDialog()) { instance.analyse();
-     * } return;
-    }
-     */
+//    public static void main(String args[]) {
+//        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Tracking Test Sequences"));
+//        ImageStack stack = Utils.buildStack(image);
+//        ImagePlus imp = new ImagePlus("Stack", stack);
+//        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
+//        if (instance.showDialog()) {
+//            instance.analyse();
+//        }
+//        return;
+//    }
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep,
             double chan1MaxThresh, double hystDiff, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
         Timelapse_Analysis.spatialRes = spatialRes;
@@ -300,47 +301,43 @@ public class Timelapse_Analysis implements PlugIn {
                          */
                         removeAdjacentGaussians(xCoords, yCoords, pixValues, chan1Proc, thisC1Max);
                         IsoGaussianFitter c1GF = new IsoGaussianFitter(xCoords, yCoords, pixValues);
-                        c1GF.doFit();
+                        c1GF.doFit(xySigEst);
                         // TODO Estiamtes of intensity need to consider particles moving into/out of focal plane
-                        //if (c1GF.getXsig() < (c1SigmaTol * xySigEst)) {
-                        /*
-                         * if (c1GF.getRSquared() > curveFitTol) {
-                         */
-                        c1Gaussian = new IsoGaussian((c1GF.getX0() + c1X - xyPartRad) * spatialRes,
-                                (c1GF.getY0() + c1Y - xyPartRad) * spatialRes, c1GF.getMag(),
-                                c1GF.getXsig(), c1GF.getYsig(), c1GF.getRSquared() - curveFitTol);
-                        /*
-                         * } else { c1Gaussian = new IsoGaussian(c1X *
-                         * spatialRes, c1Y * spatialRes,
-                         * chan1Proc.getPixelValue(c1X, c1Y), xySigEst,
-                         * xySigEst, c1GF.getRSquared() - curveFitTol);
+                        if (c1GF.getXsig() < (c1SigmaTol * xySigEst)) {
+                            if (c1GF.getRSquared() > curveFitTol) {
+                                c1Gaussian = new IsoGaussian((c1GF.getX0() + c1X - xyPartRad) * spatialRes,
+                                        (c1GF.getY0() + c1Y - xyPartRad) * spatialRes, c1GF.getMag(),
+                                        c1GF.getXsig(), c1GF.getYsig(), c1GF.getRSquared() - curveFitTol);
+                            } else {
+                                c1Gaussian = new IsoGaussian(c1X
+                                        * spatialRes, c1Y * spatialRes,
+                                        chan1Proc.getPixelValue(c1X, c1Y), xySigEst,
+                                        xySigEst, c1GF.getRSquared() - curveFitTol);
+                            }
+                            c2Points = Utils.searchNeighbourhood(c1X, c1Y, (int) Math.round(xyPartRad * searchScale), FOREGROUND,
+                                    C2Max);
+                            if (c2Points != null) {
+                                Utils.extractValues(xCoords, yCoords, pixValues,
+                                        c2Points[0][0], c2Points[0][1], chan2Proc);
+                                IsoGaussianFitter c2GF = new IsoGaussianFitter(xCoords, yCoords, pixValues);
+                                c2GF.doFit(xySigEst);
+                                if (c2GF.getXsig()
+                                        < (c2SigmaTol * xySigEst)) {
+                                    c2Gaussian = new IsoGaussian((c2GF.getX0() + c2Points[0][0]
+                                            - xyPartRad) * spatialRes, (c2GF.getY0()
+                                            + c2Points[0][1] - xyPartRad) * spatialRes,
+                                            c2GF.getMag(), c2GF.getXsig(), c2GF.getYsig(),
+                                            c2GF.getRSquared() - curveFitTol);
+                                }
+                            }
+                            /*
+                             * A particle has been isolated - trajectories need
+                             * to be updated:
+                             */
+                            if (c1Gaussian != null) {
+                                particles.addDetection(i - startSlice, c1Gaussian, c2Gaussian);
+                            }
                         }
-                         */
-                        /*
-                         * c2Points = Utils.searchNeighbourhood(c1X, c1Y, (int)
-                         * Math.round(xyPartRad * searchScale), FOREGROUND,
-                         * C2Max); if (c2Points != null) {
-                         * Utils.extractValues(xCoords, yCoords, pixValues,
-                         * c2Points[0][0], c2Points[0][1], chan2Proc);
-                         * IsoGaussianFitter c2GF = new
-                         * IsoGaussianFitter(xCoords, yCoords, pixValues);
-                         * c2GF.doFit(xySigEst, 0.0); //if (c2GF.getXsig() <
-                         * (c2SigmaTol * xySigEst)) { c2Gaussian = new
-                         * IsoGaussian((c2GF.getX0() + c2Points[0][0] -
-                         * xyPartRad) * spatialRes, (c2GF.getY0() +
-                         * c2Points[0][1] - xyPartRad) * spatialRes,
-                         * c2GF.getMag(), c2GF.getXsig(), c2GF.getYsig(),
-                         * c2GF.getRSquared() - curveFitTol); //}
-                        }
-                         */
-                        /*
-                         * A particle has been isolated - trajectories need to
-                         * be updated:
-                         */
-                        if (c1Gaussian != null) {
-                            particles.addDetection(i - startSlice, c1Gaussian, c2Gaussian);
-                        }
-                        //}
                     }
                 }
             }
@@ -705,11 +702,11 @@ public class Timelapse_Analysis implements PlugIn {
         }
 
         for (i = 0; i < frames; i++) {
-            if (monoChrome) {
-                processor = (new TypeConverter(stack.getProcessor(i + 1).duplicate(), true).convertToByte());
-            } else {
-                processor = (new TypeConverter(stack.getProcessor(i + 1).duplicate(), true).convertToRGB());
-            }
+//            if (monoChrome) {
+//                processor = (new TypeConverter(stack.getProcessor(i + 1).duplicate(), true).convertToByte());
+//            } else {
+            processor = (new TypeConverter(stack.getProcessor(i + 1).duplicate(), true).convertToRGB());
+//            }
             processor.setInterpolationMethod(ImageProcessor.BICUBIC);
             processor.setInterpolate(true);
             outputStack.addSlice("" + i, processor.resize(width, height));
@@ -736,22 +733,24 @@ public class Timelapse_Analysis implements PlugIn {
                 while (current != null) {
                     for (j = frames - 1; j >= lastTP; j--) {
                         processor = outputStack.getProcessor(j + 1);
-                        if (!monoChrome) {
-                            if (type == ParticleTrajectory.NON_COLOCAL) {
-                                processor.setColor(getDrawColor(colocaliser.getChannel1()));
-                            } else {
-                                processor.setColor(getDrawColor(colocaliser.getChannel2()));
-                            }
-                        } else {
-                            processor.setValue(255);
+//                        if (!monoChrome) {
+//                            if (type == ParticleTrajectory.NON_COLOCAL) {
+                        processor.setColor(getDrawColor(colocaliser.getChannel1()));
+//                            } else {
+//                                processor.setColor(getDrawColor(colocaliser.getChannel2()));
+//                            }
+//                        } else {
+//                            processor.setValue(255);
+//                        }
+                        if (j <= lastTP + 20.0 / timeRes) {
+                            int x = (int) (Math.round(current.getX() * scaledSR));
+                            int y = (int) (Math.round(current.getY() * scaledSR));
+                            processor.drawLine(x, y, (int) Math.round(lastX * scaledSR),
+                                    (int) Math.round(lastY * scaledSR));
                         }
-                        int x = (int) (Math.round(current.getX() * scaledSR));
-                        int y = (int) (Math.round(current.getY() * scaledSR));
-                        processor.drawLine(x, y, (int) Math.round(lastX * scaledSR),
-                                (int) Math.round(lastY * scaledSR));
                         if (j - 1 < lastTP) {
-                            processor.drawOval(((int) Math.round(lastX * scaledSR) - radius), ((int) Math.round(lastY * scaledSR) - radius), 2 * radius, 2 * radius);
-                            System.out.println("j: " + j + " lastTP: " + lastTP);
+                            processor.drawOval(((int) Math.round(lastX * scaledSR) - radius),
+                                    ((int) Math.round(lastY * scaledSR) - radius), 2 * radius, 2 * radius);
                         }
                     }
                     trajImage.drawLine((int) Math.round(ptScale * current.getX() - traj.getBounds().x),
@@ -771,8 +770,7 @@ public class Timelapse_Analysis implements PlugIn {
                  * } else {
                  * processor.setColor(getDrawColor(colocaliser.getChannel2()));
                  * } } else { processor.setValue(255); } processor.drawString(""
-                 * + count, textX, textY);
-                }
+                 * + count, textX, textY); }
                  */
                 count++;
             }
@@ -803,8 +801,7 @@ public class Timelapse_Analysis implements PlugIn {
 
     /*
      * public static void setGaussianRadius(double gaussianRadius) {
-     * Timelapse_Analysis.gaussianRadius = gaussianRadius;
-    }
+     * Timelapse_Analysis.gaussianRadius = gaussianRadius; }
      */
     public void setSigmaEstimate(double sigmaEstimate) {
         this.xySigEst = sigmaEstimate;
@@ -838,8 +835,7 @@ public class Timelapse_Analysis implements PlugIn {
      * Timelapse_Analysis.c1SigmaTol = c1SigmaTol; }
      *
      * public static void setC2SigmaTol(double c2SigmaTol) {
-     * Timelapse_Analysis.c2SigmaTol = c2SigmaTol;
-    }
+     * Timelapse_Analysis.c2SigmaTol = c2SigmaTol; }
      */
     public void previewResults() {
         if (trajectories.size() < 1) {
@@ -1157,84 +1153,85 @@ public class Timelapse_Analysis implements PlugIn {
                 }
             });
 
-            /*
-             * org.jdesktop.layout.GroupLayout layout = new
-             * org.jdesktop.layout.GroupLayout(getContentPane());
-             * getContentPane().setLayout(layout); layout.setHorizontalGroup(
-             * layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().addContainerGap().add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().add(prevResBox).add(109,
-             * 109,
-             * 109).add(analyseButton).addContainerGap()).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().add(trajPlotBox).addContainerGap()).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().add(intensPlotBox).addContainerGap()).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().add(colocalBox).addContainerGap()).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().add(preProcessBox).addContainerGap()).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().add(jLabel15).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
-             * 62, Short.MAX_VALUE).add(prevField,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).add(prevScroll,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 0,
-             * Short.MAX_VALUE).add(layout.createSequentialGroup().add(jLabel10).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
-             * org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
-             * Short.MAX_VALUE).add(minTrajLengthField,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).add(layout.createSequentialGroup().add(jLabel8).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
-             * 41, Short.MAX_VALUE).add(timeResField,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).add(jLabel4).add(layout.createSequentialGroup().add(jLabel6).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
-             * 48, Short.MAX_VALUE).add(spatialResField,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).add(layout.createSequentialGroup().add(jLabel3).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
-             * 85, Short.MAX_VALUE).add(channel2Combo,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).add(layout.createSequentialGroup().add(jLabel2).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
-             * 85, Short.MAX_VALUE).add(channel1Combo,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).add(jLabel1).add(org.jdesktop.layout.GroupLayout.TRAILING,
-             * virusDiamField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE,
-             * 72,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(org.jdesktop.layout.GroupLayout.TRAILING,
-             * layout.createSequentialGroup().add(jLabel12).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
-             * 8, Short.MAX_VALUE).add(trajStepTolField,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).add(org.jdesktop.layout.GroupLayout.TRAILING,
-             * layout.createSequentialGroup().add(jLabel13).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
-             * 12, Short.MAX_VALUE).add(ch1MinPeakField,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).add(org.jdesktop.layout.GroupLayout.TRAILING,
-             * layout.createSequentialGroup().add(jLabel14).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
-             * 12, Short.MAX_VALUE).add(ch2MinPeakField,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(jLabel7,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE,
-             * org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(jLabel9).add(jLabel11).add(jLabel5)).add(26,
-             * 26,
-             * 26)).add(layout.createSequentialGroup().add(prevDetectBox).addContainerGap(175,
-             * Short.MAX_VALUE)))))))))); layout.setVerticalGroup(
-             * layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().addContainerGap().add(jLabel1).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(jLabel2).add(channel1Combo,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(jLabel3).add(channel2Combo,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(jLabel4).add(virusDiamField,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(jLabel5)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(jLabel6).add(spatialResField,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(jLabel7,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE,
-             * org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(jLabel8).add(timeResField,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(jLabel9)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(jLabel10).add(minTrajLengthField,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(jLabel11)).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING).add(layout.createSequentialGroup().addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(trajStepTolField,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(jLabel12)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(ch1MinPeakField,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(jLabel13)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(ch2MinPeakField,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(jLabel14)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(prevDetectBox).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(jLabel15).add(prevField,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(prevScroll,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE,
-             * org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
-             * org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(preProcessBox).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(colocalBox).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(intensPlotBox).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(trajPlotBox).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(prevResBox).addContainerGap(29,
-             * Short.MAX_VALUE)).add(layout.createSequentialGroup().addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(analyseButton).addContainerGap()))));
-             */
+
+            org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
+            getContentPane().setLayout(layout);
+            layout.setHorizontalGroup(
+                    layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().addContainerGap().add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().add(prevResBox).add(109,
+                    109,
+                    109).add(analyseButton).addContainerGap()).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().add(trajPlotBox).addContainerGap()).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().add(intensPlotBox).addContainerGap()).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().add(colocalBox).addContainerGap()).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().add(preProcessBox).addContainerGap()).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().add(jLabel15).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
+                    62, Short.MAX_VALUE).add(prevField,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).add(prevScroll,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 0,
+                    Short.MAX_VALUE).add(layout.createSequentialGroup().add(jLabel10).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
+                    org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
+                    Short.MAX_VALUE).add(minTrajLengthField,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).add(layout.createSequentialGroup().add(jLabel8).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
+                    41, Short.MAX_VALUE).add(timeResField,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).add(jLabel4).add(layout.createSequentialGroup().add(jLabel6).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
+                    48, Short.MAX_VALUE).add(spatialResField,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).add(layout.createSequentialGroup().add(jLabel3).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
+                    85, Short.MAX_VALUE).add(channel2Combo,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).add(layout.createSequentialGroup().add(jLabel2).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
+                    85, Short.MAX_VALUE).add(channel1Combo,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).add(jLabel1).add(org.jdesktop.layout.GroupLayout.TRAILING,
+                    virusDiamField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE,
+                    72,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(org.jdesktop.layout.GroupLayout.TRAILING,
+                    layout.createSequentialGroup().add(jLabel12).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
+                    8, Short.MAX_VALUE).add(trajStepTolField,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).add(org.jdesktop.layout.GroupLayout.TRAILING,
+                    layout.createSequentialGroup().add(jLabel13).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
+                    12, Short.MAX_VALUE).add(ch1MinPeakField,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).add(org.jdesktop.layout.GroupLayout.TRAILING,
+                    layout.createSequentialGroup().add(jLabel14).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
+                    12, Short.MAX_VALUE).add(ch2MinPeakField,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(jLabel7,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE,
+                    org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(jLabel9).add(jLabel11).add(jLabel5)).add(26,
+                    26,
+                    26)).add(layout.createSequentialGroup().add(prevDetectBox).addContainerGap(175,
+                    Short.MAX_VALUE))))))))));
+            layout.setVerticalGroup(
+                    layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().addContainerGap().add(jLabel1).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(jLabel2).add(channel1Combo,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(jLabel3).add(channel2Combo,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(jLabel4).add(virusDiamField,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(jLabel5)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(jLabel6).add(spatialResField,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(jLabel7,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE,
+                    org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(jLabel8).add(timeResField,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(jLabel9)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(jLabel10).add(minTrajLengthField,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(jLabel11)).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING).add(layout.createSequentialGroup().addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(trajStepTolField,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(jLabel12)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(ch1MinPeakField,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(jLabel13)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(ch2MinPeakField,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(jLabel14)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(prevDetectBox).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(jLabel15).add(prevField,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(prevScroll,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE,
+                    org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
+                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(preProcessBox).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(colocalBox).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(intensPlotBox).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(trajPlotBox).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(prevResBox).addContainerGap(29,
+                    Short.MAX_VALUE)).add(layout.createSequentialGroup().addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(analyseButton).addContainerGap()))));
+
             pack();
         }// </editor-fold>
 

@@ -216,7 +216,7 @@ public class Volume_Analysis extends Timelapse_Analysis {
                         Utils.extractValues(xCoords, yCoords, pixValues, c1X, c1Y, chan1Proc);
                         /* Remove adjacent Gaussians */
                         IsoGaussianFitter c1GF = new IsoGaussianFitter(xCoords, yCoords, pixValues);
-                        c1GF.doFit();
+                        c1GF.doFit(xySigEst);
                         // TODO Estiamtes of intensity need to consider particles moving into/out of focal plane
                         //if (c1GF.getXsig() < (c1SigmaTol * xySigEst)) {
                             if (c1GF.getRSquared() > curveFitTol) {

@@ -12,22 +12,24 @@ import java.util.Random;
  */
 public class MotileGaussian extends IsoGaussian {
 
+    boolean persistent, changeState;
     private double sens, xvel, yvel;
     Random r = new Random();
 
     public MotileGaussian(double x0, double y0, double a, double xsig, double ysig,
-            double fit, double sens) {
+            double fit, double sens, boolean persistent, boolean changeState) {
         super(x0, y0, a, xsig, ysig, fit);
         this.sens = sens;
-        if (r.nextBoolean()) {
-            xvel = 0.1;
-        } else {
-            xvel = -0.1;
-        }
-        if (r.nextBoolean()) {
-            yvel = 0.1;
-        } else {
-            yvel = -0.1;
+        this.persistent = persistent;
+        this.changeState = changeState;
+        if (persistent) {
+            xvel = yvel = 0.1;
+            if (r.nextBoolean()) {
+                xvel *= -1.0;
+            }
+            if (r.nextBoolean()) {
+                yvel *= -1.0;
+            }
         }
     }
 
@@ -41,11 +43,22 @@ public class MotileGaussian extends IsoGaussian {
         if (r.nextBoolean()) {
             inc *= -1.0;
         }
-        xvel += inc;
+        if (persistent) {
+            xvel += inc;
+        } else {
+            xvel = inc;
+        }
         inc = r.nextGaussian() * sens;
         if (r.nextBoolean()) {
             inc *= -1.0;
         }
-        yvel += inc;
+        if (persistent) {
+            yvel += inc;
+        } else {
+            yvel = inc;
+        }
+        if (changeState && r.nextDouble() < 0.05) {
+            persistent = !persistent;
+        }
     }
 }

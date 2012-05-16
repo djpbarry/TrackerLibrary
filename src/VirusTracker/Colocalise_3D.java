@@ -201,7 +201,7 @@ public class Colocalise_3D extends Co_Localise {
                         Gaussian3D c1Gaussian = null, c2Gaussian = null;
                         extractValues3D(xCoords, yCoords, zCoords, pixValues, c1X, c1Y, c1Z, stack1);
                         GaussianFitter3D c1GF = new GaussianFitter3D(xCoords, yCoords, zCoords, pixValues);
-                        c1GF.doFit();
+                        c1GF.doFit(xySigEst);
                         // TODO Estiamtes of intensity need to consider particles moving into/out of focal plane
                         double c1params[] = c1GF.getParams();
                         if (c1GF.getRSquared() > curveFitTol) {
@@ -221,7 +221,7 @@ public class Colocalise_3D extends Co_Localise {
                         if (c2Points != null) {
                             extractValues3D(xCoords, yCoords, zCoords, pixValues, c2Points[0][0], c2Points[0][1], c2Points[0][2], stack2);
                             GaussianFitter3D c2GF = new GaussianFitter3D(xCoords, yCoords, zCoords, pixValues);
-                            c2GF.doFit();
+                            c2GF.doFit(xySigEst);
                             double c2params[] = c2GF.getParams();
                             // p[0]=theta, p[1]=xSigma, p[2]=ySigma, p[3]=A, p[4]=x0, p[5]=y0, p[6]=offset
                             c2Gaussian = new Gaussian3D((c2params[5] + c2Points[0][0] - particleRadius) * spatialRes,

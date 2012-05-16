@@ -18,7 +18,7 @@ public class TestGenerator {
 
     public static void main(String args[]) {
         TestGenerator tg = new TestGenerator();
-        tg.generateMulti(10, 1000, 1000, 500);
+        tg.generateMulti(50, 500, 500, 500);
     }
 
     public TestGenerator() {
@@ -49,14 +49,15 @@ public class TestGenerator {
         Random r = new Random();
         for (int i = 0; i < n; i++) {
             particles[i] = new MotileGaussian(width * res * r.nextDouble(), height * res * r.nextDouble(),
-                    r.nextDouble() * 255.0, 2.0, 2.0, 0.1, 0.01);
+                    r.nextDouble() * 255.0, 2.0, 2.0, 0.1, 0.025, true, false);
         }
         for (int i = 0; i < length; i++) {
             ByteProcessor image = new ByteProcessor(width, height);
+            image.setColor(255);
             for (int j = 0; j < n; j++) {
                 cl.draw2DGaussian(image, particles[j], 0.0);
-                particles[j].updatePosition();
                 particles[j].updateVelocity();
+                particles[j].updatePosition();
                 double x = particles[j].getX() / res;
                 double y = particles[j].getY() / res;
                 if (x < -2.0 * particles[j].getXSigma()
@@ -64,10 +65,9 @@ public class TestGenerator {
                         || y < -2.0 * particles[j].getYSigma()
                         || y > height + 2.0 * particles[j].getYSigma()) {
                     particles[j] = new MotileGaussian(width * res * r.nextDouble(), height * res * r.nextDouble(),
-                            r.nextDouble() * 255.0, 2.0, 2.0, 0.1, 0.01);
+                            r.nextDouble() * 255.0, 2.0, 2.0, 0.1, 0.025, true, false);
                 }
             }
-            
             IJ.saveAs(new ImagePlus("", image.duplicate()), "PNG",
                     "C:\\Users\\barry05\\Desktop\\Tracking Test Sequences\\Simulation\\"
                     + indFormat.format(i));
