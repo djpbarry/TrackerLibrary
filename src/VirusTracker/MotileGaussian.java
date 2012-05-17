@@ -13,7 +13,7 @@ import java.util.Random;
 public class MotileGaussian extends IsoGaussian {
 
     boolean persistent, changeState;
-    private double sens, xvel, yvel;
+    private double sens, rad, theta, scale = 1.0, initvel = 0.75;
     Random r = new Random();
 
     public MotileGaussian(double x0, double y0, double a, double xsig, double ysig,
@@ -22,20 +22,16 @@ public class MotileGaussian extends IsoGaussian {
         this.sens = sens;
         this.persistent = persistent;
         this.changeState = changeState;
-        if (persistent) {
-            xvel = yvel = 0.1;
-            if (r.nextBoolean()) {
-                xvel *= -1.0;
-            }
-            if (r.nextBoolean()) {
-                yvel *= -1.0;
-            }
+        rad = initvel + r.nextGaussian() * sens;
+        theta = r.nextGaussian() * 2.0 * Math.PI;
+        if (!persistent) {
+            rad *= scale;
         }
     }
 
     public void updatePosition() {
-        this.x0 += xvel;
-        this.y0 += yvel;
+        this.x0 += rad * Math.cos(theta);
+        this.y0 += rad * Math.sin(theta);
     }
 
     public void updateVelocity() {
@@ -44,18 +40,18 @@ public class MotileGaussian extends IsoGaussian {
             inc *= -1.0;
         }
         if (persistent) {
-            xvel += inc;
+            rad += inc;
         } else {
-            xvel = inc;
+            rad += inc * scale;
         }
-        inc = r.nextGaussian() * sens;
+        inc = r.nextGaussian() * Math.PI * 2.0;
         if (r.nextBoolean()) {
             inc *= -1.0;
         }
         if (persistent) {
-            yvel += inc;
+            theta += inc * sens;
         } else {
-            yvel = inc;
+            theta += inc;
         }
         if (changeState && r.nextDouble() < 0.05) {
             persistent = !persistent;

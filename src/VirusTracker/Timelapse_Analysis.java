@@ -1,5 +1,6 @@
 package VirusTracker;
 
+import AnaMorf.Utilities;
 import EMSeg.Utils;
 import EMSeg.FractalEstimator;
 import ij.IJ;
@@ -22,11 +23,13 @@ import java.awt.Font;
 import java.awt.Rectangle;
 import java.awt.Scrollbar;
 import java.awt.Toolkit;
+import java.io.File;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Random;
 
 /**
  * Timelapse_Analysis seeks to identify individual particles in a stack of
@@ -61,7 +64,7 @@ public class Timelapse_Analysis implements PlugIn {
             NUM_AP = 1.4; //Numerical aperture of system
     protected final static double curveFitTol = 0.8d; //Tolerance used in determining fit of IsoGaussian curves
     protected static double c1SigmaTol = 3.0, c2SigmaTol = 3.0;
-    protected ArrayList<ParticleTrajectory> trajectories = new ArrayList<ParticleTrajectory>(); //Trajectories of the detected particles
+    protected ArrayList<ParticleTrajectory> trajectories = new ArrayList(); //Trajectories of the detected particles
     protected ImagePlus imp; //The active image stack
     protected ImageStack stack;
     private long startTime;
@@ -266,7 +269,6 @@ public class Timelapse_Analysis implements PlugIn {
         double[] yCoords = new double[pSize];
         double[][] pixValues = new double[pSize][pSize];
         ParticleArray particles = new ParticleArray(arraySize);
-        ByteProcessor nextC1Max = new ByteProcessor(width, height);
         for (i = startSlice; i < noOfImages && i <= endSlice; i++) {
             IJ.freeMemory();
             IJ.showStatus("Analysing Frame " + i);
@@ -299,7 +301,7 @@ public class Timelapse_Analysis implements PlugIn {
                         /*
                          * Remove adjacent Gaussians
                          */
-                        removeAdjacentGaussians(xCoords, yCoords, pixValues, chan1Proc, thisC1Max);
+//                        removeAdjacentGaussians(xCoords, yCoords, pixValues, chan1Proc, thisC1Max);
                         IsoGaussianFitter c1GF = new IsoGaussianFitter(xCoords, yCoords, pixValues);
                         c1GF.doFit(xySigEst);
                         // TODO Estiamtes of intensity need to consider particles moving into/out of focal plane
@@ -508,6 +510,9 @@ public class Timelapse_Analysis implements PlugIn {
                     }
                 }
             }
+            if (IJ.getInstance() != null) {
+                IJ.getTextPanel().append("Frame:\t" + m + "\tTotal Count:\t" + trajectories.size());
+            }
         }
         return;
     }
@@ -711,9 +716,10 @@ public class Timelapse_Analysis implements PlugIn {
             processor.setInterpolate(true);
             outputStack.addSlice("" + i, processor.resize(width, height));
         }
-
+        Random r = new Random();
         for (i = 0, count = 1; i < n; i++) {
             traj = (ParticleTrajectory) (trajectories.get(i));
+            Color thiscolor = new Color(r.nextInt(256), r.nextInt(256), r.nextInt(256));
             length = traj.getSize();
             type = traj.getType();
             bounds = traj.getBounds();
@@ -735,7 +741,8 @@ public class Timelapse_Analysis implements PlugIn {
                         processor = outputStack.getProcessor(j + 1);
 //                        if (!monoChrome) {
 //                            if (type == ParticleTrajectory.NON_COLOCAL) {
-                        processor.setColor(getDrawColor(colocaliser.getChannel1()));
+//                        processor.setColor(getDrawColor(colocaliser.getChannel1()));
+                        processor.setColor(thiscolor);
 //                            } else {
 //                                processor.setColor(getDrawColor(colocaliser.getChannel2()));
 //                            }
@@ -762,6 +769,10 @@ public class Timelapse_Analysis implements PlugIn {
                     lastTP = (int) Math.round(current.getTimePoint() / timeRes);
                     current = current.getLink();
                 }
+                processor = outputStack.getProcessor(lastTP + 1);
+                processor.setColor(thiscolor);
+                processor.drawOval(((int) Math.round(lastX * scaledSR) - radius),
+                        ((int) Math.round(lastY * scaledSR) - radius), 2 * radius, 2 * radius);
                 /*
                  * for (j = 0; j < frames; j++) { processor =
                  * outputStack.getProcessor(j + 1); if (!monoChrome) { if (type

@@ -18,7 +18,7 @@ public class TestGenerator {
 
     public static void main(String args[]) {
         TestGenerator tg = new TestGenerator();
-        tg.generateMulti(50, 500, 500, 500);
+        tg.generateMulti(30, 250, 250, 200);
     }
 
     public TestGenerator() {
@@ -42,6 +42,7 @@ public class TestGenerator {
     }
 
     public void generateMulti(int n, int width, int height, int length) {
+        int totalcount = n;
         DecimalFormat indFormat = new DecimalFormat("000");
         Co_Localise cl = new Co_Localise();
         double res = Timelapse_Analysis.getSpatialRes();
@@ -49,7 +50,7 @@ public class TestGenerator {
         Random r = new Random();
         for (int i = 0; i < n; i++) {
             particles[i] = new MotileGaussian(width * res * r.nextDouble(), height * res * r.nextDouble(),
-                    r.nextDouble() * 255.0, 2.0, 2.0, 0.1, 0.025, true, false);
+                    255.0, 2.0, 2.0, 0.1, 0.01, r.nextBoolean(),false);
         }
         for (int i = 0; i < length; i++) {
             ByteProcessor image = new ByteProcessor(width, height);
@@ -65,12 +66,14 @@ public class TestGenerator {
                         || y < -2.0 * particles[j].getYSigma()
                         || y > height + 2.0 * particles[j].getYSigma()) {
                     particles[j] = new MotileGaussian(width * res * r.nextDouble(), height * res * r.nextDouble(),
-                            r.nextDouble() * 255.0, 2.0, 2.0, 0.1, 0.025, true, false);
+                           255.0, 2.0, 2.0, 0.1, 0.01,r.nextBoolean(),false);
+                    totalcount++;
                 }
             }
             IJ.saveAs(new ImagePlus("", image.duplicate()), "PNG",
                     "C:\\Users\\barry05\\Desktop\\Tracking Test Sequences\\Simulation\\"
                     + indFormat.format(i));
+            System.out.println("Frame:\t" + i + "\tTotal Count:\t" + totalcount);
         }
     }
 }
