@@ -1,6 +1,5 @@
 package VirusTracker;
 
-import AnaMorf.Utilities;
 import EMSeg.Utils;
 import EMSeg.FractalEstimator;
 import ij.IJ;
@@ -23,7 +22,6 @@ import java.awt.Font;
 import java.awt.Rectangle;
 import java.awt.Scrollbar;
 import java.awt.Toolkit;
-import java.io.File;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -161,6 +159,9 @@ public class Timelapse_Analysis implements PlugIn {
      * <code>stack</code>.
      */
     public void analyse() {
+        if (monoChrome) {
+            colocal = false;
+        }
         if (stack != null) {
             IJ.register(this.getClass());
             startTime = System.currentTimeMillis();
@@ -707,11 +708,11 @@ public class Timelapse_Analysis implements PlugIn {
         }
 
         for (i = 0; i < frames; i++) {
-//            if (monoChrome) {
-//                processor = (new TypeConverter(stack.getProcessor(i + 1).duplicate(), true).convertToByte());
-//            } else {
-            processor = (new TypeConverter(stack.getProcessor(i + 1).duplicate(), true).convertToRGB());
-//            }
+            if (monoChrome) {
+                processor = (new TypeConverter(stack.getProcessor(i + 1).duplicate(), true).convertToByte());
+            } else {
+                processor = (new TypeConverter(stack.getProcessor(i + 1).duplicate(), true).convertToRGB());
+            }
             processor.setInterpolationMethod(ImageProcessor.BICUBIC);
             processor.setInterpolate(true);
             outputStack.addSlice("" + i, processor.resize(width, height));
@@ -719,7 +720,7 @@ public class Timelapse_Analysis implements PlugIn {
         Random r = new Random();
         for (i = 0, count = 1; i < n; i++) {
             traj = (ParticleTrajectory) (trajectories.get(i));
-            Color thiscolor = new Color(r.nextInt(256), r.nextInt(256), r.nextInt(256));
+//            Color thiscolor = new Color(r.nextInt(256), r.nextInt(256), r.nextInt(256));
             length = traj.getSize();
             type = traj.getType();
             bounds = traj.getBounds();
@@ -739,16 +740,16 @@ public class Timelapse_Analysis implements PlugIn {
                 while (current != null) {
                     for (j = frames - 1; j >= lastTP; j--) {
                         processor = outputStack.getProcessor(j + 1);
-//                        if (!monoChrome) {
-//                            if (type == ParticleTrajectory.NON_COLOCAL) {
-//                        processor.setColor(getDrawColor(colocaliser.getChannel1()));
-                        processor.setColor(thiscolor);
-//                            } else {
-//                                processor.setColor(getDrawColor(colocaliser.getChannel2()));
-//                            }
-//                        } else {
-//                            processor.setValue(255);
-//                        }
+                        if (!monoChrome) {
+                            if (type == ParticleTrajectory.NON_COLOCAL) {
+                                processor.setColor(getDrawColor(colocaliser.getChannel1()));
+//                        processor.setColor(thiscolor);
+                            } else {
+                                processor.setColor(getDrawColor(colocaliser.getChannel2()));
+                            }
+                        } else {
+                            processor.setValue(255);
+                        }
                         if (j <= lastTP + 20.0 / timeRes) {
                             int x = (int) (Math.round(current.getX() * scaledSR));
                             int y = (int) (Math.round(current.getY() * scaledSR));
@@ -770,19 +771,24 @@ public class Timelapse_Analysis implements PlugIn {
                     current = current.getLink();
                 }
                 processor = outputStack.getProcessor(lastTP + 1);
-                processor.setColor(thiscolor);
+//                processor.setColor(thiscolor);
                 processor.drawOval(((int) Math.round(lastX * scaledSR) - radius),
                         ((int) Math.round(lastY * scaledSR) - radius), 2 * radius, 2 * radius);
-                /*
-                 * for (j = 0; j < frames; j++) { processor =
-                 * outputStack.getProcessor(j + 1); if (!monoChrome) { if (type
-                 * == ParticleTrajectory.NON_COLOCAL) {
-                 * processor.setColor(getDrawColor(colocaliser.getChannel1()));
-                 * } else {
-                 * processor.setColor(getDrawColor(colocaliser.getChannel2()));
-                 * } } else { processor.setValue(255); } processor.drawString(""
-                 * + count, textX, textY); }
-                 */
+//                for (j = 0; j < frames; j++) {
+//                    processor = outputStack.getProcessor(j + 1);
+                if (!monoChrome) {
+                    if (type == ParticleTrajectory.NON_COLOCAL) {
+                        processor.setColor(getDrawColor(colocaliser.getChannel1()));
+                    } else {
+                        processor.setColor(getDrawColor(colocaliser.getChannel2()));
+                    }
+                } else {
+                    processor.setValue(255);
+                }
+//                    processor.drawString("" + count, textX, textY);
+//                }
+                processor.drawOval(((int) Math.round(lastX * scaledSR) - radius),
+                        ((int) Math.round(lastY * scaledSR) - radius), 2 * radius, 2 * radius);
                 count++;
             }
             boxCount = new FractalEstimator();

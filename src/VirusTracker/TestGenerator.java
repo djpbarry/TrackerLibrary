@@ -16,10 +16,10 @@ import java.util.Random;
  */
 public class TestGenerator {
 
-    public static void main(String args[]) {
-        TestGenerator tg = new TestGenerator();
-        tg.generateMulti(30, 250, 250, 200);
-    }
+//    public static void main(String args[]) {
+//        TestGenerator tg = new TestGenerator();
+//        tg.generateMulti(30, 250, 250, 200);
+//    }
 
     public TestGenerator() {
     }
