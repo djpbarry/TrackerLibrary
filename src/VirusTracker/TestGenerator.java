@@ -4,6 +4,7 @@
  */
 package VirusTracker;
 
+import IAClasses.IsoGaussian;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.process.ByteProcessor;
@@ -20,7 +21,6 @@ public class TestGenerator {
 //        TestGenerator tg = new TestGenerator();
 //        tg.generateMulti(30, 250, 250, 200);
 //    }
-
     public TestGenerator() {
     }
 
@@ -50,7 +50,7 @@ public class TestGenerator {
         Random r = new Random();
         for (int i = 0; i < n; i++) {
             particles[i] = new MotileGaussian(width * res * r.nextDouble(), height * res * r.nextDouble(),
-                    255.0, 2.0, 2.0, 0.1, 0.01, r.nextBoolean(),false);
+                    255.0, 2.0, 2.0, 0.1, 0.01, r.nextBoolean(), false);
         }
         for (int i = 0; i < length; i++) {
             ByteProcessor image = new ByteProcessor(width, height);
@@ -66,7 +66,7 @@ public class TestGenerator {
                         || y < -2.0 * particles[j].getYSigma()
                         || y > height + 2.0 * particles[j].getYSigma()) {
                     particles[j] = new MotileGaussian(width * res * r.nextDouble(), height * res * r.nextDouble(),
-                           255.0, 2.0, 2.0, 0.1, 0.01,r.nextBoolean(),false);
+                            255.0, 2.0, 2.0, 0.1, 0.01, r.nextBoolean(), false);
                     totalcount++;
                 }
             }

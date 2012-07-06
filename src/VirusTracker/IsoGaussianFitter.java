@@ -4,8 +4,7 @@ package VirusTracker;
  * 2D Gaussian Curve Fitter based on ImageJ's
  * <code>CurveFitter</code>.
  *
- * TODO Compare with Schleich et al. TODO Establish a constant reference
- * background level for all fits
+ * TODO Compare with Schleich et al. background level for all fits
  *
  * @author David J Barry
  * @version 1.0, JAN 2011
@@ -192,8 +191,7 @@ public class IsoGaussianFitter {
         mag = simp[best][1];
         x0 = simp[best][2];
         y0 = simp[best][3];
-        
-        //TODO Add offsets back on to x and y coordinates
+
         return true;
     }
 

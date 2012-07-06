@@ -1,5 +1,7 @@
 package VirusTracker;
 
+import IAClasses.IsoGaussian;
+
 /**
  * Represents a detected particle in an individual image or frame.
  *
@@ -24,12 +26,15 @@ public class Particle {
 
     /**
      * Creates a new Particle
+     *
      * @param time position within an image stack
      * @param c1Gaussian IsoGaussian representation of particle in red channel
      * @param c2Gaussian IsoGaussian representation of particle in green channel
-     * @param newLink the last <code>Particle</code> in the current <code>ParticleTrajectory</code>
-     * to which this particle should be linked. Set to <code>null</code> if this
-     * is the first particle in a new trajectory.
+     * @param newLink the last
+     * <code>Particle</code> in the current
+     * <code>ParticleTrajectory</code> to which this particle should be linked.
+     * Set to
+     * <code>null</code> if this is the first particle in a new trajectory.
      */
     public Particle(double time, IsoGaussian c1Gaussian, IsoGaussian c2Gaussian, Particle newLink) {
         this.t = time;
@@ -90,7 +95,8 @@ public class Particle {
     }
 
     /**
-     * Returns the <code>Particle</code> to which this particle is linked.
+     * Returns the
+     * <code>Particle</code> to which this particle is linked.
      */
     public Particle getLink() {
         return link;

@@ -4,6 +4,8 @@
  */
 package VirusTracker;
 
+import IAClasses.IsoGaussian;
+
 /**
  *
  * @author barry05
@@ -52,5 +54,4 @@ public class NonIsoGaussian extends IsoGaussian {
     public double getTheta() {
         return theta;
     }
-    
 }

@@ -4,7 +4,7 @@
  */
 package VirusTracker;
 
-import ij.ImagePlus;
+import IAClasses.IsoGaussian;
 import ij.process.ImageProcessor;
 
 /**

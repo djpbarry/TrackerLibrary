@@ -1,5 +1,6 @@
 package VirusTracker;
 
+import IAClasses.IsoGaussian;
 import java.util.ArrayList;
 
 /**

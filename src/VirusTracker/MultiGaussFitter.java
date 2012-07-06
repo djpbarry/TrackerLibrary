@@ -1,8 +1,9 @@
 package VirusTracker;
 
-/** 2D Gaussian Curve Fitter based on ImageJ's <code>CurveFitter</code>.
+/**
+ * 2D Gaussian Curve Fitter based on ImageJ's
+ * <code>CurveFitter</code>.
  *
- * TODO Compare with Schleich et al.
  * TODO Establish a constant reference background level for all fits
  *
  * @author David J Barry
@@ -33,7 +34,9 @@ public class MultiGaussFitter {
     private int nRestarts;  // the number of restarts that occurred
     private static double maxError = 1e-10;    // maximum error tolerance
 
-    /** Construct a new CurveFitter. */
+    /**
+     * Construct a new CurveFitter.
+     */
     public MultiGaussFitter(double[][] zVals, int peaks) {
         xData = new double[zVals[0].length];
         yData = new double[xData.length];
@@ -131,7 +134,9 @@ public class MultiGaussFitter {
         return true;
     }
 
-    /** Initialise the simplex */
+    /**
+     * Initialise the simplex
+     */
     boolean initialize(double[] estimates) {
         if (estimates == null || xData == null || yData == null || zData == null) {
             return false;
@@ -148,7 +153,9 @@ public class MultiGaussFitter {
         return true;
     }
 
-    /** Restart the simplex at the nth vertex */
+    /**
+     * Restart the simplex at the nth vertex
+     */
     boolean restart(int n) {
         if (simp == null || n >= simp.length) {
             return false;
@@ -188,7 +195,9 @@ public class MultiGaussFitter {
         return true;
     }
 
-    /** Returns 'fit' formula value for parameters "p" at "x" */
+    /**
+     * Returns 'fit' formula value for parameters "p" at "x"
+     */
     public double evaluate(double[] p, double x, double y) {
         if (p == null) {
             return Double.NaN;
@@ -203,7 +212,9 @@ public class MultiGaussFitter {
         }
     }
 
-    /** Returns residuals array ie. differences between data and curve. */
+    /**
+     * Returns residuals array ie. differences between data and curve.
+     */
     public double[] getResiduals() {
         if (!(numPoints > 0)) {
             return null;
@@ -218,12 +229,10 @@ public class MultiGaussFitter {
         return residuals;
     }
 
-    /** Returns R<sup>2</sup>, where 1.0 is best.<br>
-     * <br>
-     * R<sup>2</sup> = 1.0 - SSE/SSD<br>
-     * <br>
-     * where SSE is the sum of the squares of the errors and SSD is the sum of
-     * the squares of the deviations about the mean.
+    /**
+     * Returns R<sup>2</sup>, where 1.0 is best.<br> <br> R<sup>2</sup> = 1.0 -
+     * SSE/SSD<br> <br> where SSE is the sum of the squares of the errors and
+     * SSD is the sum of the squares of the deviations about the mean.
      */
     public double getRSquared() {
         if (numPoints < 1) {
@@ -250,7 +259,9 @@ public class MultiGaussFitter {
         return rSquared;
     }
 
-    /** Adds sum of square of residuals to end of array of parameters */
+    /**
+     * Adds sum of square of residuals to end of array of parameters
+     */
     boolean sumResiduals(double[] x) {
         if (x == null) {
             return false;
@@ -266,7 +277,9 @@ public class MultiGaussFitter {
         return true;
     }
 
-    /** Keep the "next" vertex */
+    /**
+     * Keep the "next" vertex
+     */
     boolean newVertex() {
         if (next == null) {
             return false;
@@ -275,7 +288,9 @@ public class MultiGaussFitter {
         return true;
     }
 
-    /** Find the worst, nextWorst and best current set of parameter estimates */
+    /**
+     * Find the worst, nextWorst and best current set of parameter estimates
+     */
     void order() {
         for (int i = 0; i < numVertices; i++) {
             if (simp[i][numParams] < simp[best][numParams]) {
@@ -295,7 +310,9 @@ public class MultiGaussFitter {
         }
     }
 
-    /** Get the set of parameter values from the best corner of the simplex */
+    /**
+     * Get the set of parameter values from the best corner of the simplex
+     */
     public double[] getParams() {
         order();
         if (simp != null) {
@@ -305,8 +322,9 @@ public class MultiGaussFitter {
         }
     }
 
-    /* Last "parametre" at each vertex of simplex is sum of residuals
-     * for the curve described by that vertex
+    /*
+     * Last "parametre" at each vertex of simplex is sum of residuals for the
+     * curve described by that vertex
      */
     public double getSumResidualsSqr() {
         double[] params = getParams();

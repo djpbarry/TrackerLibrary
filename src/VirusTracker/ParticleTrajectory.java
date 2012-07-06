@@ -1,8 +1,9 @@
 package VirusTracker;
 
-import EMSeg.Utils;
-import EMSeg.DSPProcessor;
-import AnaMorf.DataStatistics;
+import IAClasses.IsoGaussian;
+import IAClasses.Utils;
+import IAClasses.DSPProcessor;
+import IAClasses.DataStatistics;
 import ij.IJ;
 import ij.gui.Plot;
 import ij.measure.CurveFitter;
@@ -12,8 +13,9 @@ import java.awt.Rectangle;
 import java.text.DecimalFormat;
 
 /**
- * Represents a the trajectory followed by a particle through a series of images.
- * It is, in essence, a linked list of individual <code>Particle</code>s.
+ * Represents a the trajectory followed by a particle through a series of
+ * images. It is, in essence, a linked list of individual
+ * <code>Particle</code>s.
  *
  * @author David J Barry
  * @version 1.0, JAN 2011
@@ -39,8 +41,6 @@ public class ParticleTrajectory {
 
     /**
      * Constructs a new empty trajectory.
-     * TODO Add methods to provide "telemetry" data: instantaneous velocity, instantaneous
-     * direction, diffusion coefficient.
      */
     public ParticleTrajectory(double timeRes, double spatRes) {
         this.timeRes = timeRes;
@@ -50,9 +50,12 @@ public class ParticleTrajectory {
 
     /**
      * Add a new {@link Particle} to this trajectory.
+     *
      * @param t the particle's z-position in a stack or image sequence.
-     * @param c1Gaussian {@link IsoGaussian} representation of particle in red channel
-     * @param c2Gaussian {@link IsoGaussian} representation of particle in green channel
+     * @param c1Gaussian {@link IsoGaussian} representation of particle in red
+     * channel
+     * @param c2Gaussian {@link IsoGaussian} representation of particle in green
+     * channel
      */
     public boolean addPoint(double t, IsoGaussian c1Gaussian, IsoGaussian c2Gaussian) {
         end = new Particle(t, c1Gaussian, c2Gaussian, end);
@@ -102,16 +105,16 @@ public class ParticleTrajectory {
     }
 
     /**
-     * Add a new temporary {@link Particle}, which may or may not belong to
-     * this trajectory.
+     * Add a new temporary {@link Particle}, which may or may not belong to this
+     * trajectory.
      *
      * @param t the particle's z-position in a stack or image sequence.
      * @param redGaussian the detected {@link IsoGaussian} in the red channel
      * representing this object.
      * @param c2Gaussian the detected {@link IsoGaussian} in the green channel
      * representing this object.
-     * @param score a measure of the likelihood that this particle belongs to the
-     * current trajectory. Lower values indicate greater likelihood.
+     * @param score a measure of the likelihood that this particle belongs to
+     * the current trajectory. Lower values indicate greater likelihood.
      */
     public boolean addTempPoint(double t, IsoGaussian c1Gaussian, IsoGaussian c2Gaussian,
             double score, int row, int column) {
@@ -127,7 +130,8 @@ public class ParticleTrajectory {
     }
 
     /**
-     * Returns the number of <code>Particle</code>s in this trajectory.
+     * Returns the number of
+     * <code>Particle</code>s in this trajectory.
      */
     public int getSize() {
         return size;
@@ -151,22 +155,24 @@ public class ParticleTrajectory {
     }
 
     /**
-     * Returns a non-zero score for the temporary particle, or <code>Double.MAX_VALUE</code>
-     * if no such particle exists.
+     * Returns a non-zero score for the temporary particle, or
+     * <code>Double.MAX_VALUE</code> if no such particle exists.
      */
     public double getTempScore() {
         return tempScore;
     }
 
     /**
-     * Returns the most recently-added <code>Particle</code> in this trajectory.
+     * Returns the most recently-added
+     * <code>Particle</code> in this trajectory.
      */
     public Particle getEnd() {
         return end;
     }
 
     /**
-     * Returns the most recently-added temporary <code>Particle</code> in this trajectory.
+     * Returns the most recently-added temporary
+     * <code>Particle</code> in this trajectory.
      */
     public Particle getTemp() {
         return temp;
@@ -421,15 +427,15 @@ public class ParticleTrajectory {
     }
 
     /**
-     * Calculates the directionality of the trajectory specified by <code>particleNumber</code>,
-     * where directionality (<code>D</code>) is calculated according to:
-     * <br>
-     * <br>
+     * Calculates the directionality of the trajectory specified by
+     * <code>particleNumber</code>, where directionality (
+     * <code>D</code>) is calculated according to: <br> <br>
      * <code>D = 1 / (1 + &lambda<sub>1</sub> &lambda<sub>2</sub><sup>-1</sup>)</code>
-     * <br>
-     * <br>
-     * where <code>&lambda<sub>1</sub></code> and <code>&lambda<sub>2</sub></code>
-     * are the eigenvalues of the trajectory data and <code>&lambda<sub>1</sub> <
+     * <br> <br> where
+     * <code>&lambda<sub>1</sub></code> and
+     * <code>&lambda<sub>2</sub></code> are the eigenvalues of the trajectory
+     * data and
+     * <code>&lambda<sub>1</sub> <
      * &lambda<sub>2</sub></code>.
      *
      * @param particleNumber the trajectory index.
@@ -457,14 +463,15 @@ public class ParticleTrajectory {
 
     /**
      * Calculates the Mean Square Displacement (MSD) of the given {@link ParticleTrajectory}.
-     * The result can be accessed via the <code>getDiffCoeff()</code> method of
-     * <ParticleTrajectory</code>.
+     * The result can be accessed via the
+     * <code>getDiffCoeff()</code> method of <ParticleTrajectory</code>.
+     *
      * @param traj the trajectory to be analysed.
      * @param label the particle number label to displayed on plots.
      * @param seg the number of time-steps the calculation should be limited to.
      * Set to -1 to include all trajectory points.
-     * @param showPlot set to true to display a plot of MSD versus time-step, false
-     * otherwise.
+     * @param showPlot set to true to display a plot of MSD versus time-step,
+     * false otherwise.
      */
     public boolean calcMSD(int label, int seg, boolean showPlot) {
         int i, j, maxLength, maxStepSize;
@@ -580,5 +587,4 @@ public class ParticleTrajectory {
     public double getPeakTime() {
         return peakTime;
     }
-    
 }

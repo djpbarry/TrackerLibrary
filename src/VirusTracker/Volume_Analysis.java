@@ -4,8 +4,8 @@
  */
 package VirusTracker;
 
-import AnaMorf.Utilities;
-import EMSeg.Utils;
+import IAClasses.IsoGaussian;
+import IAClasses.Utils;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -16,7 +16,6 @@ import ij.process.ImageProcessor;
 import ij.process.TypeConverter;
 import ij.text.TextWindow;
 import java.awt.Rectangle;
-import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,16 +28,15 @@ public class Volume_Analysis extends Timelapse_Analysis {
 
     private int outputsize = 51, midpoint = (outputsize - 1) / 2;
 
-    /*public static void main(String args[]) {
-    File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Tracking Test Sequences"));
-    ImageStack stack = Utils.buildStack(image);
-    ImagePlus imp = new ImagePlus("Stack", stack);
-    Volume_Analysis instance = new Volume_Analysis(imp);
-    if (instance.showDialog()) {
-    instance.analyse();
+    /*
+     * public static void main(String args[]) { File image =
+     * Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Tracking Test
+     * Sequences")); ImageStack stack = Utils.buildStack(image); ImagePlus imp =
+     * new ImagePlus("Stack", stack); Volume_Analysis instance = new
+     * Volume_Analysis(imp); if (instance.showDialog()) { instance.analyse(); }
+     * return;
     }
-    return;
-    }*/
+     */
     public Volume_Analysis() {
         super();
     }
@@ -205,32 +203,37 @@ public class Volume_Analysis extends Timelapse_Analysis {
                 c2Pix = null;
             }
             FloatProcessor chan1Proc = preProcess(new ByteProcessor(width, height, c1Pix, null));
-            ByteProcessor thisC1Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, FOREGROUND, chan1Proc, chan1MaxThresh, true); // TODO Maybe express threshold as a percentage? See Ponti et al., 2003
+            ByteProcessor thisC1Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, FOREGROUND, chan1Proc, chan1MaxThresh, true);
             for (c1X = 0; c1X < width; c1X++) {
                 for (c1Y = 0; c1Y < height; c1Y++) {
                     if (thisC1Max.getPixel(c1X, c1Y) == FOREGROUND) {
                         IsoGaussian c1Gaussian = null;
-                        /* Search for local maxima in green image within <code>xyPartRad</code>
-                         * pixels of maxima in red image:
+                        /*
+                         * Search for local maxima in green image within
+                         * <code>xyPartRad</code> pixels of maxima in red image:
                          */
                         Utils.extractValues(xCoords, yCoords, pixValues, c1X, c1Y, chan1Proc);
-                        /* Remove adjacent Gaussians */
+                        /*
+                         * Remove adjacent Gaussians
+                         */
                         IsoGaussianFitter c1GF = new IsoGaussianFitter(xCoords, yCoords, pixValues);
                         c1GF.doFit(xySigEst);
-                        // TODO Estiamtes of intensity need to consider particles moving into/out of focal plane
                         //if (c1GF.getXsig() < (c1SigmaTol * xySigEst)) {
-                            if (c1GF.getRSquared() > curveFitTol) {
-                                c1Gaussian = new IsoGaussian((c1GF.getX0() + c1X - xyPartRad) * spatialRes,
-                                        (c1GF.getY0() + c1Y - xyPartRad) * spatialRes, c1GF.getMag(),
-                                        c1GF.getXsig(), c1GF.getYsig(), c1GF.getRSquared() - curveFitTol);
-                            } else {
-                                c1Gaussian = new IsoGaussian(c1X * spatialRes, c1Y * spatialRes, chan1Proc.getPixelValue(c1X, c1Y),
-                                        xySigEst, xySigEst, c1GF.getRSquared() - curveFitTol);
-                            }
-                            /* A particle has been isolated - trajectories need to be updated: */
-                            if (c1Gaussian != null) {
-                                particles.addDetection(i - startSlice, c1Gaussian, null);
-                            }
+                        if (c1GF.getRSquared() > curveFitTol) {
+                            c1Gaussian = new IsoGaussian((c1GF.getX0() + c1X - xyPartRad) * spatialRes,
+                                    (c1GF.getY0() + c1Y - xyPartRad) * spatialRes, c1GF.getMag(),
+                                    c1GF.getXsig(), c1GF.getYsig(), c1GF.getRSquared() - curveFitTol);
+                        } else {
+                            c1Gaussian = new IsoGaussian(c1X * spatialRes, c1Y * spatialRes, chan1Proc.getPixelValue(c1X, c1Y),
+                                    xySigEst, xySigEst, c1GF.getRSquared() - curveFitTol);
+                        }
+                        /*
+                         * A particle has been isolated - trajectories need to
+                         * be updated:
+                         */
+                        if (c1Gaussian != null) {
+                            particles.addDetection(i - startSlice, c1Gaussian, null);
+                        }
                         //}
                     }
                 }

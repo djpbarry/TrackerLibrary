@@ -1,7 +1,8 @@
 package VirusTracker;
 
-import EMSeg.Utils;
-import EMSeg.FractalEstimator;
+import IAClasses.IsoGaussian;
+import IAClasses.Utils;
+import IAClasses.FractalEstimator;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -287,7 +288,8 @@ public class Timelapse_Analysis implements PlugIn {
             FloatProcessor chan1Proc = preProcess(new ByteProcessor(width, height, c1Pix, null));
             FloatProcessor chan2Proc = !monoChrome
                     ? preProcess(new ByteProcessor(width, height, c2Pix, null)) : null;
-            ByteProcessor thisC1Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, FOREGROUND, chan1Proc, chan1MaxThresh, true); // TODO Maybe express threshold as a percentage? See Ponti et al., 2003
+            // TODO Maybe express threshold as a percentage? See Ponti et al., 2003
+            ByteProcessor thisC1Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, FOREGROUND, chan1Proc, chan1MaxThresh, true);
             ByteProcessor C2Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, FOREGROUND, chan2Proc, chan2MaxThresh, true);
             for (c1X = 0; c1X < width; c1X++) {
                 for (c1Y = 0; c1Y < height; c1Y++) {
@@ -305,7 +307,6 @@ public class Timelapse_Analysis implements PlugIn {
 //                        removeAdjacentGaussians(xCoords, yCoords, pixValues, chan1Proc, thisC1Max);
                         IsoGaussianFitter c1GF = new IsoGaussianFitter(xCoords, yCoords, pixValues);
                         c1GF.doFit(xySigEst);
-                        // TODO Estiamtes of intensity need to consider particles moving into/out of focal plane
                         if (c1GF.getXsig() < (c1SigmaTol * xySigEst)) {
                             if (c1GF.getRSquared() > curveFitTol) {
                                 c1Gaussian = new IsoGaussian((c1GF.getX0() + c1X - xyPartRad) * spatialRes,
@@ -371,10 +372,6 @@ public class Timelapse_Analysis implements PlugIn {
                 double cY[] = new double[pSize];
                 double cV[][] = new double[pSize][pSize];
                 Utils.extractValues(cX, cY, cV, xc, yc, image);
-                /*
-                 * TODO try a sum of Gaussians fitter & check work of K. Lidke
-                 * or Expectation Maximisation
-                 */
                 MultiGaussFitter gf = new MultiGaussFitter(cV, m);
                 double maxz = -Double.MAX_VALUE, minz = -maxz;
                 ByteProcessor region = new ByteProcessor(values.length, values.length);
@@ -409,7 +406,6 @@ public class Timelapse_Analysis implements PlugIn {
     }
 
     public void updateTrajectories(ParticleArray objects) {
-        //TODO Trajectories should be re-analysed once all frames have been scanned to optimise trajectories
         if (objects == null) {
             return;
         }
@@ -466,6 +462,7 @@ public class Timelapse_Analysis implements PlugIn {
                                         y = ch1G.getY();
                                         greenMag = 0.0;
                                     }
+                                    // TODO Variation in C1 intensity could be interpreted as movement in Z-direction
                                     traj.projectVelocity(x, y);
                                     double vector1[] = {x, y, k * timeRes,
                                         ch1G.getMagnitude() / 255.0, greenMag / 255.0, traj.getProjectXVel(),
@@ -582,7 +579,6 @@ public class Timelapse_Analysis implements PlugIn {
         if (trajectories.size() < 1) {
             return false;
         }
-        //TODO Add MSD to results
         DecimalFormat decFormat = new DecimalFormat("0.000");
         DecimalFormat msdFormat = new DecimalFormat("0.000000");
         ParticleTrajectory traj = (ParticleTrajectory) (trajectories.get(particleNumber));

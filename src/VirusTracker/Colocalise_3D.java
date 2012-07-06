@@ -4,7 +4,8 @@
  */
 package VirusTracker;
 
-import EMSeg.Utils;
+import IAClasses.IsoGaussian;
+import IAClasses.Gaussian3D;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -15,7 +16,6 @@ import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import ij.text.TextWindow;
 import java.awt.Toolkit;
-import java.io.File;
 import java.util.ArrayList;
 
 /**
@@ -34,11 +34,14 @@ public class Colocalise_3D extends Co_Localise {
             curveFitTol = 0.5d;
     private double xySigEst, zSigEst;
 
-    /*public static void main(String args[]) {
-        (new Colocalise_3D(Utils.buildStack(new File("C:\\Users\\barry05\\Desktop\\Colocalise3DTests\\Test3\\C1")),
-                Utils.buildStack(new File("C:\\Users\\barry05\\Desktop\\Colocalise3DTests\\Test3\\C2")))).run(null);
-    }*/
-
+    /*
+     * public static void main(String args[]) { (new
+     * Colocalise_3D(Utils.buildStack(new
+     * File("C:\\Users\\barry05\\Desktop\\Colocalise3DTests\\Test3\\C1")),
+     * Utils.buildStack(new
+     * File("C:\\Users\\barry05\\Desktop\\Colocalise3DTests\\Test3\\C2")))).run(null);
+    }
+     */
     public Colocalise_3D() {
         super();
     }
@@ -118,8 +121,8 @@ public class Colocalise_3D extends Co_Localise {
         double airyRad = 1.22 * Timelapse_Analysis.LAMBDA / (2.0 * Timelapse_Analysis.NUM_AP); //Airy radius
         particleRadius = (int) Math.round(((2.0 * airyRad / 3.0) + Timelapse_Analysis.virusDiameter)
                 / (spatialRes * 2000.0));
-        xySigEst = (0.21 * 650.0 / 1.4) / (spatialRes*1000.0);
-        zSigEst = (0.66 * 1.5 * 650.0 / (1.4 * 1.4))/50.0;
+        xySigEst = (0.21 * 650.0 / 1.4) / (spatialRes * 1000.0);
+        zSigEst = (0.66 * 1.5 * 650.0 / (1.4 * 1.4)) / 50.0;
         double displaymax = 0.0;
         int colocalisation, count;
         int width = stack1.getWidth(), height = stack2.getHeight();
@@ -183,8 +186,8 @@ public class Colocalise_3D extends Co_Localise {
         int c2Points[][];
         double[] xCoords = new double[pSize];
         double[] yCoords = new double[pSize];
-        double[] zCoords = new double[2*pSize+1];
-        double[][][] pixValues = new double[pSize][pSize][2*pSize+1];
+        double[] zCoords = new double[2 * pSize + 1];
+        double[][][] pixValues = new double[pSize][pSize][2 * pSize + 1];
         ParticleArray particles = new ParticleArray(1);
         ImageStack thisC1Max = findLocalMaxima3D(particleRadius, particleRadius,
                 particleRadius, FOREGROUND, stack1, chan1MaxThresh, true),
@@ -202,7 +205,6 @@ public class Colocalise_3D extends Co_Localise {
                         extractValues3D(xCoords, yCoords, zCoords, pixValues, c1X, c1Y, c1Z, stack1);
                         GaussianFitter3D c1GF = new GaussianFitter3D(xCoords, yCoords, zCoords, pixValues);
                         c1GF.doFit(xySigEst);
-                        // TODO Estiamtes of intensity need to consider particles moving into/out of focal plane
                         double c1params[] = c1GF.getParams();
                         if (c1GF.getRSquared() > curveFitTol) {
                             c1Gaussian = new Gaussian3D((c1params[5] + c1X - particleRadius) * spatialRes,
@@ -230,7 +232,10 @@ public class Colocalise_3D extends Co_Localise {
                                     c2params[4], c2params[1], c2params[2], c2params[3],
                                     c2GF.getRSquared() - curveFitTol);
                         }
-                        /* A particle has been isolated - trajectories need to be updated: */
+                        /*
+                         * A particle has been isolated - trajectories need to
+                         * be updated:
+                         */
                         if (c1Gaussian != null) {
                             particles.addDetection(0, c1Gaussian, c2Gaussian);
                         }
@@ -390,8 +395,10 @@ public class Colocalise_3D extends Co_Localise {
         } else {
             for (x = (int) Math.floor(x0 - drawRad); x <= x0 + drawRad; x++) {
                 for (y = (int) Math.floor(y0 - drawRad); y <= y0 + drawRad; y++) {
-                    /* The current pixel value is added so as not to "overwrite" other
-                    Gaussians in close proximity: */
+                    /*
+                     * The current pixel value is added so as not to "overwrite"
+                     * other Gaussians in close proximity:
+                     */
                     value = g.getMagnitude() * Math.exp(-(Math.pow(x - x0, 2.0) / (2.0 * xSigma * xSigma)
                             + Math.pow(y - y0, 2.0) / (2.0 * ySigma * ySigma)
                             + Math.pow(z - z0, 2.0) / (2.0 * zSigma * zSigma)));

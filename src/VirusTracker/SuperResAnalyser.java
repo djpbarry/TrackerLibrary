@@ -4,6 +4,7 @@
  */
 package VirusTracker;
 
+import IAClasses.IsoGaussian;
 import EMSeg.ProgressDialog;
 import ij.IJ;
 import ij.ImagePlus;
@@ -24,7 +25,6 @@ public class SuperResAnalyser extends Co_Localise {
 //    public static void main(String args[]) {
 //        (new SuperResAnalyser(new ImagePlus("C:\\Users\\barry05\\Desktop\\SuperResTest.tif"))).run(null);
 //    }
-
     public SuperResAnalyser(ImagePlus imp) {
         super(imp);
         imp.show();
@@ -77,8 +77,10 @@ public class SuperResAnalyser extends Co_Localise {
         if (g.getMagnitude() > 0.0 && g.getMagnitude() < 255.0) {
             for (x = (int) Math.floor(x0 - drawRad); x <= x0 + drawRad; x++) {
                 for (y = (int) Math.floor(y0 - drawRad); y <= y0 + drawRad; y++) {
-                    /* The current pixel value is added so as not to "overwrite" other
-                    Gaussians in close proximity: */
+                    /*
+                     * The current pixel value is added so as not to "overwrite"
+                     * other Gaussians in close proximity:
+                     */
                     value = g.getMagnitude() * Math.exp(-(((x - x0) * (x - x0))
                             + ((y - y0) * (y - y0))) / (2 * xSigma * xSigma));
                     value += image.getPixelValue(x, y);

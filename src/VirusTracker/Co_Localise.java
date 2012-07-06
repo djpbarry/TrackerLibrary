@@ -1,5 +1,6 @@
 package VirusTracker;
 
+import IAClasses.IsoGaussian;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -32,10 +33,12 @@ public class Co_Localise implements PlugIn {
     protected static double curveFitC1 = 0.0, curveFitC2 = 0.1;
     protected boolean findTails = true;
 
-    /*public static void main(String args[]) {
-        (new Co_Localise(new ImagePlus("C:\\Users\\barry05\\Desktop\\Tail Tracer Tests\\TailTracerTest8.png"))).run(null);
-    }*/
-
+    /*
+     * public static void main(String args[]) { (new Co_Localise(new
+     * ImagePlus("C:\\Users\\barry05\\Desktop\\Tail Tracer
+     * Tests\\TailTracerTest8.png"))).run(null);
+    }
+     */
     public Co_Localise() {
     }
 
@@ -100,8 +103,10 @@ public class Co_Localise implements PlugIn {
                 Timelapse_Analysis.setChan2MaxThresh(dialog.getNextNumber());
                 curveFitC1 = dialog.getNextNumber();
                 curveFitC2 = dialog.getNextNumber();
-                /*Timelapse_Analysis.setC1SigmaTol(sigmaTolC1);
-                Timelapse_Analysis.setC2SigmaTol(sigmaTolC2);*/
+                /*
+                 * Timelapse_Analysis.setC1SigmaTol(sigmaTolC1);
+                Timelapse_Analysis.setC2SigmaTol(sigmaTolC2);
+                 */
                 coFactor = dialog.getNextNumber();
                 partialDetect = dialog.getNextBoolean();
                 // Check that entries were numeric:
@@ -141,8 +146,10 @@ public class Co_Localise implements PlugIn {
     }
 
     /**
-     * Draws a 2D IsoGaussian using the parameters contained in <code>g</code> over
-     * a square region of dimension <code>2 * radius + 1</code> in <code>image</code>.
+     * Draws a 2D IsoGaussian using the parameters contained in
+     * <code>g</code> over a square region of dimension
+     * <code>2 * radius + 1</code> in
+     * <code>image</code>.
      */
     public boolean draw2DGaussian(ImageProcessor image, IsoGaussian g, double tol) {
         if (image == null || g == null || (!partialDetect && (g.getFit() < -tol))) {
@@ -162,8 +169,10 @@ public class Co_Localise implements PlugIn {
         } else {
             for (x = (int) Math.floor(x0 - drawRad); x <= x0 + drawRad; x++) {
                 for (y = (int) Math.floor(y0 - drawRad); y <= y0 + drawRad; y++) {
-                    /* The current pixel value is added so as not to "overwrite" other
-                    Gaussians in close proximity: */
+                    /*
+                     * The current pixel value is added so as not to "overwrite"
+                     * other Gaussians in close proximity:
+                     */
                     value = g.getMagnitude() * Math.exp(-(((x - x0) * (x - x0))
                             + ((y - y0) * (y - y0))) / (2 * xSigma * xSigma));
                     value += image.getPixelValue(x, y);
