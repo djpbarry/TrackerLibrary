@@ -1,4 +1,4 @@
-package VirusTracker;
+package tracking;
 
 import IAClasses.IsoGaussian;
 import java.util.ArrayList;
