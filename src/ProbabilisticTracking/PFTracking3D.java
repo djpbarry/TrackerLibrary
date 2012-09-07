@@ -1,4 +1,4 @@
-package pftracking;
+package ProbabilisticTracking;
 
 import ij.IJ;
 import ij.ImagePlus;
@@ -403,7 +403,7 @@ public abstract class PFTracking3D implements PlugInFilter {
             mParticleMonitor.add(copyParticleVector(mParticles));
         }
 
-        for (int vFrameIndex = mFrameOfInitialization; vFrameIndex <= mTrackTillFrameNb; vFrameIndex++) {
+         for (int vFrameIndex = mFrameOfInitialization; vFrameIndex <= mTrackTillFrameNb; vFrameIndex++) {
             ImageStack vCurrentFloatFrame = getAFrameCopy(aImagePlus, vFrameIndex);
             IJ.showProgress(vFrameIndex, aImagePlus.getNFrames());
             IJ.showStatus("Particle Filter in progress at frame: " + vFrameIndex);

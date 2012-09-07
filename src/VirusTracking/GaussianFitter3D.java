@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package tracking;
+package VirusTracking;
 
 import ij.ImagePlus;
 import ij.ImageStack;

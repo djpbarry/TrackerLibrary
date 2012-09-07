@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package tracking;
+package ProbabilisticTracking;
 
 import IAClasses.Utils;
 import ij.IJ;
@@ -15,8 +15,9 @@ import java.awt.Graphics;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Vector;
-import pftracking.PFTracking3D;
-import pftracking.PFTracking3D.Point3D;
+import ProbabilisticTracking.LinearMovementFPTracker_3D;
+import ProbabilisticTracking.PFTracking3D;
+import ProbabilisticTracking.PFTracking3D.Point3D;
 
 /**
  *
@@ -25,19 +26,20 @@ import pftracking.PFTracking3D.Point3D;
 public class Probabilistic_Tracker extends PFTracking3D {
 
     private float mBackground = 1;
-    private float[] mSigmaOfDynamics = {100, 100, 100, 1};
+    private float[] mSigmaOfDynamics = {20, 20, 20, 1};
     private boolean mDoPrecisionCorrection = true;
+    int mDimOfState = 7;
 
-    public static void main(String args[]) {
-        Probabilistic_Tracker tracker = new Probabilistic_Tracker();
-        ImagePlus imp = new ImagePlus();
-        imp.setStack(Utils.buildStack(new File("C:\\Users\\barry05\\Desktop\\Tracking Test Sequences\\Simulation")),
-                1, 1, 100);
-        imp.getCalibration().setUnit("nm");
-        imp.getCalibration().pixelWidth = 132.0;
-        imp.getCalibration().pixelDepth = 132.0;
-        tracker.setup(null, imp);
-    }
+//    public static void main(String args[]) {
+//        Probabilistic_Tracker tracker = new Probabilistic_Tracker();
+//        ImagePlus imp = new ImagePlus();
+//        imp.setStack(Utils.buildStack(new File("C:\\Users\\barry05\\Desktop\\Tracking Test Sequences\\TiffSim2")),
+//                1, 1, 50);
+//        imp.getCalibration().setUnit("nm");
+//        imp.getCalibration().pixelWidth = 132.0;
+//        imp.getCalibration().pixelDepth = 132.0;
+//        tracker.setup(null, imp);
+//    }
 
     public boolean getMDoPrecisionOptimization() {
         return mDoPrecisionCorrection;
@@ -49,17 +51,20 @@ public class Probabilistic_Tracker extends PFTracking3D {
     }
 
     public float[] getMSigmaOfRandomWalk() {
-        return new float[]{1, 1, 1, 1};
+        return new float[]{1f, 1f, 1f, 0, 0, 0, 1f};
     }
 
     protected void drawFromProposalDistribution(float[] particle,
             float pxWidthInNm, float pxDepthInNm) {
-        particle[0] = particle[0] + (float) mRandomGenerator.nextGaussian() * (mSigmaOfDynamics[0] / pxWidthInNm);
-        particle[1] = particle[1] + (float) mRandomGenerator.nextGaussian() * (mSigmaOfDynamics[1] / pxWidthInNm);
-        particle[2] = particle[2] + (float) mRandomGenerator.nextGaussian() * (mSigmaOfDynamics[2] / pxDepthInNm);
-        particle[3] = particle[3] + (float) mRandomGenerator.nextGaussian() * mSigmaOfDynamics[3];
-        if (particle[3] < mBackground) {
-            particle[3] = mBackground + 1;
+        particle[3] = particle[3] + (float) mRandomGenerator.nextGaussian() * (mSigmaOfDynamics[0] / pxWidthInNm);
+        particle[4] = particle[4] + (float) mRandomGenerator.nextGaussian() * (mSigmaOfDynamics[1] / pxWidthInNm);
+        particle[5] = particle[5] + (float) mRandomGenerator.nextGaussian() * (mSigmaOfDynamics[2] / pxDepthInNm);
+        particle[0] = particle[0] + particle[3];
+        particle[1] = particle[1] + particle[4];
+        particle[2] = particle[2] + particle[5];
+        particle[6] = particle[6] + (float) mRandomGenerator.nextGaussian() * mSigmaOfDynamics[3];
+        if (particle[6] < mBackground + 1) {
+            particle[6] = mBackground + 1;
         }
     }
 
@@ -82,7 +87,7 @@ public class Probabilistic_Tracker extends PFTracking3D {
             float pxDepthInNm) {
         float[][][] vIdealImage = new float[as][ah][aw];
         addBackgroundToImage(vIdealImage, mBackground);
-        addFeaturePointTo3DImage(vIdealImage, new Point3D(particle[0], particle[1], particle[2]), particle[3], aw, ah, as, pxWidthInNm, pxDepthInNm, null);
+        addFeaturePointTo3DImage(vIdealImage, new Point3D(particle[0], particle[1], particle[2]), particle[6], aw, ah, as, pxWidthInNm, pxDepthInNm, null);
         return vIdealImage;
     }
 
@@ -134,12 +139,12 @@ public class Probabilistic_Tracker extends PFTracking3D {
             vZEnd = (int) (aPoint.mZ + .5f) + (int) (vMaxDistancez + .5f);
         }
 
-        for (int vZ = vZStart; vZ <= vZEnd; vZ++) {
-            for (int vY = vYStart; vY <= vYEnd; vY++) {
-                for (int vX = vXStart; vX <= vXEnd; vX++) {
-                    aImage[vZ][vY][vX] += (float) (aIntensity
-                            * Math.pow(Math.E, -(Math.pow(vX - aPoint.mX + .5f, 2) + Math.pow(vY - aPoint.mY + .5f, 2)) / (2 * vVarianceXYinPx))
-                            * Math.pow(Math.E, -Math.pow(vZ - aPoint.mZ + .5f, 2) / (2 * vVarianceZinPx)));
+        for (int vZ = vZStart; vZ <= vZEnd && vZ < aImage.length; vZ++) {
+            for (int vY = vYStart; vY <= vYEnd && vY < aImage[vZ].length; vY++) {
+                for (int vX = vXStart; vX <= vXEnd && vX < aImage[vZ][vY].length; vX++) {
+                    aImage[vZ][vY][vX] += (float) (aIntensity * Math.pow(Math.E,
+                            -(Math.pow(vX - aPoint.mX + .5f, 2) + Math.pow(vY - aPoint.mY + .5f, 2)) / (2 * vVarianceXYinPx))
+                            * Math.pow(Math.E, -Math.pow(vZ - aPoint.mZ + .5f, 2) / 2 * vVarianceZinPx));
                 }
             }
         }
@@ -172,11 +177,12 @@ public class Probabilistic_Tracker extends PFTracking3D {
     protected void calcFromHereButtonPressed() {
         ImagePlus imp = getMOriginalImagePlus();
         ImageProcessor proc = imp.getImageStack().getProcessor(1);
-        ArrayList<int[]> maxima = Utils.findLocalMaxima(3, 3, proc, 0.0, true);
+        ArrayList<int[]> maxima = Utils.findLocalMaxima(3, 3, proc, 200.0, true);
         int size = maxima.size();
         for (int i = 0; i < size; i++) {
             int[] thismax = maxima.get(i);
-            float[] firstState = new float[]{thismax[0], thismax[1], 0.0f, proc.getPixelValue(thismax[0], thismax[1])};
+            float[] firstState = new float[]{thismax[0], thismax[1], 0.0f, 0.0f,
+                0.0f, 0.0f, proc.getPixelValue(thismax[0], thismax[1])};
             mStateVectors.add(firstState);
         }
         setMStateOfFilter(STATE_OF_FILTER.READY_TO_RUN);
@@ -242,9 +248,9 @@ public class Probabilistic_Tracker extends PFTracking3D {
             } else {
                 vZEnd = (int) Math.round(vParticle[2] + vMaxDistancez);
             }
-            for (int vZ = vZStart; vZ <= vZEnd; vZ++) {
-                for (int vY = vYStart; vY <= vYEnd; vY++) {
-                    for (int vX = vXStart; vX <= vXEnd; vX++) {
+            for (int vZ = vZStart; vZ <= vZEnd && vZ < vBitmap.length; vZ++) {
+                for (int vY = vYStart; vY <= vYEnd && vY < vBitmap[vZ].length; vY++) {
+                    for (int vX = vXStart; vX <= vXEnd && vX < vBitmap[vZ][vY].length; vX++) {
                         vBitmap[vZ][ vY][ vX] = true;
                     }
                 }

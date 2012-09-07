@@ -1,4 +1,4 @@
-package tracking;
+package VirusTracking;
 
 /**
  * 2D Gaussian Curve Fitter based on ImageJ's

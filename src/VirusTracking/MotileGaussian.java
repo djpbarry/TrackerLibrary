@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package tracking;
+package VirusTracking;
 
 import IAClasses.IsoGaussian;
 import java.util.Random;
@@ -14,7 +14,7 @@ import java.util.Random;
 public class MotileGaussian extends IsoGaussian {
 
     boolean persistent, changeState;
-    private double sens, rad, theta, scale = 1.0, initvel = 0.75;
+    private double sens, rad, theta, scale = 1.0, initvel = 0.05;
     Random r = new Random();
 
     public MotileGaussian(double x0, double y0, double a, double xsig, double ysig,

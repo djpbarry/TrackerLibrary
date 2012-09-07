@@ -1,4 +1,4 @@
-package tracking;
+package VirusTracking;
 
 import IAClasses.IsoGaussian;
 import IAClasses.Utils;

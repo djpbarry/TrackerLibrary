@@ -1,4 +1,4 @@
-package pftracking;
+package ProbabilisticTracking;
 
 import ij.IJ;
 import ij.ImageStack;

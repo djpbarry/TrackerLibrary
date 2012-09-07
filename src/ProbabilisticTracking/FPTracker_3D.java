@@ -1,4 +1,4 @@
-package pftracking;
+package ProbabilisticTracking;
 
 import IAClasses.Utils;
 import ij.IJ;

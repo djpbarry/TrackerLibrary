@@ -1,4 +1,4 @@
-package tracking;
+package VirusTracking;
 
 import IAClasses.IsoGaussian;
 import ij.IJ;
@@ -31,7 +31,7 @@ public class Co_Localise implements PlugIn {
     protected static boolean partialDetect = false;
     protected TextWindow results = null;
     protected static double curveFitC1 = 0.0, curveFitC2 = 0.1;
-    protected boolean findTails = true;
+    protected boolean findTails = false;
 
     /*
      * public static void main(String args[]) { (new Co_Localise(new
