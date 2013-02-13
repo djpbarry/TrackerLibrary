@@ -14,7 +14,7 @@ import java.util.Random;
 public class MotileGaussian extends IsoGaussian {
 
     boolean persistent, changeState;
-    private double sens, rad, theta, scale = 1.0, initvel = 0.05;
+    private double sens, rad, theta, scale = 1.0, initvel = 0.25;
     Random r = new Random();
 
     public MotileGaussian(double x0, double y0, double a, double xsig, double ysig,

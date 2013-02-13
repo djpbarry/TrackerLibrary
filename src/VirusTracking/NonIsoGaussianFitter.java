@@ -32,7 +32,7 @@ public class NonIsoGaussianFitter extends IsoGaussianFitter {
         }
     }
 
-    boolean initialize(double sigmaEst, Object zSigEst) {
+    boolean initialize(double sigmaEst) {
         if (sigmaEst <= 0.0 || xData == null || yData == null || zData == null) {
             return false;
         }

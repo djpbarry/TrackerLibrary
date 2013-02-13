@@ -59,7 +59,7 @@ public class SuperResAnalyser extends Co_Localise {
         }
     }
 
-    public boolean draw2DGaussian(ImageProcessor image, IsoGaussian g, double tol) {
+    public boolean draw2DGaussian(ImageProcessor image, IsoGaussian g, double tol, double par3) {
         if (image == null || g == null) {
             return false;
         }
@@ -118,7 +118,7 @@ public class SuperResAnalyser extends Co_Localise {
             ArrayList detections = curves.getLevel(0);
             for (int j = 0; j < detections.size(); j++) {
                 IsoGaussian c1 = ((IsoGaussian[]) detections.get(j))[0];
-                if (draw2DGaussian(ch1proc, c1, curveFitC1)) {
+                if (draw2DGaussian(ch1proc, c1, curveFitC1, Timelapse_Analysis.spatialRes)) {
                     count++;
                 }
                 //temp.updateAndDraw();

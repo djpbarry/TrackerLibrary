@@ -43,8 +43,8 @@ import java.util.Random;
  */
 public class Timelapse_Analysis implements PlugIn {
 
-    protected static double spatialRes = 84.0 / 1000.0, //Spatial resolution in nm/pixel
-            timeRes = 1.0d, //Time resolution in s/frame;
+    protected static double spatialRes = 64.5 / 1000.0, //Spatial resolution in nm/pixel
+            timeRes = 16.0d/1000.0d, //Time resolution in s/frame;
             virusDiameter = 350.0,
             chan1MaxThresh = 100.0, //Threshold value for local maxima in channel 1
             chan2MaxThresh = 0.0, //Threshold value for local maxima in channel 2
@@ -76,7 +76,7 @@ public class Timelapse_Analysis implements PlugIn {
     private double noiseTol = 0.2;
 
 //    public static void main(String args[]) {
-//        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Tracking Test Sequences"));
+//        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Tracking Test Sequences"), null);
 //        ImageStack stack = Utils.buildStack(image);
 //        ImagePlus imp = new ImagePlus("Stack", stack);
 //        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
@@ -85,6 +85,7 @@ public class Timelapse_Analysis implements PlugIn {
 //        }
 //        return;
 //    }
+    
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep,
             double chan1MaxThresh, double hystDiff, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
         Timelapse_Analysis.spatialRes = spatialRes;
@@ -585,7 +586,7 @@ public class Timelapse_Analysis implements PlugIn {
         if (traj == null) {
             return false;
         }
-        traj.smooth();
+//        traj.smooth();
         traj.calcMSD(label, -1, msdPlot);
         traj.calcAngleSpread();
         traj.calcStepSpread();

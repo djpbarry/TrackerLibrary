@@ -54,4 +54,22 @@ public class NonIsoGaussian extends IsoGaussian {
     public double getTheta() {
         return theta;
     }
+
+    public double getX0() {
+        return x0;
+    }
+
+    public double getxSigma() {
+        return xSigma;
+    }
+
+    public double getY0() {
+        return y0;
+    }
+
+    public double getySigma() {
+        return ySigma;
+    }
+    
+    
 }

@@ -151,11 +151,10 @@ public class Co_Localise implements PlugIn {
      * <code>2 * radius + 1</code> in
      * <code>image</code>.
      */
-    public boolean draw2DGaussian(ImageProcessor image, IsoGaussian g, double tol) {
+    public boolean draw2DGaussian(ImageProcessor image, IsoGaussian g, double tol, double res) {
         if (image == null || g == null || (!partialDetect && (g.getFit() < -tol))) {
             return false;
         }
-        double res = Timelapse_Analysis.getSpatialRes();
         int x, y, drawRad;
         double x0 = g.getX() / res;
         double y0 = g.getY() / res;
@@ -222,7 +221,7 @@ public class Co_Localise implements PlugIn {
             ArrayList detections = curves.getLevel(0);
             for (int j = 0; j < detections.size(); j++) {
                 IsoGaussian c1 = ((IsoGaussian[]) detections.get(j))[0];
-                if (draw2DGaussian(ch1proc, c1, curveFitC1)) {
+                if (draw2DGaussian(ch1proc, c1, curveFitC1, Timelapse_Analysis.spatialRes)) {
                     if (c1.getMagnitude() > displaymax) {
                         displaymax = c1.getMagnitude();
                     }
@@ -248,7 +247,7 @@ public class Co_Localise implements PlugIn {
                         }
                     } else {
                         IsoGaussian c2 = ((IsoGaussian[]) detections.get(j))[1];
-                        if (draw2DGaussian(ch2proc, c2, curveFitC2)) {
+                        if (draw2DGaussian(ch2proc, c2, curveFitC2, Timelapse_Analysis.spatialRes)) {
                             if (c2.getMagnitude() > displaymax) {
                                 displaymax = c2.getMagnitude();
                             }

@@ -4,6 +4,7 @@
  */
 package VirusTracking;
 
+import AnaMorf.Utilities;
 import IAClasses.IsoGaussian;
 import IAClasses.Utils;
 import ij.IJ;
@@ -16,6 +17,7 @@ import ij.process.ImageProcessor;
 import ij.process.TypeConverter;
 import ij.text.TextWindow;
 import java.awt.Rectangle;
+import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,15 +30,17 @@ public class Volume_Analysis extends Timelapse_Analysis {
 
     private int outputsize = 51, midpoint = (outputsize - 1) / 2;
 
-    /*
-     * public static void main(String args[]) { File image =
-     * Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Tracking Test
-     * Sequences")); ImageStack stack = Utils.buildStack(image); ImagePlus imp =
-     * new ImagePlus("Stack", stack); Volume_Analysis instance = new
-     * Volume_Analysis(imp); if (instance.showDialog()) { instance.analyse(); }
-     * return;
-    }
-     */
+//    public static void main(String args[]) {
+//        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Tracking Test Sequences"), null);
+//        ImageStack stack = Utils.buildStack(image);
+//        ImagePlus imp = new ImagePlus("Stack", stack);
+//        Volume_Analysis instance = new Volume_Analysis(imp);
+//        if (instance.showDialog()) {
+//            instance.analyse();
+//        }
+//        return;
+//    }
+
     public Volume_Analysis() {
         super();
     }

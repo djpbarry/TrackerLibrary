@@ -66,16 +66,21 @@ public class IsoGaussianFitter {
 //
 //        System.exit(0);
 //    }
-    /*
-     * public static void main(String args[]) { int iterations = 100000000; int
-     * dim = (int) Math.sqrt(iterations); double[] p = {0.0, 1.0, dim / 2.0, dim
-     * / 2.0, dim / 5.0}; double results[] = new double[iterations];
-     * IsoGaussianFitter fitter = new IsoGaussianFitter(); double startTime =
-     * System.currentTimeMillis(); for (int x = 0; x < dim; x++) { for (int y =
-     * 0; y < dim; y++) { results[x + y * dim] = fitter.evaluate(p, x, y); } }
-     * System.out.println("Analysis Time: " + (System.currentTimeMillis() -
-     * startTime) + " ms"); }
-     */
+//    public static void main(String args[]) {
+//        int iterations = 100000000;
+//        int dim = (int) Math.sqrt(iterations);
+//        double[] p = {0.0, 1.0, dim / 2.0, dim / 2.0, dim / 5.0};
+//        double results[] = new double[iterations];
+//        IsoGaussianFitter fitter = new IsoGaussianFitter();
+//        double startTime = System.currentTimeMillis();
+//        for (int x = 0; x < dim; x++) {
+//            for (int y = 0; y < dim; y++) {
+//                results[x + y * dim] = fitter.evaluate(p, x, y);
+//            }
+//        }
+//        System.out.println("Analysis Time: " + (System.currentTimeMillis() - startTime) + " ms");
+//    }
+
     public IsoGaussianFitter() {
     }
 
