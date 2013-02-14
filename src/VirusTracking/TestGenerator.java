@@ -30,7 +30,8 @@ public class TestGenerator {
 
     public static void main(String args[]) {
         TestGenerator tg = new TestGenerator();
-        tg.generateStochasticGrid(1000, 1000, 100, 30, 455);
+        tg.generateFluorophoreCircle(150, 1000, 1000, 200, 83.0, 0.01,
+                "C:/Users/barry05/Desktop/Test_Data_Sets/Test_Generator_Output");
     }
 
     public TestGenerator() {
@@ -92,44 +93,22 @@ public class TestGenerator {
         }
     }
 
-    public void generateFluorophoreCircle(int n, int width, int height, int length, double finalRes) {
-        DecayingFluorophore dots[] = new DecayingFluorophore[n];
-        Random r = new Random();
-        double radius = width / 15.0;
-        double res = 125.0 / radius;
-        double sigma = (0.305f * 602.0 / 1.4) / res;
-        double maxNoise = width / 600.0;
+    public void generateFluorophoreCircle(int radius, int width, int height, int length,
+            double finalRes, double thresh, String outputDir) {
+        int circum = (int)Math.ceil(2.0 * Math.PI * radius);
+        Fluorophore dots[] = new Fluorophore[circum];
+        double sigma = 0.305f * 602.0 / 1.4;
         double theta;
         int cx = width / 2;
         int cy = height / 2;
-        GaussianBlur gb = new GaussianBlur();
-        for (int i = 0; i < n; i++) {
-            theta = i * 2.0 * Math.PI / n;
-            double x = cx + radius * Math.cos(theta) + r.nextGaussian() * maxNoise;
-            double y = cy + radius * Math.sin(theta) + r.nextGaussian() * maxNoise;
-            dots[i] = new DecayingFluorophore(x, y, 255.0, 0.05);
+        for (int i = 0; i < circum; i++) {
+            theta = i * 2.0 * Math.PI / circum;
+            double x = cx + radius * Math.cos(theta);
+            double y = cy + radius * Math.sin(theta);
+            dots[i] = new Fluorophore(x, y, 255.0, thresh);
 //            System.out.println("x: " + x + " y: " + y + " theta: " + theta);
         }
-        for (int i = 0; i < length; i++) {
-            FloatProcessor image = new FloatProcessor(width, height);
-            image.setValue(0.0);
-            image.fill();
-            for (int j = 0; j < n; j++) {
-                dots[j].updateMag();
-                int x = (int) Math.round(dots[j].getX());
-                int y = (int) Math.round(dots[j].getY());
-                double mag = dots[j].getCurrentMag() + image.getPixelValue(x, y);
-                image.putPixelValue(x, y, mag);
-            }
-            IJ.saveAs(new ImagePlus("", image), "TIF",
-                    "C:\\Users\\barry05\\Desktop\\Test Data Sets\\Tracking Test Sequences\\Simulation\\Original_"
-                    + indFormat.format(i));
-            gb.blurGaussian(image, sigma, sigma, 0.001);
-            image.setInterpolationMethod(ImageProcessor.BICUBIC);
-            IJ.saveAs(new ImagePlus("", image.resize((int) Math.round(width * res / finalRes))), "TIF",
-                    "C:\\Users\\barry05\\Desktop\\Test Data Sets\\Tracking Test Sequences\\Simulation\\BlurredAndScaled_"
-                    + indFormat.format(i));
-        }
+        runGenerator(length, width, height, dots, sigma, finalRes, outputDir);
     }
 
 //    public void generateFilledFluorophoreCircle(int n, int width, int height,
@@ -218,39 +197,18 @@ public class TestGenerator {
         }
     }
 
-    public void generateFilledFluorophoreSquare(int n, int width, int height, int length, double finalRes) {
-        DecayingFluorophore dots[] = new DecayingFluorophore[n];
-        Random r = new Random();
-        double radius = width / 15.0;
-        double res = 125.0 / radius;
-        double sigma = (0.305f * 602.0 / 1.4) / res;
-        double scope = width - 2 * radius;
-        GaussianBlur gb = new GaussianBlur();
-        for (int i = 0; i < n; i++) {
-            double x = r.nextDouble() * scope + radius;
-            double y = r.nextDouble() * scope + radius;
-            dots[i] = new DecayingFluorophore(x, y, 255.0, 0.05);
-        }
-        for (int i = 0; i < length; i++) {
-            FloatProcessor image = new FloatProcessor(width, height);
-            image.setValue(0.0);
-            image.fill();
-            for (int j = 0; j < n; j++) {
-                dots[j].updateMag();
-                int x = (int) Math.round(dots[j].getX());
-                int y = (int) Math.round(dots[j].getY());
-                double mag = dots[j].getCurrentMag() + image.getPixelValue(x, y);
-                image.putPixelValue(x, y, mag);
+    public void generateFilledFluorophoreSquare(int dw, int dh, int width, int height,
+            int length, double finalRes, String outputDir, double thresh) {
+        Fluorophore dots[] = new Fluorophore[dw * dh];
+        double sigma = 0.305f * lambda / numAp;
+        int x0 = (width - dw) / 2;
+        int y0 = (height - dh) / 2;
+        for (int i = x0; i < x0 + dw; i++) {
+            for (int j = y0; j < y0 + dh; j++) {
+                dots[(j - y0) * dw + (i - x0)] = new Fluorophore(i, j, 255.0, thresh);
             }
-            IJ.saveAs(new ImagePlus("", image), "TIF",
-                    "C:\\Users\\barry05\\Desktop\\Test Data Sets\\Tracking Test Sequences\\Simulation\\Original_"
-                    + indFormat.format(i));
-            gb.blurGaussian(image, sigma, sigma, 0.001);
-            image.setInterpolationMethod(ImageProcessor.BICUBIC);
-            IJ.saveAs(new ImagePlus("", image.resize((int) Math.round(width * res / finalRes))), "TIF",
-                    "C:\\Users\\barry05\\Desktop\\Test Data Sets\\Tracking Test Sequences\\Simulation\\BlurredAndScaled_"
-                    + indFormat.format(i));
         }
+        runGenerator(length, width, height, dots, sigma, finalRes, outputDir);
     }
 
     public void generateFilament(int n, int m, int width, int height, int length, double finalRes) {
@@ -362,6 +320,30 @@ public class TestGenerator {
             IJ.saveAs(new ImagePlus("", image.resize((int) Math.round(width / (res * 1000.0)))), "TIF",
                     "C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences\\Simulation\\BlurredAndScaled_"
                     + indFormat.format(i));
+        }
+    }
+
+    void runGenerator(int length, int width, int height, Fluorophore dots[],
+            double sigma, double finalRes, String outputDir) {
+        for (int i = 0; i < length; i++) {
+            FloatProcessor image = new FloatProcessor(width, height);
+            image.setValue(0.0);
+            image.fill();
+            int n = dots.length;
+            GaussianBlur gb = new GaussianBlur();
+            for (int j = 0; j < n; j++) {
+                int x = (int) Math.round(dots[j].getX());
+                int y = (int) Math.round(dots[j].getY());
+                double mag = dots[j].getCurrentMag() + image.getPixelValue(x, y);
+                image.putPixelValue(x, y, mag);
+                dots[j].updateMag();
+            }
+            IJ.saveAs(new ImagePlus("", image), "TIF", outputDir + "\\Original_"
+                    + indFormat.format(i));
+            gb.blurGaussian(image, sigma, sigma, 0.001);
+            image.setInterpolationMethod(ImageProcessor.BICUBIC);
+            IJ.saveAs(new ImagePlus("", image.resize((int) Math.round(width / finalRes))),
+                    "TIF", outputDir + "\\BlurredAndScaled_" + indFormat.format(i));
         }
     }
 }

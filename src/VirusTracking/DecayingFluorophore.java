@@ -2,30 +2,19 @@ package VirusTracking;
 
 import java.util.Random;
 
-public class DecayingFluorophore {
+public class DecayingFluorophore extends Fluorophore {
 
-    private double x;
-    private double y;
-    private double initialMag;
-    private double currentMag;
     private double decayRate;
     private double noise = 0.01;
     private Random rand = new Random();
 
     public DecayingFluorophore(double x, double y, double mag, double decayRate) {
-        this.x = x;
-        this.y = y;
-        this.initialMag = mag;
-        this.currentMag = mag;
+        super(x, y, mag, 0.05);
         this.decayRate = decayRate;
     }
 
     public void updateMag() {
         currentMag = currentMag * (1.0 - decayRate + noise * rand.nextGaussian());
-    }
-    
-    public void updateMag(double newMag) {
-        currentMag = newMag;
     }
 
     public void updateXMag(int t) {
@@ -39,23 +28,7 @@ public class DecayingFluorophore {
         }
     }
 
-    public double getCurrentMag() {
-        return currentMag;
-    }
-
     public double getDecayRate() {
         return decayRate;
-    }
-
-    public double getInitialMag() {
-        return initialMag;
-    }
-
-    public double getX() {
-        return x;
-    }
-
-    public double getY() {
-        return y;
     }
 }
