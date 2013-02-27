@@ -1,4 +1,4 @@
-package VirusTracking;
+package ParticleTracking;
 
 /**
  * 2D Gaussian Curve Fitter based on ImageJ's

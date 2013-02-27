@@ -1,4 +1,4 @@
-package VirusTracking;
+package ParticleTracking;
 
 import IAClasses.IsoGaussian;
 import ij.IJ;
@@ -36,8 +36,7 @@ public class Co_Localise implements PlugIn {
     /*
      * public static void main(String args[]) { (new Co_Localise(new
      * ImagePlus("C:\\Users\\barry05\\Desktop\\Tail Tracer
-     * Tests\\TailTracerTest8.png"))).run(null);
-    }
+     * Tests\\TailTracerTest8.png"))).run(null); }
      */
     public Co_Localise() {
     }
@@ -60,6 +59,11 @@ public class Co_Localise implements PlugIn {
         if (imp == null) {
             Toolkit.getDefaultToolkit().beep();
             IJ.error("No image stack open.");
+            return;
+        }
+        if (!(imp.getImageStack().getProcessor(1) instanceof ColorProcessor)) {
+            Toolkit.getDefaultToolkit().beep();
+            IJ.error("Colour (RGB) image required.");
             return;
         }
         if (showDialog()) {
@@ -105,7 +109,7 @@ public class Co_Localise implements PlugIn {
                 curveFitC2 = dialog.getNextNumber();
                 /*
                  * Timelapse_Analysis.setC1SigmaTol(sigmaTolC1);
-                Timelapse_Analysis.setC2SigmaTol(sigmaTolC2);
+                 * Timelapse_Analysis.setC2SigmaTol(sigmaTolC2);
                  */
                 coFactor = dialog.getNextNumber();
                 partialDetect = dialog.getNextBoolean();

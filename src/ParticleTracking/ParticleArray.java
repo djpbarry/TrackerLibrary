@@ -1,4 +1,4 @@
-package VirusTracking;
+package ParticleTracking;
 
 import IAClasses.IsoGaussian;
 import java.util.ArrayList;
