@@ -11,6 +11,8 @@ import ij.plugin.filter.GaussianBlur;
 import ij.process.ByteProcessor;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
+import java.awt.Color;
+import java.awt.Font;
 import java.text.DecimalFormat;
 import java.util.Random;
 
@@ -29,9 +31,14 @@ public class TestGenerator {
     private double sigmaEstPix = 0.305 * lambda / (numAp * res * 1000.0);
 
     public static void main(String args[]) {
+        ByteProcessor template = new ByteProcessor(1000, 250);
+        template.setValue(0.0);
+        template.fill();
+        template.setValue(255.0);
+        template.setFont(new Font("Serif", Font.BOLD, 25));
+        template.drawString("Listening to Dave talk about image analysis is ****ing riveting.", 50, 125);
         TestGenerator tg = new TestGenerator();
-        tg.generateFluorophoreCircle(150, 1000, 1000, 200, 83.0, 0.01,
-                "C:/Users/barry05/Desktop/Test_Data_Sets/Test_Generator_Output");
+        tg.generateSwitchingSequenceFromBitMap(template, 1000, 0.002, 5.0, "C:/Users/barry05/Desktop/Test_Data_Sets/Test_Generator_Output");
     }
 
     public TestGenerator() {
@@ -95,7 +102,7 @@ public class TestGenerator {
 
     public void generateFluorophoreCircle(int radius, int width, int height, int length,
             double finalRes, double thresh, String outputDir) {
-        int circum = (int)Math.ceil(2.0 * Math.PI * radius);
+        int circum = (int) Math.ceil(2.0 * Math.PI * radius);
         Fluorophore dots[] = new Fluorophore[circum];
         double sigma = 0.305f * 602.0 / 1.4;
         double theta;
@@ -323,26 +330,51 @@ public class TestGenerator {
         }
     }
 
+    public void generateSwitchingSequenceFromBitMap(ByteProcessor template, int length,
+            double onProb, double finalRes, String outputDir) {
+        int width = template.getWidth();
+        int height = template.getHeight();
+        int nFluors = template.getStatistics().histogram[255];
+        BlinkingFluorophore dots[] = new BlinkingFluorophore[nFluors];
+        double initialSig = (0.305 * lambda / numAp) / finalRes;
+        for (int j = 0, count = 0; j < height; j++) {
+            for (int i = 0; i < width; i++) {
+                if (template.getPixel(i, j) > 0) {
+                    dots[count] = new BlinkingFluorophore(i, j, 0.0, onProb);
+                    count++;
+                }
+            }
+        }
+        runGenerator(length, width, height, dots, initialSig, finalRes, outputDir);
+    }
+
     void runGenerator(int length, int width, int height, Fluorophore dots[],
             double sigma, double finalRes, String outputDir) {
+        FloatProcessor origImage = new FloatProcessor(width, height);
+        origImage.setValue(0.0);
+        origImage.fill();
         for (int i = 0; i < length; i++) {
-            FloatProcessor image = new FloatProcessor(width, height);
-            image.setValue(0.0);
-            image.fill();
+            FloatProcessor blurImage = new FloatProcessor(width, height);
+            blurImage.setValue(0.0);
+            blurImage.fill();
             int n = dots.length;
             GaussianBlur gb = new GaussianBlur();
             for (int j = 0; j < n; j++) {
                 int x = (int) Math.round(dots[j].getX());
                 int y = (int) Math.round(dots[j].getY());
-                double mag = dots[j].getCurrentMag() + image.getPixelValue(x, y);
-                image.putPixelValue(x, y, mag);
+                double mag = dots[j].getCurrentMag() + blurImage.getPixelValue(x, y);
+                blurImage.putPixelValue(x, y, mag);
+                mag = dots[j].getCurrentMag();
+                if (mag > 0.0) {
+                    origImage.putPixelValue(x, y, mag);
+                }
                 dots[j].updateMag();
             }
-            IJ.saveAs(new ImagePlus("", image), "TIF", outputDir + "\\Original_"
+            IJ.saveAs(new ImagePlus("", origImage), "TIF", outputDir + "\\Original_"
                     + indFormat.format(i));
-            gb.blurGaussian(image, sigma, sigma, 0.001);
-            image.setInterpolationMethod(ImageProcessor.BICUBIC);
-            IJ.saveAs(new ImagePlus("", image.resize((int) Math.round(width / finalRes))),
+            gb.blurGaussian(blurImage, sigma, sigma, 0.001);
+            blurImage.setInterpolationMethod(ImageProcessor.BICUBIC);
+            IJ.saveAs(new ImagePlus("", blurImage.resize((int) Math.round(width / finalRes))),
                     "TIF", outputDir + "\\BlurredAndScaled_" + indFormat.format(i));
         }
     }
