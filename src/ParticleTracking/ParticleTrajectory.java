@@ -58,7 +58,7 @@ public class ParticleTrajectory {
      * channel
      */
     public boolean addPoint(double t, IsoGaussian c1Gaussian, IsoGaussian c2Gaussian) {
-        end = new Particle(t, c1Gaussian, c2Gaussian, end);
+        end = new Particle(t, c1Gaussian, c2Gaussian, end, -1);
         if (end == null) {
             return false;
         }
@@ -118,7 +118,7 @@ public class ParticleTrajectory {
      */
     public boolean addTempPoint(double t, IsoGaussian c1Gaussian, IsoGaussian c2Gaussian,
             double score, int row, int column) {
-        temp = new Particle(t, c1Gaussian, c2Gaussian, end);
+        temp = new Particle(t, c1Gaussian, c2Gaussian, end, -1);
         if (temp == null) {
             return false;
         }

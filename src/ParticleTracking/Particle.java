@@ -10,6 +10,7 @@ import IAClasses.IsoGaussian;
  */
 public class Particle {
 
+    private int iD;
     private double t;
     private double x, y;
     private Particle link;
@@ -19,6 +20,7 @@ public class Particle {
         t = 0.0;
         x = 0.0;
         y = 0.0;
+        iD = -1;
         link = null;
         c1Gaussian = null;
         c2Gaussian = null;
@@ -36,7 +38,9 @@ public class Particle {
      * Set to
      * <code>null</code> if this is the first particle in a new trajectory.
      */
-    public Particle(double time, IsoGaussian c1Gaussian, IsoGaussian c2Gaussian, Particle newLink) {
+    public Particle(double time, IsoGaussian c1Gaussian, IsoGaussian c2Gaussian,
+            Particle newLink, int iD) {
+        this.iD = iD;
         this.t = time;
         this.c1Gaussian = c1Gaussian;
         this.c2Gaussian = c2Gaussian;
@@ -111,7 +115,7 @@ public class Particle {
     }
 
     protected Object clone() {
-        return new Particle(t, (IsoGaussian) c1Gaussian.clone(), (IsoGaussian) c2Gaussian.clone(), (Particle) link.clone());
+        return new Particle(t, (IsoGaussian) c1Gaussian.clone(), (IsoGaussian) c2Gaussian.clone(), (Particle) link.clone(), -1);
     }
 
     public boolean equals(Object obj) {

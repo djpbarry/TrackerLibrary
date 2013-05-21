@@ -1,8 +1,8 @@
 package ParticleTracking;
 
+import IAClasses.FractalEstimator;
 import IAClasses.IsoGaussian;
 import IAClasses.Utils;
-import IAClasses.FractalEstimator;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -12,17 +12,9 @@ import ij.gui.GenericDialog;
 import ij.gui.Plot;
 import ij.plugin.PlugIn;
 import ij.plugin.filter.GaussianBlur;
-import ij.process.ByteProcessor;
-import ij.process.ColorProcessor;
-import ij.process.FloatProcessor;
-import ij.process.ImageProcessor;
-import ij.process.TypeConverter;
+import ij.process.*;
 import ij.text.TextWindow;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Rectangle;
-import java.awt.Scrollbar;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -44,7 +36,7 @@ import java.util.Random;
 public class Timelapse_Analysis implements PlugIn {
 
     protected static double spatialRes = 64.5 / 1000.0, //Spatial resolution in nm/pixel
-            timeRes = 16.0d/1000.0d, //Time resolution in s/frame;
+            timeRes = 16.0d / 1000.0d, //Time resolution in s/frame;
             virusDiameter = 350.0,
             chan1MaxThresh = 100.0, //Threshold value for local maxima in channel 1
             chan2MaxThresh = 0.0, //Threshold value for local maxima in channel 2
@@ -85,7 +77,6 @@ public class Timelapse_Analysis implements PlugIn {
 //        }
 //        return;
 //    }
-    
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep,
             double chan1MaxThresh, double hystDiff, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
         Timelapse_Analysis.spatialRes = spatialRes;
@@ -211,7 +202,7 @@ public class Timelapse_Analysis implements PlugIn {
                 previewResults();
             }
             n = trajectories.size();
-            mapTrajectories();
+            mapTrajectories(stack, monoChrome, trajectories, scale, spatialRes, xyPartRad, minTrajLength, timeRes, true);
             for (i = 0, count = 1; i < n; i++) {
                 ParticleTrajectory traj = (ParticleTrajectory) trajectories.get(i);
                 if (traj.getSize() > minTrajLength && ((traj.getType() == ParticleTrajectory.COLOCAL)
@@ -348,7 +339,7 @@ public class Timelapse_Analysis implements PlugIn {
             }
         }
         if (update) {
-            updateTrajectories(particles);
+            updateTrajectories(particles, timeRes, trajMaxStep, chan1MaxThresh, hystDiff, spatialRes);
         }
         return particles;
     }
@@ -406,7 +397,7 @@ public class Timelapse_Analysis implements PlugIn {
         return;
     }
 
-    public void updateTrajectories(ParticleArray objects) {
+    public void updateTrajectories(ParticleArray objects, double timeRes, double trajMaxStep, double chan1MaxThresh, double hystDiff, double spatialRes) {
         if (objects == null) {
             return;
         }
@@ -680,11 +671,11 @@ public class Timelapse_Analysis implements PlugIn {
      * Constructed trajectories are drawn onto the original image sequence and
      * displayed as a stack sequence.
      */
-    public boolean mapTrajectories() {
-        if (imp == null) {
-            return false;
+    public ImageStack mapTrajectories(ImageStack stack, boolean monoChrome, ArrayList<ParticleTrajectory> trajectories, double scale, double spatialRes, double xyPartRad, double minTrajLength, double timeRes, boolean tracks) {
+        if (stack == null) {
+            return null;
         }
-        stack = imp.getStack();
+//        stack = imp.getStack();
         int i, j, width = (int) Math.round(stack.getWidth() * scale), height = (int) Math.round(stack.getHeight() * scale),
                 textX, textY, type, frames = stack.getSize(), radius = (int) Math.round(xyPartRad * scale);
         double lastX, lastY;
@@ -701,7 +692,7 @@ public class Timelapse_Analysis implements PlugIn {
         FractalEstimator boxCount;
 
         if (n < 1) {
-            return false;
+            return null;
         }
 
         for (i = 0; i < frames; i++) {
@@ -747,7 +738,7 @@ public class Timelapse_Analysis implements PlugIn {
                         } else {
                             processor.setValue(255);
                         }
-                        if (j <= lastTP + 20.0 / timeRes) {
+                        if (tracks && j <= lastTP + 20.0 / timeRes) {
                             int x = (int) (Math.round(current.getX() * scaledSR));
                             int y = (int) (Math.round(current.getY() * scaledSR));
                             processor.drawLine(x, y, (int) Math.round(lastX * scaledSR),
@@ -758,10 +749,12 @@ public class Timelapse_Analysis implements PlugIn {
                                     ((int) Math.round(lastY * scaledSR) - radius), 2 * radius, 2 * radius);
                         }
                     }
-                    trajImage.drawLine((int) Math.round(ptScale * current.getX() - traj.getBounds().x),
-                            (int) Math.round(ptScale * current.getY() - traj.getBounds().y),
-                            (int) Math.round(ptScale * lastX - traj.getBounds().x),
-                            (int) Math.round(ptScale * lastY - traj.getBounds().y));
+                    if (tracks) {
+                        trajImage.drawLine((int) Math.round(ptScale * current.getX() - traj.getBounds().x),
+                                (int) Math.round(ptScale * current.getY() - traj.getBounds().y),
+                                (int) Math.round(ptScale * lastX - traj.getBounds().x),
+                                (int) Math.round(ptScale * lastY - traj.getBounds().y));
+                    }
                     lastX = current.getX();
                     lastY = current.getY();
                     lastTP = (int) Math.round(current.getTimePoint() / timeRes);
@@ -798,7 +791,7 @@ public class Timelapse_Analysis implements PlugIn {
         }
         (new ImagePlus("Trajectories", outputStack)).show();
 
-        return true;
+        return outputStack;
     }
 
     public static void setChan1MaxThresh(double chan1MaxThresh) {
@@ -941,6 +934,14 @@ public class Timelapse_Analysis implements PlugIn {
                     + "\nMinimum Trajectory Length (s):\t" + numFormat.format(minTrajLength * timeRes)
                     + "\nPre-Process Stack:\t" + preProcess;
         }
+    }
+
+    public ArrayList<ParticleTrajectory> getTrajectories() {
+        return trajectories;
+    }
+
+    public void setTrajectories(ArrayList<ParticleTrajectory> trajectories) {
+        this.trajectories = trajectories;
     }
 
     public boolean equals(Object obj) {

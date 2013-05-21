@@ -92,7 +92,7 @@ public class Volume_Analysis extends Timelapse_Analysis {
                 }
             }
             n = trajectories.size();
-            mapTrajectories();
+            mapTrajectories(stack, monoChrome, trajectories, scale, spatialRes, xyPartRad, minTrajLength, timeRes, true);
             ArrayList distributions = new ArrayList();
             int cropRad = 4 * xyPartRad + 1;
             for (i = 0, count = 1; i < n; i++) {
@@ -244,7 +244,7 @@ public class Volume_Analysis extends Timelapse_Analysis {
             }
         }
         if (update) {
-            updateTrajectories(particles);
+            updateTrajectories(particles, timeRes, trajMaxStep, chan1MaxThresh, hystDiff, spatialRes);
         }
         return particles;
     }

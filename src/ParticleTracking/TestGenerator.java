@@ -11,8 +11,6 @@ import ij.plugin.filter.GaussianBlur;
 import ij.process.ByteProcessor;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
-import java.awt.Color;
-import java.awt.Font;
 import java.text.DecimalFormat;
 import java.util.Random;
 
@@ -30,16 +28,16 @@ public class TestGenerator {
     private double res = 0.083;
     private double sigmaEstPix = 0.305 * lambda / (numAp * res * 1000.0);
 
-    public static void main(String args[]) {
-        ByteProcessor template = new ByteProcessor(1000, 250);
-        template.setValue(0.0);
-        template.fill();
-        template.setValue(255.0);
-        template.setFont(new Font("Serif", Font.BOLD, 25));
-        template.drawString("Listening to Dave talk about image analysis is ****ing riveting.", 50, 125);
-        TestGenerator tg = new TestGenerator();
-        tg.generateSwitchingSequenceFromBitMap(template, 1000, 0.002, 5.0, "C:/Users/barry05/Desktop/Test_Data_Sets/Test_Generator_Output");
-    }
+//    public static void main(String args[]) {
+//        ByteProcessor template = new ByteProcessor(1000, 250);
+//        template.setValue(0.0);
+//        template.fill();
+//        template.setValue(255.0);
+//        template.setFont(new Font("Serif", Font.BOLD, 25));
+//        template.drawString("Listening to Dave talk about image analysis is ****ing riveting.", 50, 125);
+//        TestGenerator tg = new TestGenerator();
+//        tg.generateSwitchingSequenceFromBitMap(template, 1000, 0.002, 5.0, "C:/Users/barry05/Desktop/Test_Data_Sets/Test_Generator_Output");
+//    }
 
     public TestGenerator() {
     }
