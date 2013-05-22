@@ -1,6 +1,5 @@
 package ParticleTracking;
 
-import IAClasses.IsoGaussian;
 import java.util.ArrayList;
 
 /**
@@ -10,14 +9,14 @@ import java.util.ArrayList;
 public class ParticleArray {
 
     private int depth;
-    private ArrayList detections[];
+    private ArrayList<Particle> detections[];
 
     public ParticleArray(int depth) {
         this.depth = depth;
         if (depth > 0) {
             detections = new ArrayList[depth];
             for (int i = 0; i < depth; i++) {
-                detections[i] = new ArrayList();
+                detections[i] = new ArrayList<Particle>();
             }
         } else {
             this.depth = 0;
@@ -25,29 +24,28 @@ public class ParticleArray {
         }
     }
 
-    public boolean addDetection(int level, IsoGaussian g1, IsoGaussian g2) {
+    public boolean addDetection(int level, Particle detection) {
         if (detections == null || level > depth - 1) {
             return false;
         }
-        IsoGaussian detection[] = {g1, g2};
         detections[level].add(detection);
         return true;
     }
-
+    
     public boolean nullifyDetection(int level, int index) {
         if (detections == null || level > depth - 1) {
             return false;
         }
-        IsoGaussian detection[] = {null, null};
+        Particle detection = null;
         detections[level].set(index, detection);
         return true;
     }
-
+    
     public int getDepth() {
         return depth;
     }
 
-    public ArrayList getLevel(int level) {
+    public ArrayList<Particle> getLevel(int level) {
         if (detections != null) {
             return detections[level];
         } else {

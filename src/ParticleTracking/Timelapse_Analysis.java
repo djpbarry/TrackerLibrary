@@ -331,7 +331,8 @@ public class Timelapse_Analysis implements PlugIn {
                              * to be updated:
                              */
                             if (c1Gaussian != null) {
-                                particles.addDetection(i - startSlice, c1Gaussian, c2Gaussian);
+                                particles.addDetection(i - startSlice,
+                                        new Particle((i - startSlice) * timeRes, c1Gaussian, c2Gaussian, null, -1));
                             }
                         }
                     }
@@ -394,7 +395,6 @@ public class Timelapse_Analysis implements PlugIn {
                 }
             }
         }
-        return;
     }
 
     public void updateTrajectories(ParticleArray objects, double timeRes, double trajMaxStep, double chan1MaxThresh, double hystDiff, double spatialRes) {
@@ -402,28 +402,32 @@ public class Timelapse_Analysis implements PlugIn {
             return;
         }
         int i, j, k, m, size;
+        int depth = objects.getDepth();
         ParticleTrajectory traj = null;
         Particle last;
         IsoGaussian ch1G, ch2G;
         double x, y, score, greenMag, minScore;
         int minScoreIndex;
-        ArrayList detections;
+        ArrayList<Particle> detections;
 
-        for (m = 0; m < objects.getDepth(); m++) {
-            for (k = m; (k < objects.getDepth()) && (((k - m) * timeRes) < trajMaxStep); k++) {
+        for (m = 0; m < depth; m++) {
+            for (k = m; (k < depth) && (((k - m) * timeRes) < trajMaxStep); k++) {
                 size = trajectories.size();
                 detections = objects.getLevel(k);
                 for (j = 0; j < detections.size(); j++) {
-                    ch1G = ((IsoGaussian[]) detections.get(j))[0];
-                    if (ch1G != null) {
-                        ch2G = ((IsoGaussian[]) detections.get(j))[1];
+                    Particle currentParticle = detections.get(j);
+                    if (currentParticle != null) {
+                        ch1G = currentParticle.getC1Gaussian();
+                        ch2G = currentParticle.getC2Gaussian();
                         /*
                          * If no trajectories have yet been built, start a new
                          * one:
                          */
                         if (k == m && ch1G.getMagnitude() > chan1MaxThresh * hystDiff && ch1G.getFit() > 0.0) {
                             traj = new ParticleTrajectory(timeRes, spatialRes);
-                            traj.addPoint(k * timeRes, ch1G, ch2G);
+                            /* Particles need to be cloned as they are set to null
+                             * once inserted into trajectories. */
+                            traj.addPoint((Particle)currentParticle.clone());
                             trajectories.add(traj);
                             /*
                              * Otherwise, determine whether the current particle
@@ -481,7 +485,7 @@ public class Timelapse_Analysis implements PlugIn {
                                 traj = (ParticleTrajectory) trajectories.get(minScoreIndex);
                             }
                             if ((minScore < trajMaxStep) && (minScore < traj.getTempScore())) {
-                                traj.addTempPoint(k, ch1G, ch2G, minScore, j, k);
+                                traj.addTempPoint((Particle)currentParticle.clone(), minScore, j, k);
                             }
                         }
                     }
@@ -494,8 +498,7 @@ public class Timelapse_Analysis implements PlugIn {
                     int row = traj.getTempRow();
                     int col = traj.getTempColumn();
                     if (col <= m + 1) {
-                        traj.checkDetections(timeRes * temp.getTimePoint(), temp.getC1Gaussian(),
-                                temp.getC2Gaussian());
+                        traj.checkDetections(temp);
                         objects.nullifyDetection(col, row);
                     }
                 }
@@ -504,7 +507,6 @@ public class Timelapse_Analysis implements PlugIn {
                 IJ.getTextPanel().append("Frame:\t" + m + "\tTotal Count:\t" + trajectories.size());
             }
         }
-        return;
     }
 
     /**

@@ -57,15 +57,16 @@ public class ParticleTrajectory {
      * @param c2Gaussian {@link IsoGaussian} representation of particle in green
      * channel
      */
-    public boolean addPoint(double t, IsoGaussian c1Gaussian, IsoGaussian c2Gaussian) {
-        end = new Particle(t, c1Gaussian, c2Gaussian, end, -1);
-        if (end == null) {
+    public boolean addPoint(Particle particle) {
+        if (particle == null) {
             return false;
         }
+        particle.setLink(end);
+        end = particle;
         int newX = (int) Math.round(scale * end.getX());
         int newY = (int) Math.round(scale * end.getY());
         if (size < 1) {
-            startTime = t;
+            startTime = particle.getTimePoint();
             bounds = new Rectangle(newX, newY, 0, 0);
         }
         if (newX < bounds.x) {
@@ -85,23 +86,23 @@ public class ParticleTrajectory {
         if (size > segment) {
             updateVelocity();
         }
-        if (c1Gaussian.getMagnitude() > peakIntens) {
-            peakIntens = c1Gaussian.getMagnitude();
-            peakTime = t;
+        if (particle.getC1Gaussian().getMagnitude() > peakIntens) {
+            peakIntens = particle.getC1Gaussian().getMagnitude();
+            peakTime = particle.getTimePoint();
         }
         return true;
     }
 
-    public boolean checkDetections(double t, IsoGaussian c1Gaussian, IsoGaussian c2Gaussian) {
-        if (c1Gaussian == null) {
+    public boolean checkDetections(Particle particle) {
+        if (particle == null) {
             return false;
         }
-        boolean c1 = (c1Gaussian.getFit() > 0);
-        boolean c2 = (c2Gaussian != null) ? (c2Gaussian.getFit() > 0) : false;
+        boolean c1 = (particle.getC1Gaussian().getFit() > 0);
+        boolean c2 = (particle.getC2Gaussian() != null) ? (particle.getC2Gaussian().getFit() > 0) : false;
         if (c1 && c2) {
             dualScore++;
         }
-        return addPoint(t, c1Gaussian, c2Gaussian);
+        return addPoint(particle);
     }
 
     /**
@@ -116,9 +117,9 @@ public class ParticleTrajectory {
      * @param score a measure of the likelihood that this particle belongs to
      * the current trajectory. Lower values indicate greater likelihood.
      */
-    public boolean addTempPoint(double t, IsoGaussian c1Gaussian, IsoGaussian c2Gaussian,
-            double score, int row, int column) {
-        temp = new Particle(t, c1Gaussian, c2Gaussian, end, -1);
+    public boolean addTempPoint(Particle particle, double score, int row, int column) {
+        particle.setLink(end);
+        temp = particle;
         if (temp == null) {
             return false;
         }
@@ -262,9 +263,13 @@ public class ParticleTrajectory {
         double x = current.getX();
         double y = current.getY();
         for (i = 1; i < segment && i < size - 1; i++) {
-            current = current.getLink();
-            xDist += x - current.getX();
-            yDist += y - current.getY();
+            try {
+                current = current.getLink();
+                xDist += x - current.getX();
+                yDist += y - current.getY();
+            } catch (Exception e) {
+                e.toString();
+            }
             x = current.getX();
             y = current.getY();
         }

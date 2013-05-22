@@ -1,6 +1,7 @@
 package ParticleTracking;
 
 import IAClasses.IsoGaussian;
+import java.util.Objects;
 
 /**
  * Represents a detected particle in an individual image or frame.
@@ -114,10 +115,15 @@ public class Particle {
         return c1Gaussian;
     }
 
-    protected Object clone() {
-        return new Particle(t, (IsoGaussian) c1Gaussian.clone(), (IsoGaussian) c2Gaussian.clone(), (Particle) link.clone(), -1);
+    public void setLink(Particle link) {
+        this.link = link;
     }
 
+    public Object clone() {
+        return new Particle(t, c1Gaussian, c2Gaussian, link, iD);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (obj == null) {
             return false;
@@ -126,6 +132,9 @@ public class Particle {
             return false;
         }
         final Particle other = (Particle) obj;
+        if (this.iD != other.iD) {
+            return false;
+        }
         if (Double.doubleToLongBits(this.t) != Double.doubleToLongBits(other.t)) {
             return false;
         }
@@ -135,13 +144,13 @@ public class Particle {
         if (Double.doubleToLongBits(this.y) != Double.doubleToLongBits(other.y)) {
             return false;
         }
-        if (this.link != other.link && (this.link == null || !this.link.equals(other.link))) {
+        if (!Objects.equals(this.link, other.link)) {
             return false;
         }
-        if (this.c1Gaussian != other.c1Gaussian && (this.c1Gaussian == null || !this.c1Gaussian.equals(other.c1Gaussian))) {
+        if (!Objects.equals(this.c1Gaussian, other.c1Gaussian)) {
             return false;
         }
-        if (this.c2Gaussian != other.c2Gaussian && (this.c2Gaussian == null || !this.c2Gaussian.equals(other.c2Gaussian))) {
+        if (!Objects.equals(this.c2Gaussian, other.c2Gaussian)) {
             return false;
         }
         return true;

@@ -40,7 +40,7 @@ public class Colocalise_3D extends Co_Localise {
      * File("C:\\Users\\barry05\\Desktop\\Colocalise3DTests\\Test3\\C1")),
      * Utils.buildStack(new
      * File("C:\\Users\\barry05\\Desktop\\Colocalise3DTests\\Test3\\C2")))).run(null);
-    }
+     * }
      */
     public Colocalise_3D() {
         super();
@@ -237,7 +237,7 @@ public class Colocalise_3D extends Co_Localise {
                          * be updated:
                          */
                         if (c1Gaussian != null) {
-                            particles.addDetection(0, c1Gaussian, c2Gaussian);
+                            particles.addDetection(0, new Particle(0, c1Gaussian, c2Gaussian, null, -1));
                         }
 
                     }

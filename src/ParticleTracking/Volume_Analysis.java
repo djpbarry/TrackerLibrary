@@ -40,7 +40,6 @@ public class Volume_Analysis extends Timelapse_Analysis {
 //        }
 //        return;
 //    }
-
     public Volume_Analysis() {
         super();
     }
@@ -236,7 +235,7 @@ public class Volume_Analysis extends Timelapse_Analysis {
                          * be updated:
                          */
                         if (c1Gaussian != null) {
-                            particles.addDetection(i - startSlice, c1Gaussian, null);
+                            particles.addDetection(i - startSlice, new Particle(i - startSlice, c1Gaussian, null, null, -1));
                         }
                         //}
                     }
