@@ -243,7 +243,7 @@ public class Volume_Analysis extends Timelapse_Analysis {
             }
         }
         if (update) {
-            updateTrajectories(particles, timeRes, trajMaxStep, chan1MaxThresh, hystDiff, spatialRes);
+            updateTrajectories(particles, timeRes, trajMaxStep, chan1MaxThresh, hystDiff, spatialRes, true);
         }
         return particles;
     }

@@ -340,7 +340,7 @@ public class Timelapse_Analysis implements PlugIn {
             }
         }
         if (update) {
-            updateTrajectories(particles, timeRes, trajMaxStep, chan1MaxThresh, hystDiff, spatialRes);
+            updateTrajectories(particles, timeRes, trajMaxStep, chan1MaxThresh, hystDiff, spatialRes, true);
         }
         return particles;
     }
@@ -397,7 +397,8 @@ public class Timelapse_Analysis implements PlugIn {
         }
     }
 
-    public void updateTrajectories(ParticleArray objects, double timeRes, double trajMaxStep, double chan1MaxThresh, double hystDiff, double spatialRes) {
+    public void updateTrajectories(ParticleArray objects, double timeRes, double trajMaxStep,
+            double chan1MaxThresh, double hystDiff, double spatialRes, boolean projectVel) {
         if (objects == null) {
             return;
         }
@@ -425,9 +426,11 @@ public class Timelapse_Analysis implements PlugIn {
                          */
                         if (k == m && ch1G.getMagnitude() > chan1MaxThresh * hystDiff && ch1G.getFit() > 0.0) {
                             traj = new ParticleTrajectory(timeRes, spatialRes);
-                            /* Particles need to be cloned as they are set to null
-                             * once inserted into trajectories. */
-                            traj.addPoint((Particle)currentParticle.clone());
+                            /*
+                             * Particles need to be cloned as they are set to
+                             * null once inserted into trajectories.
+                             */
+                            traj.addPoint((Particle) currentParticle.clone());
                             trajectories.add(traj);
                             /*
                              * Otherwise, determine whether the current particle
@@ -459,16 +462,25 @@ public class Timelapse_Analysis implements PlugIn {
                                         greenMag = 0.0;
                                     }
                                     // TODO Variation in C1 intensity could be interpreted as movement in Z-direction
-                                    traj.projectVelocity(x, y);
-                                    double vector1[] = {x, y, k * timeRes,
-                                        ch1G.getMagnitude() / 255.0, greenMag / 255.0, traj.getProjectXVel(),
-                                        traj.getProjectYVel()};
-                                    double vector2[] = {last.getX(), last.getY(),
-                                        last.getTimePoint(), last.getC1Intensity() / 255.0,
-                                        last.getC2Intensity() / 255.0, traj.getXVelocity(),
-                                        traj.getYVelocity()};
-                                    //TODO Useful cost function described in Vallotton et al., 2003
-                                    score = Utils.calcEuclidDist(vector1, vector2);
+                                    if (projectVel) {
+                                        traj.projectVelocity(x, y);
+                                        double vector1[] = {x, y, k * timeRes,
+                                            ch1G.getMagnitude() / 255.0, greenMag / 255.0,
+                                            traj.getProjectXVel(),
+                                            traj.getProjectYVel()};
+                                        double vector2[] = {last.getX(), last.getY(),
+                                            last.getTimePoint(), last.getC1Intensity() / 255.0,
+                                            last.getC2Intensity() / 255.0, traj.getXVelocity(),
+                                            traj.getYVelocity()};
+                                        score = Utils.calcEuclidDist(vector1, vector2);
+                                    } else {
+                                        double vector1[] = {x, y, k * timeRes,
+                                            ch1G.getMagnitude() / 255.0};
+                                        double vector2[] = {last.getX(), last.getY(),
+                                            last.getTimePoint(), last.getC1Intensity() / 255.0};
+                                        //TODO Useful cost function described in Vallotton et al., 2003
+                                        score = Utils.calcEuclidDist(vector1, vector2);
+                                    }
                                     if (score < minScore) {
                                         minScore = score;
                                         minScoreIndex = i;
@@ -485,7 +497,7 @@ public class Timelapse_Analysis implements PlugIn {
                                 traj = (ParticleTrajectory) trajectories.get(minScoreIndex);
                             }
                             if ((minScore < trajMaxStep) && (minScore < traj.getTempScore())) {
-                                traj.addTempPoint((Particle)currentParticle.clone(), minScore, j, k);
+                                traj.addTempPoint((Particle) currentParticle.clone(), minScore, j, k);
                             }
                         }
                     }

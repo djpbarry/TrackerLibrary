@@ -119,6 +119,10 @@ public class Particle {
         this.link = link;
     }
 
+    public int getiD() {
+        return iD;
+    }
+
     public Object clone() {
         return new Particle(t, c1Gaussian, c2Gaussian, link, iD);
     }
