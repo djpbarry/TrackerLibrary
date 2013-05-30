@@ -515,9 +515,9 @@ public class Timelapse_Analysis implements PlugIn {
                     }
                 }
             }
-            if (IJ.getInstance() != null) {
-                IJ.getTextPanel().append("Frame:\t" + m + "\tTotal Count:\t" + trajectories.size());
-            }
+//            if (IJ.getInstance() != null) {
+//                IJ.getTextPanel().append("Frame:\t" + m + "\tTotal Count:\t" + trajectories.size());
+//            }
         }
     }
 
