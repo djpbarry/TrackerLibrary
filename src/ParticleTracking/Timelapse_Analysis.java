@@ -412,7 +412,7 @@ public class Timelapse_Analysis implements PlugIn {
         ArrayList<Particle> detections;
 
         for (m = 0; m < depth; m++) {
-            for (k = m; (k < depth) && (((k - m) * timeRes) < trajMaxStep); k++) {
+            for (k = m; (k < depth) && (((k - m)) < trajMaxStep); k++) {
                 size = trajectories.size();
                 detections = objects.getLevel(k);
                 for (j = 0; j < detections.size(); j++) {
@@ -464,20 +464,20 @@ public class Timelapse_Analysis implements PlugIn {
                                     // TODO Variation in C1 intensity could be interpreted as movement in Z-direction
                                     if (projectVel) {
                                         traj.projectVelocity(x, y);
-                                        double vector1[] = {x, y, k * timeRes,
+                                        double vector1[] = {x, y, k,
                                             ch1G.getMagnitude() / 255.0, greenMag / 255.0,
                                             traj.getProjectXVel(),
                                             traj.getProjectYVel()};
                                         double vector2[] = {last.getX(), last.getY(),
-                                            last.getTimePoint(), last.getC1Intensity() / 255.0,
+                                            last.getTimePoint() / timeRes, last.getC1Intensity() / 255.0,
                                             last.getC2Intensity() / 255.0, traj.getXVelocity(),
                                             traj.getYVelocity()};
                                         score = Utils.calcEuclidDist(vector1, vector2);
                                     } else {
-                                        double vector1[] = {x, y, k * timeRes,
+                                        double vector1[] = {x, y, k,
                                             ch1G.getMagnitude() / 255.0};
                                         double vector2[] = {last.getX(), last.getY(),
-                                            last.getTimePoint(), last.getC1Intensity() / 255.0};
+                                            last.getTimePoint() / timeRes, last.getC1Intensity() / 255.0};
                                         //TODO Useful cost function described in Vallotton et al., 2003
                                         score = Utils.calcEuclidDist(vector1, vector2);
                                     }
