@@ -5,6 +5,7 @@
 package ParticleTracking;
 
 import IAClasses.IsoGaussian;
+import IAClasses.Utils;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.plugin.filter.GaussianBlur;
@@ -38,21 +39,19 @@ public class TestGenerator {
 //        TestGenerator tg = new TestGenerator();
 //        tg.generateSwitchingSequenceFromBitMap(template, 1000, 0.002, 5.0, "C:/Users/barry05/Desktop/Test_Data_Sets/Test_Generator_Output");
 //    }
-
     public TestGenerator() {
     }
 
     public void generate() {
         DecimalFormat indFormat = new DecimalFormat("000");
         int width = 640, height = 480;
-        Co_Localise cl = new Co_Localise();
         double res = Timelapse_Analysis.getSpatialRes();
         for (int i = 0; i < 50; i++) {
             ByteProcessor image = new ByteProcessor(width, height);
             IsoGaussian g1 = new IsoGaussian((i * 0.2 + 320) * res, 240.0 * res, 100.0, 2.0 * res, 2.0 * res, 0.1);
             IsoGaussian g2 = new IsoGaussian((320 - i * 0.2) * res, 240.0 * res, 100.0, 2.0 * res, 2.0 * res, 0.1);
-            cl.draw2DGaussian(image, g1, 0.0, Timelapse_Analysis.spatialRes);
-            cl.draw2DGaussian(image, g2, 0.0, Timelapse_Analysis.spatialRes);
+            Utils.draw2DGaussian(image, g1, 0.0, Timelapse_Analysis.spatialRes, false);
+            Utils.draw2DGaussian(image, g2, 0.0, Timelapse_Analysis.spatialRes, false);
             IJ.saveAs(new ImagePlus("", image.duplicate()), "PNG",
                     "C:\\Users\\barry05\\Desktop\\Tracking Test Sequences\\Simulation\\"
                     + indFormat.format(i));
@@ -73,7 +72,7 @@ public class TestGenerator {
             image.setColor(255);
             for (int j = 0; j < n; j++) {
                 if (particles[j] != null) {
-                    cl.draw2DGaussian(image, particles[j], 0.0, res);
+                    Utils.draw2DGaussian(image, particles[j], 0.0, res, false);
                     particles[j].updateVelocity();
                     particles[j].updatePosition();
                     double x = particles[j].getX() / res;
