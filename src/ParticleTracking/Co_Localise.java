@@ -1,16 +1,13 @@
 package ParticleTracking;
 
 import IAClasses.IsoGaussian;
+import IAClasses.Utils;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.gui.GenericDialog;
 import ij.plugin.PlugIn;
-import ij.process.ByteProcessor;
-import ij.process.ColorProcessor;
-import ij.process.FloatProcessor;
-import ij.process.ImageProcessor;
-import ij.process.TypeConverter;
+import ij.process.*;
 import ij.text.TextWindow;
 import java.awt.Toolkit;
 import java.text.DecimalFormat;
@@ -33,10 +30,9 @@ public class Co_Localise implements PlugIn {
     protected static double curveFitC1 = 0.0, curveFitC2 = 0.1;
     protected boolean findTails = false;
 
-    public static void main(String args[]) {
-        (new Co_Localise(new ImagePlus("C:\\Users\\barry05\\Desktop\\Xenia\\A36 1a.png"))).run(null);
-    }
-
+//    public static void main(String args[]) {
+//        (new Co_Localise(new ImagePlus("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Co_Localiser_Test\\Co_Localiser_Test.png"))).run(null);
+//    }
     public Co_Localise() {
     }
 
@@ -68,7 +64,8 @@ public class Co_Localise implements PlugIn {
         if (showDialog()) {
             headings = "Image\tChannel 1 (" + channels[channel1]
                     + ") Detections\tColocalised Channel 2 (" + channels[channel2]
-                    + ") Detections\t% Colocalisation";
+                    + ") Detections\t% Colocalisation\t"
+                    + "\u0394 (nm)";
             Timelapse_Analysis.setPreProcess(true);
             Timelapse_Analysis analyser = new Timelapse_Analysis(stack);
             analyser.calcParticleRadius();
@@ -148,43 +145,6 @@ public class Co_Localise implements PlugIn {
         }
     }
 
-    /**
-     * Draws a 2D IsoGaussian using the parameters contained in
-     * <code>g</code> over a square region of dimension
-     * <code>2 * radius + 1</code> in
-     * <code>image</code>.
-     */
-    public boolean draw2DGaussian(ImageProcessor image, IsoGaussian g, double tol, double res) {
-        if (image == null || g == null || (!partialDetect && (g.getFit() < -tol))) {
-            return false;
-        }
-        int x, y, drawRad;
-        double x0 = g.getX() / res;
-        double y0 = g.getY() / res;
-        double xSigma = g.getXSigma();
-        double value;
-        drawRad = (int) Math.round(xSigma * 3.0);
-        if (g.getFit() < -tol) {
-            image.setColor(100);
-            image.drawOval((int) Math.round(x0 - drawRad), (int) Math.round(y0 - drawRad),
-                    2 * drawRad + 1, 2 * drawRad + 1);
-        } else {
-            for (x = (int) Math.floor(x0 - drawRad); x <= x0 + drawRad; x++) {
-                for (y = (int) Math.floor(y0 - drawRad); y <= y0 + drawRad; y++) {
-                    /*
-                     * The current pixel value is added so as not to "overwrite"
-                     * other Gaussians in close proximity:
-                     */
-                    value = g.getMagnitude() * Math.exp(-(((x - x0) * (x - x0))
-                            + ((y - y0) * (y - y0))) / (2 * xSigma * xSigma));
-                    value += image.getPixelValue(x, y);
-                    image.putPixelValue(x, y, value);
-                }
-            }
-        }
-        return true;
-    }
-
     byte[] outPix(ImageProcessor ch1, ImageProcessor ch2, int colour) {
         ImageProcessor fch1 = (new TypeConverter(ch1, true)).convertToByte();
         ImageProcessor fch2 = (new TypeConverter(ch2, true)).convertToByte();
@@ -208,54 +168,58 @@ public class Co_Localise implements PlugIn {
         }
         double displaymax = 0.0;
         analyser.setColocaliser(this);
-        int colocalisation, count, tails;
+        int colocalisation, count;
         int width = imp.getWidth(), height = imp.getHeight();
         ImageStack outStack = new ImageStack(width, height);
         double res = Timelapse_Analysis.getSpatialRes();
+        double sepsum;
         for (int i = 0; i < stack.getSize(); i++) {
             ByteProcessor tailImage = new ByteProcessor(stack.getWidth(), stack.getHeight());
             tailImage.setPixels(getPixels(channel2, i));
             colocalisation = 0;
             count = 0;
-            tails = 0;
+//            tails = 0;
+            sepsum = 0.0;
             ParticleArray curves = analyser.findParticles(coFactor, false, i, i);
             FloatProcessor ch1proc = new FloatProcessor(width, height);
             FloatProcessor ch2proc = new FloatProcessor(width, height);
             ArrayList detections = curves.getLevel(0);
             for (int j = 0; j < detections.size(); j++) {
-                IsoGaussian c1 = ((IsoGaussian[]) detections.get(j))[0];
-                if (draw2DGaussian(ch1proc, c1, curveFitC1, Timelapse_Analysis.spatialRes)) {
+                IsoGaussian c1 = ((Particle) detections.get(j)).getC1Gaussian();
+                if (Utils.draw2DGaussian(ch1proc, c1, curveFitC1, Timelapse_Analysis.spatialRes, partialDetect)) {
                     if (c1.getMagnitude() > displaymax) {
                         displaymax = c1.getMagnitude();
                     }
                     count++;
-                    if (findTails) {
-                        TailTracer tracer = new TailTracer(tailImage.duplicate(), 0.25, c1.getX() / res,
-                                c1.getY() / res, 2, 0.5, 20, 5);
-                        if (tracer.trace()) {
-                            double[] xTail = tracer.getX();
-                            double[] yTail = tracer.getY();
-                            double[] intens = tracer.getTailIntens();
-                            for (int k = 0; k < xTail.length; k++) {
-                                int x = (int) Math.round(xTail[k]);
-                                int y = (int) Math.round(yTail[k]);
-                                double val = 255.0 * intens[k];
-                                if (val > displaymax) {
-                                    displaymax = val;
-                                }
-                                ch2proc.setValue(val);
-                                ch2proc.drawPixel(x, y);
-                            }
-                            tails++;
+//                    if (findTails) {
+//                        TailTracer tracer = new TailTracer(tailImage.duplicate(), 0.25, c1.getX() / res,
+//                                c1.getY() / res, 2, 0.5, 20, 5);
+//                        if (tracer.trace()) {
+//                            double[] xTail = tracer.getX();
+//                            double[] yTail = tracer.getY();
+//                            double[] intens = tracer.getTailIntens();
+//                            for (int k = 0; k < xTail.length; k++) {
+//                                int x = (int) Math.round(xTail[k]);
+//                                int y = (int) Math.round(yTail[k]);
+//                                double val = 255.0 * intens[k];
+//                                if (val > displaymax) {
+//                                    displaymax = val;
+//                                }
+//                                ch2proc.setValue(val);
+//                                ch2proc.drawPixel(x, y);
+//                            }
+//                            tails++;
+//                        }
+//                    } else {
+                    IsoGaussian c2 = ((Particle) detections.get(j)).getC2Gaussian();
+                    if (Utils.draw2DGaussian(ch2proc, c2, curveFitC2, Timelapse_Analysis.spatialRes,
+                            partialDetect)) {
+                        if (c2.getMagnitude() > displaymax) {
+                            displaymax = c2.getMagnitude();
                         }
-                    } else {
-                        IsoGaussian c2 = ((IsoGaussian[]) detections.get(j))[1];
-                        if (draw2DGaussian(ch2proc, c2, curveFitC2, Timelapse_Analysis.spatialRes)) {
-                            if (c2.getMagnitude() > displaymax) {
-                                displaymax = c2.getMagnitude();
-                            }
-                            colocalisation++;
-                        }
+                        colocalisation++;
+                        sepsum += Utils.calcDistance(c1.getX(), c1.getY(), c2.getX(), c2.getY());
+//                        }
                     }
                 }
             }
@@ -263,7 +227,8 @@ public class Co_Localise implements PlugIn {
                 results = new TextWindow(title + " Results", headings, null, 1000, 500);
             }
             results.append(imp.getTitle() + " (Slice " + i + ")\t" + count + "\t" + colocalisation
-                    + "\t" + numFormat.format(100.0 * colocalisation / count));
+                    + "\t" + numFormat.format(100.0 * colocalisation / count)
+                    + "\t" + numFormat.format(1000.0 * res * sepsum / count));
             ColorProcessor output = new ColorProcessor(width, height);
             output.setRGB(outPix(ch1proc, ch2proc, RED), outPix(ch1proc, ch2proc, GREEN),
                     outPix(ch1proc, ch2proc, BLUE));

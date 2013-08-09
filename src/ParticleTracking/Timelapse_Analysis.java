@@ -35,7 +35,7 @@ import java.util.Random;
  */
 public class Timelapse_Analysis implements PlugIn {
 
-    protected static double spatialRes = 64.5 / 1000.0, //Spatial resolution in nm/pixel
+    protected static double spatialRes = 64.5 / 1000.0, //Spatial resolution in microns/pixel
             timeRes = 16.0d / 1000.0d, //Time resolution in s/frame;
             virusDiameter = 350.0,
             chan1MaxThresh = 100.0, //Threshold value for local maxima in channel 1
