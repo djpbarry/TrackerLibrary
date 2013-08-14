@@ -12,13 +12,13 @@ import java.util.Objects;
 public class Particle {
 
     private int iD;
-    private double t;
+    private int t;
     private double x, y;
     private Particle link;
     private IsoGaussian c1Gaussian, c2Gaussian;
 
     public Particle() {
-        t = 0.0;
+        t = 0;
         x = 0.0;
         y = 0.0;
         iD = -1;
@@ -39,7 +39,7 @@ public class Particle {
      * Set to
      * <code>null</code> if this is the first particle in a new trajectory.
      */
-    public Particle(double time, IsoGaussian c1Gaussian, IsoGaussian c2Gaussian,
+    public Particle(int time, IsoGaussian c1Gaussian, IsoGaussian c2Gaussian,
             Particle newLink, int iD) {
         this.iD = iD;
         this.t = time;
@@ -73,7 +73,7 @@ public class Particle {
     /**
      * This particle's z-position within an image stack.
      */
-    public double getTimePoint() {
+    public int getTimePoint() {
         return t;
     }
 
@@ -125,38 +125,5 @@ public class Particle {
 
     public Object clone() {
         return new Particle(t, c1Gaussian, c2Gaussian, link, iD);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final Particle other = (Particle) obj;
-        if (this.iD != other.iD) {
-            return false;
-        }
-        if (Double.doubleToLongBits(this.t) != Double.doubleToLongBits(other.t)) {
-            return false;
-        }
-        if (Double.doubleToLongBits(this.x) != Double.doubleToLongBits(other.x)) {
-            return false;
-        }
-        if (Double.doubleToLongBits(this.y) != Double.doubleToLongBits(other.y)) {
-            return false;
-        }
-        if (!Objects.equals(this.link, other.link)) {
-            return false;
-        }
-        if (!Objects.equals(this.c1Gaussian, other.c1Gaussian)) {
-            return false;
-        }
-        if (!Objects.equals(this.c2Gaussian, other.c2Gaussian)) {
-            return false;
-        }
-        return true;
     }
 }

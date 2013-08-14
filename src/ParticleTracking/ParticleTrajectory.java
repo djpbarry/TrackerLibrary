@@ -66,7 +66,7 @@ public class ParticleTrajectory {
         int newX = (int) Math.round(scale * end.getX());
         int newY = (int) Math.round(scale * end.getY());
         if (size < 1) {
-            startTime = particle.getTimePoint();
+            startTime = particle.getTimePoint()*timeRes;
             bounds = new Rectangle(newX, newY, 0, 0);
         }
         if (newX < bounds.x) {
@@ -88,7 +88,7 @@ public class ParticleTrajectory {
         }
         if (particle.getC1Gaussian().getMagnitude() > peakIntens) {
             peakIntens = particle.getC1Gaussian().getMagnitude();
-            peakTime = particle.getTimePoint();
+            peakTime = particle.getTimePoint()*timeRes;
         }
         return true;
     }
@@ -208,7 +208,7 @@ public class ParticleTrajectory {
                 xsig = ysig = theta = Double.NaN;
             }
             output.append(formatter.format(current.getX()) + "\t" + formatter.format(current.getY())
-                    + "\t" + formatter.format(current.getTimePoint()) + "\t"
+                    + "\t" + formatter.format(current.getTimePoint()*timeRes) + "\t"
                     + formatter.format(current.getC1Intensity()) + "\t"
                     + formatter.format(current.getC2Intensity()) + "\t"
                     + formatter.format(xsig) + "\t"

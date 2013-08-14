@@ -332,7 +332,7 @@ public class Timelapse_Analysis implements PlugIn {
                              */
                             if (c1Gaussian != null) {
                                 particles.addDetection(i - startSlice,
-                                        new Particle((i - startSlice) * timeRes, c1Gaussian, c2Gaussian, null, -1));
+                                        new Particle((i - startSlice), c1Gaussian, c2Gaussian, null, -1));
                             }
                         }
                     }
@@ -440,7 +440,7 @@ public class Timelapse_Analysis implements PlugIn {
                             for (minScoreIndex = -1, minScore = Double.MAX_VALUE, i = 0; i < size; i++) {
                                 traj = (ParticleTrajectory) trajectories.get(i);
                                 last = traj.getEnd();
-                                if ((last != null) && (last.getTimePoint() == m * timeRes) && k != m) {
+                                if ((last != null) && (last.getTimePoint() == m) && k != m) {
                                     /*
                                      * Evaluate the probability that the current
                                      * particle belongs to the current
@@ -469,7 +469,7 @@ public class Timelapse_Analysis implements PlugIn {
                                             traj.getProjectXVel(),
                                             traj.getProjectYVel()};
                                         double vector2[] = {last.getX(), last.getY(),
-                                            last.getTimePoint() / timeRes, last.getC1Intensity() / 255.0,
+                                            last.getTimePoint(), last.getC1Intensity() / 255.0,
                                             last.getC2Intensity() / 255.0, traj.getXVelocity(),
                                             traj.getYVelocity()};
                                         score = Utils.calcEuclidDist(vector1, vector2);
@@ -477,7 +477,7 @@ public class Timelapse_Analysis implements PlugIn {
                                         double vector1[] = {x, y, k,
                                             ch1G.getMagnitude() / 255.0};
                                         double vector2[] = {last.getX(), last.getY(),
-                                            last.getTimePoint() / timeRes, last.getC1Intensity() / 255.0};
+                                            last.getTimePoint(), last.getC1Intensity() / 255.0};
                                         //TODO Useful cost function described in Vallotton et al., 2003
                                         score = Utils.calcEuclidDist(vector1, vector2);
                                     }
@@ -650,7 +650,7 @@ public class Timelapse_Analysis implements PlugIn {
         }
 
         for (int i = size - 1; i >= 0; i--) {
-            xvalues[i] = current.getTimePoint();
+            xvalues[i] = current.getTimePoint()*timeRes;
             redValues[i] = current.getC1Intensity() / 255.0d;
             greenValues[i] = current.getC2Intensity() / 255.0d;
             ratios[i] = greenValues[i] / redValues[i];
@@ -737,7 +737,7 @@ public class Timelapse_Analysis implements PlugIn {
                 lastY = current.getY();
                 textX = (int) (Math.round(current.getX() * scaledSR));
                 textY = (int) (Math.round(current.getY() * scaledSR));
-                lastTP = (int) Math.round(current.getTimePoint() / timeRes);
+                lastTP = current.getTimePoint();
                 current = current.getLink();
                 while (current != null) {
                     for (j = frames - 1; j >= lastTP; j--) {
@@ -771,7 +771,7 @@ public class Timelapse_Analysis implements PlugIn {
                     }
                     lastX = current.getX();
                     lastY = current.getY();
-                    lastTP = (int) Math.round(current.getTimePoint() / timeRes);
+                    lastTP = current.getTimePoint();
                     current = current.getLink();
                 }
                 processor = outputStack.getProcessor(lastTP + 1);
@@ -1486,7 +1486,7 @@ public class Timelapse_Analysis implements PlugIn {
             current = traj.getEnd();
             currentX = lastX = (int) (Math.round(current.getX() / spatialRes - xOffset)) * visScale;
             currentY = lastY = (int) (Math.round(current.getY() / spatialRes - yOffset)) * visScale;
-            lastTP = current.getTimePoint() / timeRes;
+            lastTP = current.getTimePoint();
             current = current.getLink();
             while (current != null) {
                 for (j = frames - 1; j >= lastTP; j--) {
@@ -1508,7 +1508,7 @@ public class Timelapse_Analysis implements PlugIn {
                 }
                 lastX = currentX;
                 lastY = currentY;
-                lastTP = current.getTimePoint() / timeRes;
+                lastTP = current.getTimePoint();
                 current = current.getLink();
             }
             return new ImagePlus("Trajectory Number " + (trajNumber + 1), outputStack);
