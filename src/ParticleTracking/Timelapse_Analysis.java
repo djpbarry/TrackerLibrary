@@ -1,8 +1,8 @@
 package ParticleTracking;
 
-import IAClasses.FractalEstimator;
 import IAClasses.IsoGaussian;
 import IAClasses.Utils;
+import UtilClasses.GenUtils;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -35,21 +35,22 @@ import java.util.Random;
  */
 public class Timelapse_Analysis implements PlugIn {
 
-    protected static double spatialRes = 64.5 / 1000.0, //Spatial resolution in microns/pixel
-            timeRes = 16.0d / 1000.0d, //Time resolution in s/frame;
+    protected static double spatialRes = 83.0 / 1000.0, //Spatial resolution in microns/pixel
+            timeRes = 1.0d, //Time resolution in s/frame;
             virusDiameter = 350.0,
-            chan1MaxThresh = 100.0, //Threshold value for local maxima in channel 1
+            chan1MaxThresh = 10.0, //Threshold value for local maxima in channel 1
             chan2MaxThresh = 0.0, //Threshold value for local maxima in channel 2
             //gaussianRadius, //Gaussian filter radius
-            trajMaxStep = 1.1, //Tolerance used in evaluating likely trajectories
+            trajMaxStep = 1.5, //Tolerance used in evaluating likely trajectories
             //TODO Consider performing a series of analyses with incresing values for trajMaxStep. This may allow discrimination between different modes of motion by identifying slowly-moving particles first (and subsequently removing them from the data set) and then proceeding to more complex trajectories.
-            minTrajLength = 0.0 / timeRes, //Minimum trajectory length output in results
+            minTrajLength = 0.0, //Minimum trajectory length output in results
             hystDiff = 1.25;
     protected double scale, //Scale factor for visualisation
             xySigEst; //Initial estimate of standard deviation for IsoGaussian fitting
     protected int xyPartRad; //Radius over which to draw particles in visualisation
     public final static int FOREGROUND = 255, //Integer value of foreground pixels
-            SHOW_RESULTS = -1;
+            SHOW_RESULTS = -1,
+            VERSION = 3;
     protected final static double VIS_SIZE = 750.0,
             LAMBDA = 650.0, //Wavelength of light
             NUM_AP = 1.4; //Numerical aperture of system
@@ -60,22 +61,22 @@ public class Timelapse_Analysis implements PlugIn {
     protected ImageStack stack;
     private long startTime;
     protected DecimalFormat numFormat = new DecimalFormat("0.000");
-    public static String title = "Virus Tracker v3.09";
+    protected DecimalFormat intFormat = new DecimalFormat("000");
+    public static String title = "Particle Tracker";
     protected static boolean colocal = false, msdPlot = false, intensPlot = false,
-            preProcess = true, trajPlot = false, prevRes = false;
+            preProcess = false, trajPlot = false, prevRes = true;
     protected Co_Localise colocaliser;
     protected boolean monoChrome;
-    private double noiseTol = 0.2;
+//    private double noiseTol = 0.2;
 
 //    public static void main(String args[]) {
-//        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Tracking Test Sequences"), null);
+//        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
 //        ImageStack stack = Utils.buildStack(image);
 //        ImagePlus imp = new ImagePlus("Stack", stack);
 //        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
 //        if (instance.showDialog()) {
 //            instance.analyse();
 //        }
-//        return;
 //    }
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep,
             double chan1MaxThresh, double hystDiff, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
@@ -110,6 +111,9 @@ public class Timelapse_Analysis implements PlugIn {
      * Implements run method from {@link PlugIn}.
      */
     public void run(String arg) {
+        title = title + "_v" + VERSION + "." + intFormat.format(
+                GenUtils.getRevisionNumber("c:/users/barry05/documents/netbeans/projects/particle_tracker/"
+                + GenUtils.hgTagDir, GenUtils.maxline));
         imp = WindowManager.getCurrentImage();
         if (showDialog()) {
             analyse();
@@ -223,7 +227,6 @@ public class Timelapse_Analysis implements PlugIn {
             results.setVisible(true);
             resultSummary.setVisible(true);
         }
-        return;
     }
 
     /**
@@ -265,7 +268,7 @@ public class Timelapse_Analysis implements PlugIn {
         ParticleArray particles = new ParticleArray(arraySize);
         for (i = startSlice; i < noOfImages && i <= endSlice; i++) {
             IJ.freeMemory();
-            IJ.showStatus("Analysing Frame " + i);
+            IJ.showStatus("Finding Particles...");
             IJ.showProgress(i, noOfImages);
             if (!monoChrome) {
                 ColorProcessor colProc = new ColorProcessor(width, height);
@@ -286,7 +289,7 @@ public class Timelapse_Analysis implements PlugIn {
             for (c1X = 0; c1X < width; c1X++) {
                 for (c1Y = 0; c1Y < height; c1Y++) {
                     if (thisC1Max.getPixel(c1X, c1Y) == FOREGROUND) {
-                        IsoGaussian c1Gaussian = null;
+                        IsoGaussian c1Gaussian;
                         IsoGaussian c2Gaussian = null;
                         /*
                          * Search for local maxima in green image within
@@ -412,6 +415,8 @@ public class Timelapse_Analysis implements PlugIn {
         ArrayList<Particle> detections;
 
         for (m = 0; m < depth; m++) {
+            IJ.showStatus("Building Trajectories...");
+            IJ.showProgress(m, depth);
             for (k = m; (k < depth) && (((k - m)) < trajMaxStep); k++) {
                 size = trajectories.size();
                 detections = objects.getLevel(k);
@@ -650,7 +655,7 @@ public class Timelapse_Analysis implements PlugIn {
         }
 
         for (int i = size - 1; i >= 0; i--) {
-            xvalues[i] = current.getTimePoint()*timeRes;
+            xvalues[i] = current.getTimePoint() * timeRes;
             redValues[i] = current.getC1Intensity() / 255.0d;
             greenValues[i] = current.getC2Intensity() / 255.0d;
             ratios[i] = greenValues[i] / redValues[i];
@@ -689,9 +694,8 @@ public class Timelapse_Analysis implements PlugIn {
         if (stack == null) {
             return null;
         }
-//        stack = imp.getStack();
         int i, j, width = (int) Math.round(stack.getWidth() * scale), height = (int) Math.round(stack.getHeight() * scale),
-                textX, textY, type, frames = stack.getSize(), radius = (int) Math.round(xyPartRad * scale);
+                type, frames = stack.getSize(), radius = (int) Math.round(xyPartRad * scale);
         double lastX, lastY;
         ImageStack outputStack = new ImageStack(width, height);
         Particle current;
@@ -703,7 +707,6 @@ public class Timelapse_Analysis implements PlugIn {
         double scaledSR = scale / spatialRes;
         int lastTP;
         double ptScale = ParticleTrajectory.scale;
-        FractalEstimator boxCount;
 
         if (n < 1) {
             return null;
@@ -721,8 +724,10 @@ public class Timelapse_Analysis implements PlugIn {
         }
         Random r = new Random();
         for (i = 0, count = 1; i < n; i++) {
+            IJ.showStatus("Mapping Output...");
+            IJ.showProgress(i, n);
             traj = (ParticleTrajectory) (trajectories.get(i));
-//            Color thiscolor = new Color(r.nextInt(256), r.nextInt(256), r.nextInt(256));
+            Color thiscolor = new Color(r.nextInt(256), r.nextInt(256), r.nextInt(256));
             length = traj.getSize();
             type = traj.getType();
             bounds = traj.getBounds();
@@ -735,8 +740,6 @@ public class Timelapse_Analysis implements PlugIn {
                 current = traj.getEnd();
                 lastX = current.getX();
                 lastY = current.getY();
-                textX = (int) (Math.round(current.getX() * scaledSR));
-                textY = (int) (Math.round(current.getY() * scaledSR));
                 lastTP = current.getTimePoint();
                 current = current.getLink();
                 while (current != null) {
@@ -744,23 +747,20 @@ public class Timelapse_Analysis implements PlugIn {
                         processor = outputStack.getProcessor(j + 1);
                         if (!monoChrome) {
                             if (type == ParticleTrajectory.NON_COLOCAL) {
-                                processor.setColor(getDrawColor(colocaliser.getChannel1()));
-//                        processor.setColor(thiscolor);
-                            } else {
-                                processor.setColor(getDrawColor(colocaliser.getChannel2()));
+                                processor.setColor(thiscolor);
                             }
                         } else {
                             processor.setValue(255);
+                        }
+                        if (j - 1 < lastTP) {
+                            markParticle(processor, (int) Math.round(lastX * scaledSR) - radius,
+                                    (int) Math.round(lastY * scaledSR) - radius, radius, true, "" + count);
                         }
                         if (tracks && j <= lastTP + 20.0 / timeRes) {
                             int x = (int) (Math.round(current.getX() * scaledSR));
                             int y = (int) (Math.round(current.getY() * scaledSR));
                             processor.drawLine(x, y, (int) Math.round(lastX * scaledSR),
                                     (int) Math.round(lastY * scaledSR));
-                        }
-                        if (j - 1 < lastTP) {
-                            processor.drawOval(((int) Math.round(lastX * scaledSR) - radius),
-                                    ((int) Math.round(lastY * scaledSR) - radius), 2 * radius, 2 * radius);
                         }
                     }
                     if (tracks) {
@@ -775,37 +775,22 @@ public class Timelapse_Analysis implements PlugIn {
                     current = current.getLink();
                 }
                 processor = outputStack.getProcessor(lastTP + 1);
-//                processor.setColor(thiscolor);
-                processor.drawOval(((int) Math.round(lastX * scaledSR) - radius),
-                        ((int) Math.round(lastY * scaledSR) - radius), 2 * radius, 2 * radius);
-//                for (j = 0; j < frames; j++) {
-//                    processor = outputStack.getProcessor(j + 1);
-                if (!monoChrome) {
-                    if (type == ParticleTrajectory.NON_COLOCAL) {
-                        processor.setColor(getDrawColor(colocaliser.getChannel1()));
-                    } else {
-                        processor.setColor(getDrawColor(colocaliser.getChannel2()));
-                    }
-                } else {
-                    processor.setValue(255);
-                }
-//                    processor.drawString("" + count, textX, textY);
-//                }
-                processor.drawOval(((int) Math.round(lastX * scaledSR) - radius),
-                        ((int) Math.round(lastY * scaledSR) - radius), 2 * radius, 2 * radius);
+                processor.setColor(thiscolor);
+                markParticle(processor, (int) Math.round(lastX * scaledSR) - radius,
+                        (int) Math.round(lastY * scaledSR) - radius, radius, true, "" + count);
                 count++;
-            }
-            boxCount = new FractalEstimator();
-            double[] fractalDims = boxCount.do2DEstimate(trajImage);
-            if (fractalDims != null) {
-                traj.setFracDim(fractalDims[0]);
-            } else {
-                traj.setFracDim(Double.NaN);
             }
         }
         (new ImagePlus("Trajectories", outputStack)).show();
 
         return outputStack;
+    }
+
+    void markParticle(ImageProcessor processor, int x, int y, int radius, boolean string, String label) {
+        processor.drawOval(x, y, 2 * radius, 2 * radius);
+        if (string) {
+            processor.drawString(label, x, y);
+        }
     }
 
     public static void setChan1MaxThresh(double chan1MaxThresh) {
@@ -876,7 +861,7 @@ public class Timelapse_Analysis implements PlugIn {
             ResultsPreviewer previewer = new ResultsPreviewer();
             dialog.addDialogListener(previewer);
             dialog.showDialog();
-            while (dialog.isVisible());
+            while (!(dialog.wasCanceled() || dialog.wasOKed()));
             previewer.preview.close();
             if (dialog.wasOKed()) {
                 remove = (int) dialog.getNextNumber();
@@ -888,7 +873,6 @@ public class Timelapse_Analysis implements PlugIn {
                 done = true;
             }
         }
-        return;
     }
 
     public static double getSpatialRes() {
@@ -929,7 +913,6 @@ public class Timelapse_Analysis implements PlugIn {
                     + "\nChannel 2:\t" + Co_Localise.channels[colocaliser.getChannel2()]
                     + "\nSpatial Resolution (nm/pixel):\t" + numFormat.format(spatialRes * 1000.0)
                     + "\nFrames per Second (/s):\t" + numFormat.format(1.0 / timeRes)
-                    + "\nVirus Diameter (nm):\t" + numFormat.format(virusDiameter)
                     + "\nMinimum Peak Size (" + Co_Localise.channels[colocaliser.getChannel1()]
                     + "):\t" + numFormat.format(chan1MaxThresh)
                     + "\nMinimum Peak Size (" + Co_Localise.channels[colocaliser.getChannel2()]
@@ -941,7 +924,6 @@ public class Timelapse_Analysis implements PlugIn {
             return title + "\t" + dateFormat.format(current)
                     + "\nSpatial Resolution (nm/pixel):\t" + numFormat.format(spatialRes * 1000.0)
                     + "\nFrames per Second (/s):\t" + numFormat.format(1.0 / timeRes)
-                    + "\nVirus Diameter (nm):\t" + numFormat.format(virusDiameter)
                     + "\nMinimum Peak Size (Chan 1):\t" + numFormat.format(chan1MaxThresh)
                     + "\nMinimum Peak Size (Chan 2):\t" + numFormat.format(chan2MaxThresh)
                     + "\nTrajectory Step Tolerance:\t" + numFormat.format(trajMaxStep)
@@ -1009,6 +991,8 @@ public class Timelapse_Analysis implements PlugIn {
         public InputDialog(java.awt.Frame parent, boolean modal) {
             super(parent, modal);
             initComponents();
+            Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+            this.setLocation(dim.width / 2 - this.getWidth() / 2, dim.height / 2 - this.getHeight() / 2);
         }
 
         /**
@@ -1080,6 +1064,7 @@ public class Timelapse_Analysis implements PlugIn {
             virusDiamField.setText(virusDiameter + "");
             virusDiamField.setMaximumSize(new java.awt.Dimension(72, 20));
             virusDiamField.setMinimumSize(new java.awt.Dimension(72, 20));
+            virusDiamField.setEnabled(false);
 
             jLabel5.setText("nm");
 
@@ -1302,8 +1287,6 @@ public class Timelapse_Analysis implements PlugIn {
                         colocaliser.getPixels(-1, slice));
             }
             viewDetections(findParticles(1.0, false, slice, slice));
-
-            return;
         }
 
         /**
@@ -1321,12 +1304,12 @@ public class Timelapse_Analysis implements PlugIn {
             }
             double scaledSR = scale / spatialRes;
             IsoGaussian c1, c2;
-            ArrayList particles = detections.getLevel(0);
+            ArrayList<Particle> particles = detections.getLevel(0);
             Color c1Color = !monoChrome ? getDrawColor(colocaliser.getChannel1()) : Color.white;
             Color c2Color = !monoChrome ? getDrawColor(colocaliser.getChannel2()) : Color.white;
             for (i = 0; i < particles.size(); i++) {
-                c1 = ((IsoGaussian[]) particles.get(i))[0];
-                c2 = ((IsoGaussian[]) particles.get(i))[1];
+                c1 = particles.get(i).getC1Gaussian();
+                c2 = particles.get(i).getC2Gaussian();
                 drawDetections(output, (int) (Math.round(scaledSR * c1.getX())),
                         (int) (Math.round(scaledSR * c1.getY())), radius,
                         (c1.getFit() > 0), c1Color);
@@ -1339,8 +1322,6 @@ public class Timelapse_Analysis implements PlugIn {
             preview.setProcessor("Preview of Slice " + slice, output);
             preview.updateAndDraw();
             preview.show();
-
-            return;
         }
 
         public void drawDetections(ImageProcessor image, int x, int y, int radius,
@@ -1351,7 +1332,6 @@ public class Timelapse_Analysis implements PlugIn {
             } else {
                 image.drawRect((x - radius), (y - radius), 2 * radius, 2 * radius);
             }
-            return;
         }
 
         private void prevScrollAdjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {
@@ -1461,7 +1441,7 @@ public class Timelapse_Analysis implements PlugIn {
             ParticleTrajectory traj = (ParticleTrajectory) (trajectories.get(trajNumber));
             stack = imp.getStack();
             Rectangle bounds = traj.getBounds();
-            int visScale = 20, border = 2 * xyPartRad;
+            int visScale = 2, border = 2 * xyPartRad;
             int i, j, width = (bounds.width + 2 * border) * visScale, height = (bounds.height + 2 * border) * visScale,
                     currentX, currentY, lastX, lastY, type, frames = stack.getSize(),
                     xOffset = bounds.x - border, yOffset = bounds.y - border;

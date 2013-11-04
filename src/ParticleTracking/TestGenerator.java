@@ -39,6 +39,12 @@ public class TestGenerator {
 //        TestGenerator tg = new TestGenerator();
 //        tg.generateSwitchingSequenceFromBitMap(template, 1000, 0.002, 5.0, "C:/Users/barry05/Desktop/Test_Data_Sets/Test_Generator_Output");
 //    }
+    
+//    public static void main(String args[]){
+//         TestGenerator tg = new TestGenerator();
+//         tg.generateMulti(20, 512, 512, 100);
+//    }
+    
     public TestGenerator() {
     }
 
@@ -53,7 +59,7 @@ public class TestGenerator {
             Utils.draw2DGaussian(image, g1, 0.0, Timelapse_Analysis.spatialRes, false);
             Utils.draw2DGaussian(image, g2, 0.0, Timelapse_Analysis.spatialRes, false);
             IJ.saveAs(new ImagePlus("", image.duplicate()), "PNG",
-                    "C:\\Users\\barry05\\Desktop\\Tracking Test Sequences\\Simulation\\"
+                    "C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences\\Simulation\\"
                     + indFormat.format(i));
         }
     }

@@ -1,7 +1,6 @@
 package ParticleTracking;
 
 import IAClasses.IsoGaussian;
-import java.util.Objects;
 
 /**
  * Represents a detected particle in an individual image or frame.
