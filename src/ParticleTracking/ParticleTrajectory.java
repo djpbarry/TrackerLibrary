@@ -66,7 +66,7 @@ public class ParticleTrajectory {
         int newX = (int) Math.round(scale * end.getX());
         int newY = (int) Math.round(scale * end.getY());
         if (size < 1) {
-            startTime = particle.getTimePoint()*timeRes;
+            startTime = particle.getTimePoint() * timeRes;
             bounds = new Rectangle(newX, newY, 0, 0);
         }
         if (newX < bounds.x) {
@@ -88,7 +88,7 @@ public class ParticleTrajectory {
         }
         if (particle.getC1Gaussian().getMagnitude() > peakIntens) {
             peakIntens = particle.getC1Gaussian().getMagnitude();
-            peakTime = particle.getTimePoint()*timeRes;
+            peakTime = particle.getTimePoint() * timeRes;
         }
         return true;
     }
@@ -155,6 +155,19 @@ public class ParticleTrajectory {
         return displacement;
     }
 
+    public double getDuration() {
+        int duration = 0;
+        Particle current = end;
+        if (current == null) {
+            return 0.0;
+        }
+        while (current.getLink() != null) {
+            duration += (current.getTimePoint() - (current.getLink()).getTimePoint());
+            current = current.getLink();
+        }
+        return duration * timeRes;
+    }
+
     /**
      * Returns a non-zero score for the temporary particle, or
      * <code>Double.MAX_VALUE</code> if no such particle exists.
@@ -208,7 +221,7 @@ public class ParticleTrajectory {
                 xsig = ysig = theta = Double.NaN;
             }
             output.append(formatter.format(current.getX()) + "\t" + formatter.format(current.getY())
-                    + "\t" + formatter.format(current.getTimePoint()*timeRes) + "\t"
+                    + "\t" + formatter.format(current.getTimePoint() * timeRes) + "\t"
                     + formatter.format(current.getC1Intensity()) + "\t"
                     + formatter.format(current.getC2Intensity()) + "\t"
                     + formatter.format(xsig) + "\t"
@@ -247,8 +260,6 @@ public class ParticleTrajectory {
         }
         xVelocity = xDist / i;
         yVelocity = yDist / i;
-
-        return;
     }
 
     void projectVelocity(double testX, double testY) {
@@ -275,8 +286,6 @@ public class ParticleTrajectory {
         }
         projectXVel = xDist / i;
         projectYVel = yDist / i;
-
-        return;
     }
 
     public double getFluorRatio() {
@@ -578,7 +587,6 @@ public class ParticleTrajectory {
         } else {
             xFluorSpread = yFluorSpread = Double.NaN;
         }
-        return;
     }
 
     public double getxFluorSpread() {

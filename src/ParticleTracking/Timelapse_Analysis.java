@@ -1,5 +1,6 @@
 package ParticleTracking;
 
+import AnaMorf.Utilities;
 import IAClasses.IsoGaussian;
 import IAClasses.Utils;
 import UtilClasses.GenUtils;
@@ -15,6 +16,7 @@ import ij.plugin.filter.GaussianBlur;
 import ij.process.*;
 import ij.text.TextWindow;
 import java.awt.*;
+import java.io.File;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -35,13 +37,13 @@ import java.util.Random;
  */
 public class Timelapse_Analysis implements PlugIn {
 
-    protected static double spatialRes = 83.0 / 1000.0, //Spatial resolution in microns/pixel
-            timeRes = 1.0d, //Time resolution in s/frame;
+    protected static double spatialRes = 212.0 / 1000.0, //Spatial resolution in microns/pixel
+            timeRes = 2.0d, //Time resolution in s/frame;
             virusDiameter = 350.0,
-            chan1MaxThresh = 10.0, //Threshold value for local maxima in channel 1
+            chan1MaxThresh = 100.0, //Threshold value for local maxima in channel 1
             chan2MaxThresh = 0.0, //Threshold value for local maxima in channel 2
             //gaussianRadius, //Gaussian filter radius
-            trajMaxStep = 1.5, //Tolerance used in evaluating likely trajectories
+            trajMaxStep = 2.5, //Tolerance used in evaluating likely trajectories
             //TODO Consider performing a series of analyses with incresing values for trajMaxStep. This may allow discrimination between different modes of motion by identifying slowly-moving particles first (and subsequently removing them from the data set) and then proceeding to more complex trajectories.
             minTrajLength = 0.0, //Minimum trajectory length output in results
             hystDiff = 1.25;
@@ -64,7 +66,7 @@ public class Timelapse_Analysis implements PlugIn {
     protected DecimalFormat intFormat = new DecimalFormat("000");
     public static String title = "Particle Tracker";
     protected static boolean colocal = false, msdPlot = false, intensPlot = false,
-            preProcess = false, trajPlot = false, prevRes = true;
+            preProcess = true, trajPlot = false, prevRes = false;
     protected Co_Localise colocaliser;
     protected boolean monoChrome;
 //    private double noiseTol = 0.2;
@@ -78,6 +80,7 @@ public class Timelapse_Analysis implements PlugIn {
 //            instance.analyse();
 //        }
 //    }
+
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep,
             double chan1MaxThresh, double hystDiff, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
         Timelapse_Analysis.spatialRes = spatialRes;
@@ -409,8 +412,8 @@ public class Timelapse_Analysis implements PlugIn {
         int depth = objects.getDepth();
         ParticleTrajectory traj = null;
         Particle last;
-        IsoGaussian ch1G, ch2G;
-        double x, y, score, greenMag, minScore;
+        IsoGaussian ch1G;
+        double x, y, score, minScore;
         int minScoreIndex;
         ArrayList<Particle> detections;
 
@@ -424,7 +427,6 @@ public class Timelapse_Analysis implements PlugIn {
                     Particle currentParticle = detections.get(j);
                     if (currentParticle != null) {
                         ch1G = currentParticle.getC1Gaussian();
-                        ch2G = currentParticle.getC2Gaussian();
                         /*
                          * If no trajectories have yet been built, start a new
                          * one:
@@ -457,25 +459,18 @@ public class Timelapse_Analysis implements PlugIn {
                                      * differences in respective intensity
                                      * levels:
                                      */
-                                    if (ch2G != null && !(ch2G instanceof RandomDistribution)) {
-                                        x = (ch1G.getX() + ch2G.getX()) / 2.0d;
-                                        y = (ch1G.getY() + ch2G.getY()) / 2.0d;
-                                        greenMag = ch2G.getMagnitude();
-                                    } else {
-                                        x = ch1G.getX();
-                                        y = ch1G.getY();
-                                        greenMag = 0.0;
-                                    }
+                                    x = ch1G.getX();
+                                    y = ch1G.getY();
                                     // TODO Variation in C1 intensity could be interpreted as movement in Z-direction
                                     if (projectVel) {
                                         traj.projectVelocity(x, y);
                                         double vector1[] = {x, y, k,
-                                            ch1G.getMagnitude() / 255.0, greenMag / 255.0,
+                                            ch1G.getMagnitude() / 255.0,
                                             traj.getProjectXVel(),
                                             traj.getProjectYVel()};
                                         double vector2[] = {last.getX(), last.getY(),
                                             last.getTimePoint(), last.getC1Intensity() / 255.0,
-                                            last.getC2Intensity() / 255.0, traj.getXVelocity(),
+                                            traj.getXVelocity(),
                                             traj.getYVelocity()};
                                         score = Utils.calcEuclidDist(vector1, vector2);
                                     } else {
@@ -602,7 +597,7 @@ public class Timelapse_Analysis implements PlugIn {
         traj.calcStepSpread();
         traj.calcDirectionality();
         double displacement = traj.getDisplacement();
-        double duration = traj.getSize() * timeRes;
+        double duration = traj.getDuration();
         int type = traj.getType();
         String trajType = null;
         switch (type) {
@@ -775,7 +770,11 @@ public class Timelapse_Analysis implements PlugIn {
                     current = current.getLink();
                 }
                 processor = outputStack.getProcessor(lastTP + 1);
-                processor.setColor(thiscolor);
+                if (!monoChrome) {
+                    processor.setColor(thiscolor);
+                } else {
+                    processor.setValue(255);
+                }
                 markParticle(processor, (int) Math.round(lastX * scaledSR) - radius,
                         (int) Math.round(lastY * scaledSR) - radius, radius, true, "" + count);
                 count++;

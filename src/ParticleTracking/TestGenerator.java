@@ -26,7 +26,7 @@ public class TestGenerator {
     private Random rand = new Random();
     private double numAp = 1.4;
     private double lambda = 602.0;
-    private double res = 0.083;
+    private double res = 0.212;
     private double sigmaEstPix = 0.305 * lambda / (numAp * res * 1000.0);
 
 //    public static void main(String args[]) {
@@ -42,7 +42,7 @@ public class TestGenerator {
     
 //    public static void main(String args[]){
 //         TestGenerator tg = new TestGenerator();
-//         tg.generateMulti(20, 512, 512, 100);
+//         tg.generateMulti(1, 256, 256, 60);
 //    }
     
     public TestGenerator() {
@@ -51,7 +51,7 @@ public class TestGenerator {
     public void generate() {
         DecimalFormat indFormat = new DecimalFormat("000");
         int width = 640, height = 480;
-        double res = Timelapse_Analysis.getSpatialRes();
+//        double res = Timelapse_Analysis.getSpatialRes();
         for (int i = 0; i < 50; i++) {
             ByteProcessor image = new ByteProcessor(width, height);
             IsoGaussian g1 = new IsoGaussian((i * 0.2 + 320) * res, 240.0 * res, 100.0, 2.0 * res, 2.0 * res, 0.1);
@@ -66,7 +66,7 @@ public class TestGenerator {
 
     public void generateMulti(int n, int width, int height, int length) {
         int totalcount = n;
-        Co_Localise cl = new Co_Localise();
+//        Co_Localise cl = new Co_Localise();
         MotileGaussian particles[] = new MotileGaussian[n];
         Random r = new Random();
         for (int i = 0; i < n; i++) {
@@ -94,12 +94,13 @@ public class TestGenerator {
                         totalcount++;
 
                     }
+                    System.out.println("X:\t" + particles[j].getX() + "\tY:\t" + particles[j].getY());
                 }
             }
             IJ.saveAs(new ImagePlus("", image.duplicate()), "PNG",
                     "C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences\\Simulation\\"
                     + indFormat.format(i));
-            System.out.println("Frame:\t" + i + "\tTotal Count:\t" + totalcount);
+//            System.out.println("Frame:\t" + i + "\tTotal Count:\t" + totalcount);
         }
     }
 
