@@ -222,13 +222,13 @@ public class Volume_Analysis extends Timelapse_Analysis {
                         IsoGaussianFitter c1GF = new IsoGaussianFitter(xCoords, yCoords, pixValues);
                         c1GF.doFit(xySigEst);
                         //if (c1GF.getXsig() < (c1SigmaTol * xySigEst)) {
-                        if (c1GF.getRSquared() > curveFitTol) {
+                        if (c1GF.getRSquared() > c1CurveFitTol) {
                             c1Gaussian = new IsoGaussian((c1GF.getX0() + c1X - xyPartRad) * spatialRes,
                                     (c1GF.getY0() + c1Y - xyPartRad) * spatialRes, c1GF.getMag(),
-                                    c1GF.getXsig(), c1GF.getYsig(), c1GF.getRSquared() - curveFitTol);
+                                    c1GF.getXsig(), c1GF.getYsig(), c1GF.getRSquared() - c1CurveFitTol);
                         } else {
                             c1Gaussian = new IsoGaussian(c1X * spatialRes, c1Y * spatialRes, chan1Proc.getPixelValue(c1X, c1Y),
-                                    xySigEst, xySigEst, c1GF.getRSquared() - curveFitTol);
+                                    xySigEst, xySigEst, c1GF.getRSquared() - c1CurveFitTol);
                         }
                         /*
                          * A particle has been isolated - trajectories need to

@@ -3,7 +3,6 @@ package ParticleTracking;
 import AnaMorf.Utilities;
 import IAClasses.IsoGaussian;
 import IAClasses.Utils;
-import UtilClasses.GenUtils;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -56,8 +55,9 @@ public class Timelapse_Analysis implements PlugIn {
     protected final static double VIS_SIZE = 750.0,
             LAMBDA = 650.0, //Wavelength of light
             NUM_AP = 1.4; //Numerical aperture of system
-    protected final static double curveFitTol = 0.8d, //Tolerance used in determining fit of IsoGaussian curves
-    colocalThresh=0.5;
+    protected final static double c1CurveFitTol = 0.8d, //Tolerance used in determining fit of IsoGaussian curves
+            c2CurveFitTol = 0.0d,
+            colocalThresh = 0.5;
 //    protected static double c1SigmaTol = 3.0, c2SigmaTol = 3.0;
     protected ArrayList<ParticleTrajectory> trajectories = new ArrayList(); //Trajectories of the detected particles
     protected ImagePlus imp; //The active image stack
@@ -65,22 +65,23 @@ public class Timelapse_Analysis implements PlugIn {
     private long startTime;
     protected DecimalFormat numFormat = new DecimalFormat("0.000");
     protected DecimalFormat intFormat = new DecimalFormat("000");
-    public static String title = "Particle Tracker_v3.022";
+    public static String title = "Particle Tracker_v3.023";
     protected static boolean colocal = false, msdPlot = false, intensPlot = false,
             preProcess = true, trajPlot = false, prevRes = false;
     protected Co_Localise colocaliser;
     protected boolean monoChrome;
 //    private double noiseTol = 0.2;
 
-//    public static void main(String args[]) {
-//        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
-//        ImageStack stack = Utils.buildStack(image);
-//        ImagePlus imp = new ImagePlus("Stack", stack);
-//        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
-//        if (instance.showDialog()) {
-//            instance.analyse();
-//        }
-//    }
+    public static void main(String args[]) {
+        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
+        ImageStack stack = Utils.buildStack(image);
+        ImagePlus imp = new ImagePlus("Stack", stack);
+        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
+        if (instance.showDialog()) {
+            instance.analyse();
+        }
+    }
+
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep,
             double chan1MaxThresh, double hystDiff, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
         Timelapse_Analysis.spatialRes = spatialRes;
@@ -306,15 +307,15 @@ public class Timelapse_Analysis implements PlugIn {
                         IsoGaussianFitter c1GF = new IsoGaussianFitter(xCoords, yCoords, pixValues);
                         c1GF.doFit(xySigEst);
 //                        if (c1GF.getXsig() < (c1SigmaTol * xySigEst)) {
-                        if (c1GF.getRSquared() > curveFitTol) {
+                        if (c1GF.getRSquared() > c1CurveFitTol) {
                             c1Gaussian = new IsoGaussian((c1GF.getX0() + c1X - xyPartRad) * spatialRes,
                                     (c1GF.getY0() + c1Y - xyPartRad) * spatialRes, c1GF.getMag(),
-                                    c1GF.getXsig(), c1GF.getYsig(), c1GF.getRSquared() - curveFitTol);
+                                    c1GF.getXsig(), c1GF.getYsig(), c1GF.getRSquared() - c1CurveFitTol);
                         } else {
                             c1Gaussian = new IsoGaussian(c1X
                                     * spatialRes, c1Y * spatialRes,
                                     chan1Proc.getPixelValue(c1X, c1Y), xySigEst,
-                                    xySigEst, c1GF.getRSquared() - curveFitTol);
+                                    xySigEst, c1GF.getRSquared() - c1CurveFitTol);
                         }
                         c2Points = Utils.searchNeighbourhood(c1X, c1Y, (int) Math.round(xyPartRad * searchScale), FOREGROUND,
                                 C2Max);
@@ -329,7 +330,7 @@ public class Timelapse_Analysis implements PlugIn {
                                     - xyPartRad) * spatialRes, (c2GF.getY0()
                                     + c2Points[0][1] - xyPartRad) * spatialRes,
                                     c2GF.getMag(), c2GF.getXsig(), c2GF.getYsig(),
-                                    c2GF.getRSquared() - curveFitTol);
+                                    c2GF.getRSquared() - c2CurveFitTol);
 //                                }
                         }
                         /*
@@ -392,7 +393,7 @@ public class Timelapse_Analysis implements PlugIn {
                 gf.doFit(estimates);
                 double params[] = gf.getParams();
                 IsoGaussian g = new IsoGaussian((params[2] + cX[0]), (params[3] + cY[0]),
-                        params[1], params[4], params[4], gf.getRSquared() - curveFitTol);
+                        params[1], params[4], params[4], gf.getRSquared() - c1CurveFitTol);
                 for (int y = 0; y < values.length; y++) {
                     for (int x = 0; x < values.length; x++) {
                         values[x][y] -= g.evaluate(xCoords[x], yCoords[y]);
@@ -510,7 +511,7 @@ public class Timelapse_Analysis implements PlugIn {
                     int row = traj.getTempRow();
                     int col = traj.getTempColumn();
                     if (col <= m + 1) {
-                        traj.checkDetections(temp, 0.0, -0.3);
+                        traj.checkDetections(temp, 0.0, 0.0);
                         objects.nullifyDetection(col, row);
                     }
                 }
@@ -742,7 +743,7 @@ public class Timelapse_Analysis implements PlugIn {
                         processor = outputStack.getProcessor(j + 1);
                         if (!monoChrome) {
 //                            if (type == ParticleTrajectory.NON_COLOCAL) {
-                                processor.setColor(thiscolor);
+                            processor.setColor(thiscolor);
 //                            }
                         } else {
                             processor.setValue(255);
@@ -1469,14 +1470,14 @@ public class Timelapse_Analysis implements PlugIn {
             current = current.getLink();
             while (current != null) {
                 for (j = frames - 1; j >= lastTP; j--) {
-                    if (j <= lastTP + 5.0 / timeRes) {
+                    if (j <= lastTP + 10.0 / timeRes) {
                         processor = outputStack.getProcessor(j + 1);
                         if (!monoChrome) {
-                            if (type == ParticleTrajectory.NON_COLOCAL) {
-                                processor.setColor(getDrawColor(colocaliser.getChannel1()));
-                            } else {
-                                processor.setColor(getDrawColor(colocaliser.getChannel2()));
-                            }
+//                            if (type == ParticleTrajectory.NON_COLOCAL) {
+                            processor.setColor(Color.WHITE);
+//                            } else {
+//                                processor.setColor(getDrawColor(colocaliser.getChannel2()));
+//                            }
                         } else {
                             processor.setColor(255);
                         }
@@ -1485,6 +1486,13 @@ public class Timelapse_Analysis implements PlugIn {
                         processor.drawLine(currentX, currentY, lastX, lastY);
                     }
                 }
+                processor = outputStack.getProcessor(j + 1);
+                if (!monoChrome) {
+                    processor.setColor(Color.WHITE);
+                } else {
+                    processor.setColor(255);
+                }
+                processor.drawOval(currentX - 2, currentY - 2, 5, 5);
                 lastX = currentX;
                 lastY = currentY;
                 lastTP = current.getTimePoint();

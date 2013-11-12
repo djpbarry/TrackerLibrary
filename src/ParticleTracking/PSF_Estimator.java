@@ -99,7 +99,7 @@ public class PSF_Estimator extends Timelapse_Analysis {
                         NonIsoGaussianFitter fitter = new NonIsoGaussianFitter(xCoords, yCoords, pixValues);
                         fitter.doFit(xySigEst);
                         //if (c1GF.getXsig() < (c1SigmaTol * xySigEst)) {
-                        NonIsoGaussian gaussian = new NonIsoGaussian(fitter, curveFitTol);
+                        NonIsoGaussian gaussian = new NonIsoGaussian(fitter, c1CurveFitTol);
                         results.append(i + "\t" + x + "\t" + y + "\t"
                                 + numFormat.format(gaussian.getMagnitude())
                                 + "\t" + numFormat.format(gaussian.getxSigma() * spatialRes * 1000.0)
