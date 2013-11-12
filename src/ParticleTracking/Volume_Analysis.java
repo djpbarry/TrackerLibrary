@@ -83,8 +83,8 @@ public class Volume_Analysis extends Timelapse_Analysis {
             int n = trajectories.size();
             for (i = 0; i < n; i++) {
                 ParticleTrajectory traj = (ParticleTrajectory) trajectories.get(i);
-                if (!(traj.getSize() > minTrajLength && ((traj.getType() == ParticleTrajectory.COLOCAL)
-                        || ((traj.getType() == ParticleTrajectory.NON_COLOCAL) && !colocal)))) {
+                if (!(traj.getSize() > minTrajLength && ((traj.getType(0.1) == ParticleTrajectory.COLOCAL)
+                        || ((traj.getType(0.1) == ParticleTrajectory.NON_COLOCAL) && !colocal)))) {
                     trajectories.remove(i);
                     i--;
                     n--;
@@ -97,7 +97,7 @@ public class Volume_Analysis extends Timelapse_Analysis {
             for (i = 0, count = 1; i < n; i++) {
                 ParticleTrajectory traj = (ParticleTrajectory) trajectories.get(i);
                 int s = traj.getSize();
-                int t = traj.getType();
+                int t = traj.getType(0.1);
                 if (s > minTrajLength && ((t == ParticleTrajectory.COLOCAL)
                         || ((t == ParticleTrajectory.NON_COLOCAL) && !colocal))) {
                     Particle current = traj.getEnd();
@@ -269,7 +269,7 @@ public class Volume_Analysis extends Timelapse_Analysis {
         double fluorArea = Math.PI * 4.0 * fluorMin * fluorMaj * spatialRes * spatialRes;
         double displacement = traj.getDisplacement();
         double duration = traj.getSize() * timeRes;
-        int type = traj.getType();
+        int type = traj.getType(0.1);
         String trajType = null;
         switch (type) {
             case ParticleTrajectory.COLOCAL:

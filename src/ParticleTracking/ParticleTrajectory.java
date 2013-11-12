@@ -93,12 +93,12 @@ public class ParticleTrajectory {
         return true;
     }
 
-    public boolean checkDetections(Particle particle) {
+    public boolean checkDetections(Particle particle, double c1tol, double c2tol) {
         if (particle == null) {
             return false;
         }
-        boolean c1 = (particle.getC1Gaussian().getFit() > 0);
-        boolean c2 = (particle.getC2Gaussian() != null) ? (particle.getC2Gaussian().getFit() > 0) : false;
+        boolean c1 = (particle.getC1Gaussian().getFit() > c1tol);
+        boolean c2 = (particle.getC2Gaussian() != null) ? (particle.getC2Gaussian().getFit() > c2tol) : false;
         if (c1 && c2) {
             dualScore++;
         }
@@ -232,11 +232,11 @@ public class ParticleTrajectory {
         output.append("\n");
     }
 
-    public int getType() {
+    public int getType(double thresh) {
         if (size < 1) {
             return UNKNOWN;
         }
-        if ((double) dualScore / size > 0.1) {
+        if ((double) dualScore / size > thresh) {
             return COLOCAL;
         } else {
             return NON_COLOCAL;
