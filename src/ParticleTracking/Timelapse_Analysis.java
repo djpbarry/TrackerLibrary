@@ -1,6 +1,5 @@
 package ParticleTracking;
 
-import AnaMorf.Utilities;
 import IAClasses.IsoGaussian;
 import IAClasses.Utils;
 import ij.IJ;
@@ -15,7 +14,6 @@ import ij.plugin.filter.GaussianBlur;
 import ij.process.*;
 import ij.text.TextWindow;
 import java.awt.*;
-import java.io.File;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -65,22 +63,22 @@ public class Timelapse_Analysis implements PlugIn {
     private long startTime;
     protected DecimalFormat numFormat = new DecimalFormat("0.000");
     protected DecimalFormat intFormat = new DecimalFormat("000");
-    public static String title = "Particle Tracker_v3.023";
+    public static String title = "Particle Tracker";
     protected static boolean colocal = false, msdPlot = false, intensPlot = false,
             preProcess = true, trajPlot = false, prevRes = false;
     protected Co_Localise colocaliser;
     protected boolean monoChrome;
 //    private double noiseTol = 0.2;
 
-    public static void main(String args[]) {
-        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
-        ImageStack stack = Utils.buildStack(image);
-        ImagePlus imp = new ImagePlus("Stack", stack);
-        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
-        if (instance.showDialog()) {
-            instance.analyse();
-        }
-    }
+//    public static void main(String args[]) {
+//        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
+//        ImageStack stack = Utils.buildStack(image);
+//        ImagePlus imp = new ImagePlus("Stack", stack);
+//        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
+//        if (instance.showDialog()) {
+//            instance.analyse();
+//        }
+//    }
 
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep,
             double chan1MaxThresh, double hystDiff, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
@@ -115,9 +113,7 @@ public class Timelapse_Analysis implements PlugIn {
      * Implements run method from {@link PlugIn}.
      */
     public void run(String arg) {
-//        title = title + "_v" + VERSION + "." + intFormat.format(
-//                GenUtils.getRevisionNumber("c:/users/barry05/documents/netbeans/projects/particle_tracker/"
-//                + GenUtils.hgTagDir, GenUtils.maxline));
+        title = title + "_v" + VERSION + "." + intFormat.format(Revision.revisionNumber);
         imp = WindowManager.getCurrentImage();
         if (showDialog()) {
             analyse();
