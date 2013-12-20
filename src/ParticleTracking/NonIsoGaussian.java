@@ -5,6 +5,7 @@
 package ParticleTracking;
 
 import IAClasses.IsoGaussian;
+import ij.process.FloatProcessor;
 
 /**
  *
@@ -70,6 +71,14 @@ public class NonIsoGaussian extends IsoGaussian {
     public double getySigma() {
         return ySigma;
     }
-    
-    
+
+    public void draw(FloatProcessor image, double res) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+        for (int j = 0; j < height; j++) {
+            for (int i = 0; i < width; i++) {
+                image.putPixelValue(i, j, evaluate(i * res, j * res));
+            }
+        }
+    }
 }
