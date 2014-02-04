@@ -97,8 +97,8 @@ public class ParticleTrajectory {
         if (particle == null) {
             return false;
         }
-        boolean c1 = (particle.getC1Gaussian().getFit() > c1tol);
-        boolean c2 = (particle.getC2Gaussian() != null) ? (particle.getC2Gaussian().getFit() > c2tol) : false;
+        boolean c1 = (particle.getC1Gaussian().getFit() >= c1tol);
+        boolean c2 = (particle.getC2Gaussian() != null) ? (particle.getC2Gaussian().getFit() >= c2tol) : false;
         if (c1 && c2) {
             dualScore++;
         }
@@ -195,9 +195,9 @@ public class ParticleTrajectory {
     /**
      * Prints the details of this trajectory to the output display.
      */
-    public void printTrajectory(int number, TextWindow output, DecimalFormat formatter) {
+    public void printTrajectory(int number, TextWindow output, DecimalFormat formatter, String title) {
         if (output == null) {
-            output = new TextWindow(Timelapse_Analysis.title + " Results",
+            output = new TextWindow(title + " Results",
                     "X\tY\tFrame\tChannel 1\tChannel 2\tChannel 2 " + '\u03C3'
                     + "x\tChannel 2 " + '\u03C3' + "y\t" + '\u03B8', null, 1000, 500);
             output.setVisible(true);

@@ -55,7 +55,7 @@ public class Timelapse_Analysis implements PlugIn {
             NUM_AP = 1.4; //Numerical aperture of system
     protected final static double c1CurveFitTol = 0.8d, //Tolerance used in determining fit of IsoGaussian curves
             c2CurveFitTol = 0.0d,
-            colocalThresh = 0.5;
+            colocalThresh = 0.1;
 //    protected static double c1SigmaTol = 3.0, c2SigmaTol = 3.0;
     protected ArrayList<ParticleTrajectory> trajectories = new ArrayList(); //Trajectories of the detected particles
     protected ImagePlus imp; //The active image stack
@@ -63,7 +63,7 @@ public class Timelapse_Analysis implements PlugIn {
     private long startTime;
     protected DecimalFormat numFormat = new DecimalFormat("0.000");
     protected DecimalFormat intFormat = new DecimalFormat("000");
-    public static String title = "Particle Tracker";
+    String title = "Particle Tracker";
     protected static boolean colocal = false, msdPlot = false, intensPlot = false,
             preProcess = true, trajPlot = false, prevRes = false;
     protected Co_Localise colocaliser;
@@ -208,7 +208,7 @@ public class Timelapse_Analysis implements PlugIn {
                         plotTrajectory(width, height, i, count);
                     }
                     printData(i, resultSummary, count);
-                    traj.printTrajectory(count, results, numFormat);
+                    traj.printTrajectory(count, results, numFormat, title);
                     count++;
                 }
             }
@@ -280,7 +280,7 @@ public class Timelapse_Analysis implements PlugIn {
                 for (c1Y = 0; c1Y < height; c1Y++) {
                     if (thisC1Max.getPixel(c1X, c1Y) == FOREGROUND) {
                         IsoGaussian c1Gaussian;
-                        NonIsoGaussian c2Gaussian = null;
+                        IsoGaussian c2Gaussian = null;
                         /*
                          * Search for local maxima in green image within
                          * <code>xyPartRad</code> pixels of maxima in red image:
@@ -307,9 +307,11 @@ public class Timelapse_Analysis implements PlugIn {
                         if (c2Points != null) {
                             Utils.extractValues(xCoords, yCoords, pixValues,
                                     c2Points[0][0], c2Points[0][1], chan2Proc);
-                            NonIsoGaussianFitter c2GF = new NonIsoGaussianFitter(xCoords, yCoords, pixValues);
+                            IsoGaussianFitter c2GF = new IsoGaussianFitter(xCoords, yCoords, pixValues);
                             c2GF.doFit(xySigEst);
-                            c2Gaussian = new NonIsoGaussian(c2GF, c2GF.getRSquared() - c2CurveFitTol);
+                            c2Gaussian = new IsoGaussian((c2GF.getX0() + c2Points[0][0] - xyPartRad) * spatialRes,
+                                    (c2GF.getY0() + c2Points[0][1] - xyPartRad) * spatialRes, c2GF.getMag(),
+                                    c2GF.getXsig(), c2GF.getYsig(), c2GF.getRSquared() - c1CurveFitTol);
 //                            FloatProcessor image = new FloatProcessor(25, 25);
 //                            c2Gaussian.draw(image, spatialRes);
 //                            IJ.saveAs((new ImagePlus("", image)), "TIF", "C:/users/barry05/desktop/tail.tif");
@@ -443,7 +445,7 @@ public class Timelapse_Analysis implements PlugIn {
                                     // TODO Variation in C1 intensity could be interpreted as movement in Z-direction
                                     if (projectVel) {
                                         traj.projectVelocity(x, y);
-                                        double vector1[] = {x, y, k,
+                                        double vector1[] = {x, y, currentParticle.getTimePoint(),
                                             ch1G.getMagnitude() / 255.0,
                                             traj.getProjectXVel(),
                                             traj.getProjectYVel()};
@@ -453,7 +455,7 @@ public class Timelapse_Analysis implements PlugIn {
                                             traj.getYVelocity()};
                                         score = Utils.calcEuclidDist(vector1, vector2);
                                     } else {
-                                        double vector1[] = {x, y, k,
+                                        double vector1[] = {x, y, currentParticle.getTimePoint(),
                                             ch1G.getMagnitude() / 255.0};
                                         double vector2[] = {last.getX(), last.getY(),
                                             last.getTimePoint(), last.getC1Intensity() / 255.0};
@@ -1011,7 +1013,7 @@ public class Timelapse_Analysis implements PlugIn {
             analyseButton = new javax.swing.JButton();
 
             setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-            setTitle(Timelapse_Analysis.title);
+            setTitle(title);
 
             jLabel1.setText("Channel 2 will be colocalised with Channel 1");
 

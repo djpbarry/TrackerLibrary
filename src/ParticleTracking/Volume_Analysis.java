@@ -139,7 +139,7 @@ public class Volume_Analysis extends Timelapse_Analysis {
                             plotTrajectory(width, height, i, count);
                         }
                         printData(i, resultSummary, count);
-                        traj.printTrajectory(count, results, numFormat);
+                        traj.printTrajectory(count, results, numFormat, title);
                     }
                 }
             }
