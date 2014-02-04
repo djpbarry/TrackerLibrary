@@ -118,7 +118,7 @@ public class SuperResAnalyser extends Co_Localise {
             ArrayList detections = curves.getLevel(0);
             for (int j = 0; j < detections.size(); j++) {
                 IsoGaussian c1 = ((IsoGaussian[]) detections.get(j))[0];
-                if (draw2DGaussian(ch1proc, c1, curveFitC1, Timelapse_Analysis.spatialRes)) {
+                if (draw2DGaussian(ch1proc, c1, Timelapse_Analysis.getC1CurveFitTol(), Timelapse_Analysis.spatialRes)) {
                     count++;
                 }
                 //temp.updateAndDraw();

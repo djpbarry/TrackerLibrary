@@ -27,7 +27,6 @@ public class Co_Localise implements PlugIn {
     protected DecimalFormat numFormat = new DecimalFormat("0.0");
     protected static boolean partialDetect = false;
     protected TextWindow results = null;
-    protected static double curveFitC1 = 0.0, curveFitC2 = 0.1;
     protected boolean findTails = false;
 
 //    public static void main(String args[]) {
@@ -90,8 +89,8 @@ public class Co_Localise implements PlugIn {
             dialog.addNumericField("Spatial Resolution:", Timelapse_Analysis.getSpatialRes() * 1000.0, 1, 5, "nm/pixel");
             dialog.addNumericField("Minimum Peak Size (Ch 1):", Timelapse_Analysis.getChan1MaxThresh(), 1, 5, "");
             dialog.addNumericField("Minimum Peak Size (Ch 2):", Timelapse_Analysis.getChan2MaxThresh(), 1, 5, "");
-            dialog.addNumericField("Curve Fit Tolerance (Ch 1):", curveFitC1, 1, 5, "");
-            dialog.addNumericField("Curve Fit Tolerance (Ch 2):", curveFitC2, 1, 5, "");
+            dialog.addNumericField("Curve Fit Tolerance (Ch 1):", Timelapse_Analysis.getC1CurveFitTol(), 1, 5, "");
+            dialog.addNumericField("Curve Fit Tolerance (Ch 2):", Timelapse_Analysis.getC2CurveFitTol(), 1, 5, "");
             dialog.addNumericField("Colocalisation Factor:", coFactor, 1, 5, "");
             dialog.addCheckbox("Include Partial Detections", partialDetect);
             dialog.showDialog();
@@ -101,8 +100,8 @@ public class Co_Localise implements PlugIn {
                 Timelapse_Analysis.setSpatialRes(dialog.getNextNumber() / 1000.0);
                 Timelapse_Analysis.setChan1MaxThresh(dialog.getNextNumber());
                 Timelapse_Analysis.setChan2MaxThresh(dialog.getNextNumber());
-                curveFitC1 = dialog.getNextNumber();
-                curveFitC2 = dialog.getNextNumber();
+                Timelapse_Analysis.setC1CurveFitTol(dialog.getNextNumber());
+                Timelapse_Analysis.setC2CurveFitTol(dialog.getNextNumber());
                 /*
                  * Timelapse_Analysis.setC1SigmaTol(sigmaTolC1);
                  * Timelapse_Analysis.setC2SigmaTol(sigmaTolC2);
@@ -186,7 +185,7 @@ public class Co_Localise implements PlugIn {
             ArrayList detections = curves.getLevel(0);
             for (int j = 0; j < detections.size(); j++) {
                 IsoGaussian c1 = ((Particle) detections.get(j)).getC1Gaussian();
-                if (Utils.draw2DGaussian(ch1proc, c1, curveFitC1, Timelapse_Analysis.spatialRes, partialDetect)) {
+                if (Utils.draw2DGaussian(ch1proc, c1, Timelapse_Analysis.getC1CurveFitTol(), Timelapse_Analysis.spatialRes, partialDetect)) {
                     if (c1.getMagnitude() > displaymax) {
                         displaymax = c1.getMagnitude();
                     }
@@ -212,7 +211,7 @@ public class Co_Localise implements PlugIn {
 //                        }
 //                    } else {
                     IsoGaussian c2 = ((Particle) detections.get(j)).getC2Gaussian();
-                    if (Utils.draw2DGaussian(ch2proc, c2, curveFitC2, Timelapse_Analysis.spatialRes,
+                    if (Utils.draw2DGaussian(ch2proc, c2, Timelapse_Analysis.getC2CurveFitTol(), Timelapse_Analysis.spatialRes,
                             partialDetect)) {
                         if (c2.getMagnitude() > displaymax) {
                             displaymax = c2.getMagnitude();
@@ -267,8 +266,8 @@ public class Co_Localise implements PlugIn {
                 + "\n" + channels[channel1] + " Minimum Peak Size:\t" + numFormat.format(Timelapse_Analysis.getChan1MaxThresh())
                 + "\n" + channels[channel2] + " Minimum Peak Size:\t" + numFormat.format(Timelapse_Analysis.getChan2MaxThresh())
                 + "\nColocalisation Factor:\t" + numFormat.format(coFactor) + "\nInclude Partial Detections:\t"
-                + partialDetect + "\n" + channels[channel1] + "Curve Fit Tolerance:\t" + curveFitC1
-                + "\n" + channels[channel2] + "Curve Fit Tolerance:\t" + curveFitC2
+                + partialDetect + "\n" + channels[channel1] + "Curve Fit Tolerance:\t" + Timelapse_Analysis.getC1CurveFitTol()
+                + "\n" + channels[channel2] + "Curve Fit Tolerance:\t" + Timelapse_Analysis.getC2CurveFitTol()
                 + "\n" + channels[channel1] + "\n" + channels[channel2]
                 + "\n\n\n";
     }

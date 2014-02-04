@@ -86,8 +86,8 @@ public class Colocalise_3D extends Co_Localise {
             dialog.addNumericField("Spatial Resolution:", spatialRes * 1000.0, 1, 5, "nm/pixel");
             dialog.addNumericField("Minimum Peak Size (Ch 1):", chan1MaxThresh, 1, 5, "");
             dialog.addNumericField("Minimum Peak Size (Ch 2):", chan2MaxThresh, 1, 5, "");
-            dialog.addNumericField("Curve Fit Tolerance (Ch 1):", curveFitC1, 1, 5, "");
-            dialog.addNumericField("Curve Fit Tolerance (Ch 2):", curveFitC2, 1, 5, "");
+            dialog.addNumericField("Curve Fit Tolerance (Ch 1):", Timelapse_Analysis.getC1CurveFitTol(), 1, 5, "");
+            dialog.addNumericField("Curve Fit Tolerance (Ch 2):", Timelapse_Analysis.getC2CurveFitTol(), 1, 5, "");
             dialog.addNumericField("Colocalisation Factor:", coFactor, 1, 5, "");
             dialog.addCheckbox("Include Partial Detections", partialDetect);
             dialog.showDialog();
@@ -97,8 +97,8 @@ public class Colocalise_3D extends Co_Localise {
                 spatialRes = dialog.getNextNumber() / 1000.0;
                 chan1MaxThresh = dialog.getNextNumber();
                 chan2MaxThresh = dialog.getNextNumber();
-                curveFitC1 = dialog.getNextNumber();
-                curveFitC2 = dialog.getNextNumber();
+                Timelapse_Analysis.setC1CurveFitTol(dialog.getNextNumber());
+                Timelapse_Analysis.setC2CurveFitTol(dialog.getNextNumber());
                 coFactor = dialog.getNextNumber();
                 partialDetect = dialog.getNextBoolean();
                 // Check that entries were numeric:
@@ -136,13 +136,13 @@ public class Colocalise_3D extends Co_Localise {
             FloatProcessor ch2proc = new FloatProcessor(width, height);
             for (int j = 0; j < detections.size(); j++) {
                 Gaussian3D c1 = (Gaussian3D) ((IsoGaussian[]) detections.get(j))[0];
-                if (draw2DGaussian(ch1proc, c1, curveFitC1, i)) {
+                if (draw2DGaussian(ch1proc, c1, Timelapse_Analysis.getC1CurveFitTol(), i)) {
                     if (c1.getMagnitude() > displaymax) {
                         displaymax = c1.getMagnitude();
                     }
                     count++;
                     Gaussian3D c2 = (Gaussian3D) ((IsoGaussian[]) detections.get(j))[1];
-                    if (draw2DGaussian(ch2proc, c2, curveFitC2, i)) {
+                    if (draw2DGaussian(ch2proc, c2, Timelapse_Analysis.getC2CurveFitTol(), i)) {
                         if (c2.getMagnitude() > displaymax) {
                             displaymax = c2.getMagnitude();
                         }

@@ -53,8 +53,8 @@ public class Timelapse_Analysis implements PlugIn {
     protected final static double VIS_SIZE = 750.0,
             LAMBDA = 650.0, //Wavelength of light
             NUM_AP = 1.4; //Numerical aperture of system
-    protected final static double c1CurveFitTol = 0.8d, //Tolerance used in determining fit of IsoGaussian curves
-            c2CurveFitTol = 0.0d,
+    protected static double c1CurveFitTol = 0.8d, //Tolerance used in determining fit of IsoGaussian curves
+            c2CurveFitTol = 0.8d,
             colocalThresh = 0.1;
 //    protected static double c1SigmaTol = 3.0, c2SigmaTol = 3.0;
     protected ArrayList<ParticleTrajectory> trajectories = new ArrayList(); //Trajectories of the detected particles
@@ -295,12 +295,12 @@ public class Timelapse_Analysis implements PlugIn {
                         if (c1GF.getRSquared() > c1CurveFitTol) {
                             c1Gaussian = new IsoGaussian((c1GF.getX0() + c1X - xyPartRad) * spatialRes,
                                     (c1GF.getY0() + c1Y - xyPartRad) * spatialRes, c1GF.getMag(),
-                                    c1GF.getXsig(), c1GF.getYsig(), c1GF.getRSquared() - c1CurveFitTol);
+                                    c1GF.getXsig(), c1GF.getYsig(), c1GF.getRSquared());
                         } else {
                             c1Gaussian = new IsoGaussian(c1X
                                     * spatialRes, c1Y * spatialRes,
                                     chan1Proc.getPixelValue(c1X, c1Y), xySigEst,
-                                    xySigEst, c1GF.getRSquared() - c1CurveFitTol);
+                                    xySigEst, c1GF.getRSquared());
                         }
                         c2Points = Utils.searchNeighbourhood(c1X, c1Y, (int) Math.round(xyPartRad * searchScale), FOREGROUND,
                                 C2Max);
@@ -311,7 +311,7 @@ public class Timelapse_Analysis implements PlugIn {
                             c2GF.doFit(xySigEst);
                             c2Gaussian = new IsoGaussian((c2GF.getX0() + c2Points[0][0] - xyPartRad) * spatialRes,
                                     (c2GF.getY0() + c2Points[0][1] - xyPartRad) * spatialRes, c2GF.getMag(),
-                                    c2GF.getXsig(), c2GF.getYsig(), c2GF.getRSquared() - c1CurveFitTol);
+                                    c2GF.getXsig(), c2GF.getYsig(), c2GF.getRSquared());
 //                            FloatProcessor image = new FloatProcessor(25, 25);
 //                            c2Gaussian.draw(image, spatialRes);
 //                            IJ.saveAs((new ImagePlus("", image)), "TIF", "C:/users/barry05/desktop/tail.tif");
@@ -412,7 +412,7 @@ public class Timelapse_Analysis implements PlugIn {
                          * If no trajectories have yet been built, start a new
                          * one:
                          */
-                        if (k == m && ch1G.getMagnitude() > chan1MaxThresh * hystDiff && ch1G.getFit() > 0.0) {
+                        if (k == m && ch1G.getMagnitude() > chan1MaxThresh * hystDiff && ch1G.getFit() > c1CurveFitTol) {
                             traj = new ParticleTrajectory(timeRes, spatialRes);
                             /*
                              * Particles need to be cloned as they are set to
@@ -782,6 +782,22 @@ public class Timelapse_Analysis implements PlugIn {
 
     public static void setSpatialRes(double spatialRes) {
         Timelapse_Analysis.spatialRes = spatialRes;
+    }
+
+    public static double getC1CurveFitTol() {
+        return c1CurveFitTol;
+    }
+
+    public static void setC1CurveFitTol(double c1CurveFitTol) {
+        Timelapse_Analysis.c1CurveFitTol = c1CurveFitTol;
+    }
+
+    public static double getC2CurveFitTol() {
+        return c2CurveFitTol;
+    }
+
+    public static void setC2CurveFitTol(double c2CurveFitTol) {
+        Timelapse_Analysis.c2CurveFitTol = c2CurveFitTol;
     }
 
     /*
@@ -1286,11 +1302,11 @@ public class Timelapse_Analysis implements PlugIn {
                 c2 = particles.get(i).getC2Gaussian();
                 drawDetections(output, (int) (Math.round(scaledSR * c1.getX())),
                         (int) (Math.round(scaledSR * c1.getY())), radius,
-                        (c1.getFit() > 0), c1Color);
+                        (c1.getFit() > c1CurveFitTol), c1Color);
                 if (c2 != null) {
                     drawDetections(output, (int) (Math.round(scaledSR * c2.getX())),
                             (int) (Math.round(scaledSR * c2.getY())), radius,
-                            (c2.getFit() > 0), c2Color);
+                            (c2.getFit() > c2CurveFitTol), c2Color);
                 }
             }
             preview.setProcessor("Preview of Slice " + slice, output);
