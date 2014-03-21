@@ -4,16 +4,13 @@
  */
 package ParticleTracking;
 
-import AnaMorf.Utilities;
 import IAClasses.Utils;
 import ij.IJ;
 import ij.ImagePlus;
-import ij.ImageStack;
 import ij.gui.GenericDialog;
 import ij.process.*;
 import ij.text.TextWindow;
 import java.awt.Toolkit;
-import java.io.File;
 
 /**
  *

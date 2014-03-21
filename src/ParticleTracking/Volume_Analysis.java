@@ -4,7 +4,6 @@
  */
 package ParticleTracking;
 
-import AnaMorf.Utilities;
 import IAClasses.IsoGaussian;
 import IAClasses.Utils;
 import ij.IJ;
@@ -17,7 +16,6 @@ import ij.process.ImageProcessor;
 import ij.process.TypeConverter;
 import ij.text.TextWindow;
 import java.awt.Rectangle;
-import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
