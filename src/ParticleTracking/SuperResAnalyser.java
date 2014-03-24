@@ -21,6 +21,7 @@ import java.util.ArrayList;
 public class SuperResAnalyser extends Co_Localise {
 
     private int scaleFactor = 10;
+    private final String TITLE = this.getClass().getName();
 
 //    public static void main(String args[]) {
 //        (new SuperResAnalyser(new ImagePlus("C:\\Users\\barry05\\Desktop\\SuperResTest.tif"))).run(null);
@@ -105,7 +106,7 @@ public class SuperResAnalyser extends Co_Localise {
         int count;
         int width = imp.getWidth() * scaleFactor, height = imp.getHeight() * scaleFactor;
         //ImageStack outStack = new ImageStack(width, height);
-        ProgressDialog dialog = new ProgressDialog(null, "Processing...", false, false);
+        ProgressDialog dialog = new ProgressDialog(null, "Processing...", false, false, TITLE);
         dialog.setVisible(true);
         FloatProcessor ch1proc = new FloatProcessor(width, height);
         for (int i = 0; i < stack.getSize(); i++) {
