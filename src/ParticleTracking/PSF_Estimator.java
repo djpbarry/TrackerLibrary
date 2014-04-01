@@ -67,7 +67,7 @@ public class PSF_Estimator extends Timelapse_Analysis {
         if (stack == null) {
             return null;
         }
-        xySigEst = (0.21 * lambda / 1.4) / (spatialRes * 1000.0);
+        xySigEst = (0.21 * lambda / 1.4) / (UserVariables.getSpatialRes() * 1000.0);
         xyPartRad = (int) Math.round(2.0 * xySigEst / 0.95);
         int i, noOfImages = stack.getSize(), width = stack.getWidth(), height = stack.getHeight();
         byte pix[];
@@ -99,8 +99,8 @@ public class PSF_Estimator extends Timelapse_Analysis {
                         NonIsoGaussian gaussian = new NonIsoGaussian(fitter, c1CurveFitTol);
                         results.append(i + "\t" + x + "\t" + y + "\t"
                                 + numFormat.format(gaussian.getMagnitude())
-                                + "\t" + numFormat.format(gaussian.getxSigma() * spatialRes * 1000.0)
-                                + "\t" + numFormat.format(gaussian.getySigma() * spatialRes * 1000.0)
+                                + "\t" + numFormat.format(gaussian.getxSigma() * UserVariables.getSpatialRes() * 1000.0)
+                                + "\t" + numFormat.format(gaussian.getySigma() * UserVariables.getSpatialRes() * 1000.0)
                                 + "\t" + numFormat.format(fitter.getRSquared()));
                         /*
                          * A particle has been isolated - trajectories need to
@@ -121,13 +121,13 @@ public class PSF_Estimator extends Timelapse_Analysis {
             return false;
         }
         GenericDialog gd = new GenericDialog(psfTitle);
-        gd.addNumericField("Spatial Resolution", spatialRes * 1000.0, 5, 5, "nm");
+        gd.addNumericField("Spatial Resolution", UserVariables.getSpatialRes() * 1000.0, 5, 5, "nm");
         gd.addNumericField("Peak Threshold", chan1MaxThresh, 5);
         gd.showDialog();
         if (gd.wasCanceled()) {
             return false;
         }
-        spatialRes = gd.getNextNumber() / 1000.0;
+        UserVariables.setSpatialRes(gd.getNextNumber() / 1000.0);
         chan1MaxThresh = gd.getNextNumber();
         return true;
     }

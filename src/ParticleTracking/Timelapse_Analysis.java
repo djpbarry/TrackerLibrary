@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Random;
+import ui.UserInterface;
 
 /**
  * Timelapse_Analysis seeks to identify individual particles in a stack of
@@ -36,8 +37,7 @@ import java.util.Random;
  */
 public class Timelapse_Analysis implements PlugIn {
 
-    protected static double spatialRes = 212.0 / 1000.0, //Spatial resolution in microns/pixel
-            timeRes = 2.0d, //Time resolution in s/frame;
+    protected static double timeRes = 2.0d, //Time resolution in s/frame;
             virusDiameter = 350.0,
             chan1MaxThresh = 100.0, //Threshold value for local maxima in channel 1
             chan2MaxThresh = 0.0, //Threshold value for local maxima in channel 2
@@ -84,7 +84,7 @@ public class Timelapse_Analysis implements PlugIn {
 
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep,
             double chan1MaxThresh, double hystDiff, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
-        Timelapse_Analysis.spatialRes = spatialRes;
+        UserVariables.setSpatialRes(spatialRes);
         Timelapse_Analysis.timeRes = timeRes;
         Timelapse_Analysis.trajMaxStep = trajMaxStep;
         Timelapse_Analysis.chan1MaxThresh = chan1MaxThresh;
@@ -131,17 +131,23 @@ public class Timelapse_Analysis implements PlugIn {
         colocaliser = new Co_Localise(imp);
         stack = imp.getImageStack();
         monoChrome = !(stack.getProcessor(1).getNChannels() > 1);
-        boolean valid = false;
-        while (!valid) {
-            InputDialog dialog = new InputDialog(IJ.getInstance(), true);
-            dialog.setVisible(true);
-            if (dialog.wasOKed()) {
-                valid = dialog.isValidEntries();
-            } else {
-                return false;
-            }
+        UserInterface ui = new UserInterface(null, true, title, this);
+        ui.setVisible(true);
+        if (ui.isWasOKed()) {
+            return true;
+        } else {
+            return false;
         }
-        return true;
+//        boolean valid = false;
+//        while (!valid) {
+//            InputDialog dialog = new InputDialog(IJ.getInstance(), true);
+//            dialog.setVisible(true);
+//            if (dialog.wasOKed()) {
+//                valid = dialog.isValidEntries();
+//            } else {
+//                return false;
+//            }
+//        }
     }
 
     /**
@@ -155,7 +161,7 @@ public class Timelapse_Analysis implements PlugIn {
             IJ.register(this.getClass());
             startTime = System.currentTimeMillis();
             //gaussianRadius = 0.139d / spatialRes; // IsoGaussian filter radius set to 139 nm
-            calcParticleRadius(); //Virus particles are approximately 350nm in diameter
+            calcParticleRadius(UserVariables.getSpatialRes());
             int i, count;
             int width = stack.getWidth(), height = stack.getHeight();
             if (width > VIS_SIZE || height > VIS_SIZE) {
@@ -198,7 +204,7 @@ public class Timelapse_Analysis implements PlugIn {
                 previewResults();
             }
             n = trajectories.size();
-            mapTrajectories(stack, monoChrome, trajectories, scale, spatialRes, xyPartRad, minTrajLength, timeRes, true);
+            mapTrajectories(stack, monoChrome, trajectories, scale, UserVariables.getSpatialRes(), xyPartRad, minTrajLength, timeRes, true);
             for (i = 0, count = 1; i < n; i++) {
                 ParticleTrajectory traj = (ParticleTrajectory) trajectories.get(i);
                 if (traj.getSize() > minTrajLength && ((traj.getType(colocalThresh) == ParticleTrajectory.COLOCAL)
@@ -257,6 +263,7 @@ public class Timelapse_Analysis implements PlugIn {
         double[] xCoords = new double[pSize];
         double[] yCoords = new double[pSize];
         double[][] pixValues = new double[pSize][pSize];
+        double spatialRes = UserVariables.getSpatialRes();
         ParticleArray particles = new ParticleArray(arraySize);
         for (i = startSlice; i < noOfImages && i <= endSlice; i++) {
             IJ.freeMemory();
@@ -528,8 +535,8 @@ public class Timelapse_Analysis implements PlugIn {
         int size = traj.getSize();
         double xValues[] = new double[size];
         double yValues[] = new double[size];
-        width *= spatialRes;
-        height *= spatialRes;
+        width *= UserVariables.getSpatialRes();
+        height *= UserVariables.getSpatialRes();
 
         for (int i = size - 1; i >= 0; i--) {
             xValues[i] = (double) current.getX() / width;
@@ -774,34 +781,6 @@ public class Timelapse_Analysis implements PlugIn {
         }
     }
 
-    public static void setChan1MaxThresh(double chan1MaxThresh) {
-        Timelapse_Analysis.chan1MaxThresh = chan1MaxThresh;
-    }
-
-    public static void setChan2MaxThresh(double chan2MaxThresh) {
-        Timelapse_Analysis.chan2MaxThresh = chan2MaxThresh;
-    }
-
-    public static void setSpatialRes(double spatialRes) {
-        Timelapse_Analysis.spatialRes = spatialRes;
-    }
-
-    public static double getC1CurveFitTol() {
-        return c1CurveFitTol;
-    }
-
-    public static void setC1CurveFitTol(double c1CurveFitTol) {
-        Timelapse_Analysis.c1CurveFitTol = c1CurveFitTol;
-    }
-
-    public static double getC2CurveFitTol() {
-        return c2CurveFitTol;
-    }
-
-    public static void setC2CurveFitTol(double c2CurveFitTol) {
-        Timelapse_Analysis.c2CurveFitTol = c2CurveFitTol;
-    }
-
     /*
      * public static void setGaussianRadius(double gaussianRadius) {
      * Timelapse_Analysis.gaussianRadius = gaussianRadius; }
@@ -814,14 +793,10 @@ public class Timelapse_Analysis implements PlugIn {
         return xyPartRad;
     }
 
-    public void calcParticleRadius() {
+    public void calcParticleRadius(double spatialRes) {
         double airyRad = 1.22 * LAMBDA / (2.0 * NUM_AP); //Airy radius
         xyPartRad = (int) Math.ceil(airyRad / (spatialRes * 1000.0));
         xySigEst = airyRad / (2.0 * spatialRes * 1000.0);
-    }
-
-    public static void setPreProcess(boolean preProcess) {
-        Timelapse_Analysis.preProcess = preProcess;
     }
 
     public boolean removeTrajectory(int index) {
@@ -872,19 +847,7 @@ public class Timelapse_Analysis implements PlugIn {
         }
     }
 
-    public static double getSpatialRes() {
-        return spatialRes;
-    }
-
-    public static double getChan1MaxThresh() {
-        return chan1MaxThresh;
-    }
-
-    public static double getChan2MaxThresh() {
-        return chan2MaxThresh;
-    }
-
-    Color getDrawColor(int key) {
+    public Color getDrawColor(int key) {
         switch (key) {
             case Co_Localise.RED:
                 return Color.red;
@@ -901,40 +864,20 @@ public class Timelapse_Analysis implements PlugIn {
         this.colocaliser = colocaliser;
     }
 
-    public String toString() {
-        Date current = new Date();
-        DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-        if (colocaliser != null) {
-            return title + "\t" + dateFormat.format(current)
-                    + "\n\nChannel 1:\t" + Co_Localise.channels[colocaliser.getChannel1()]
-                    + "\nChannel 2:\t" + Co_Localise.channels[colocaliser.getChannel2()]
-                    + "\nSpatial Resolution (nm/pixel):\t" + numFormat.format(spatialRes * 1000.0)
-                    + "\nFrames per Second (/s):\t" + numFormat.format(1.0 / timeRes)
-                    + "\nMinimum Peak Size (" + Co_Localise.channels[colocaliser.getChannel1()]
-                    + "):\t" + numFormat.format(chan1MaxThresh)
-                    + "\nMinimum Peak Size (" + Co_Localise.channels[colocaliser.getChannel2()]
-                    + "):\t" + numFormat.format(chan2MaxThresh)
-                    + "\nTrajectory Step Tolerance:\t" + numFormat.format(trajMaxStep)
-                    + "\nMinimum Trajectory Length (s):\t" + numFormat.format(minTrajLength * timeRes)
-                    + "\nPre-Process Stack:\t" + preProcess;
-        } else {
-            return title + "\t" + dateFormat.format(current)
-                    + "\nSpatial Resolution (nm/pixel):\t" + numFormat.format(spatialRes * 1000.0)
-                    + "\nFrames per Second (/s):\t" + numFormat.format(1.0 / timeRes)
-                    + "\nMinimum Peak Size (Chan 1):\t" + numFormat.format(chan1MaxThresh)
-                    + "\nMinimum Peak Size (Chan 2):\t" + numFormat.format(chan2MaxThresh)
-                    + "\nTrajectory Step Tolerance:\t" + numFormat.format(trajMaxStep)
-                    + "\nMinimum Trajectory Length (s):\t" + numFormat.format(minTrajLength * timeRes)
-                    + "\nPre-Process Stack:\t" + preProcess;
-        }
-    }
-
     public ArrayList<ParticleTrajectory> getTrajectories() {
         return trajectories;
     }
 
     public void setTrajectories(ArrayList<ParticleTrajectory> trajectories) {
         this.trajectories = trajectories;
+    }
+
+    public ImageStack getStack() {
+        return stack;
+    }
+
+    public boolean isMonoChrome() {
+        return monoChrome;
     }
 
     public boolean equals(Object obj) {
@@ -968,448 +911,7 @@ public class Timelapse_Analysis implements PlugIn {
         }
         return true;
     }
-
-    public class InputDialog extends javax.swing.JDialog {
-
-        private ImagePlus preview;
-        private int width, height, slice = 0;
-        private boolean dialogOKed = false, validEntries = true;
-
-        public InputDialog() {
-            super();
-        }
-
-        /**
-         * Creates new form InputDialog
-         */
-        public InputDialog(java.awt.Frame parent, boolean modal) {
-            super(parent, modal);
-            initComponents();
-            Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-            this.setLocation(dim.width / 2 - this.getWidth() / 2, dim.height / 2 - this.getHeight() / 2);
-        }
-
-        /**
-         * This method is called from within the constructor to initialize the
-         * form. WARNING: Do NOT modify this code. The content of this method is
-         * always regenerated by the Form Editor.
-         */
-        private void initComponents() {
-
-            jLabel1 = new javax.swing.JLabel();
-            jLabel2 = new javax.swing.JLabel();
-            jLabel3 = new javax.swing.JLabel();
-            channel1Combo = new javax.swing.JComboBox();
-            channel2Combo = new javax.swing.JComboBox();
-            jLabel4 = new javax.swing.JLabel();
-            virusDiamField = new javax.swing.JTextField();
-            jLabel5 = new javax.swing.JLabel();
-            jLabel6 = new javax.swing.JLabel();
-            spatialResField = new javax.swing.JTextField();
-            jLabel7 = new javax.swing.JLabel();
-            jLabel8 = new javax.swing.JLabel();
-            timeResField = new javax.swing.JTextField();
-            jLabel9 = new javax.swing.JLabel();
-            jLabel10 = new javax.swing.JLabel();
-            minTrajLengthField = new javax.swing.JTextField();
-            jLabel11 = new javax.swing.JLabel();
-            jLabel12 = new javax.swing.JLabel();
-            trajStepTolField = new javax.swing.JTextField();
-            jLabel13 = new javax.swing.JLabel();
-            jLabel14 = new javax.swing.JLabel();
-            ch1MinPeakField = new javax.swing.JTextField();
-            ch2MinPeakField = new javax.swing.JTextField();
-            prevDetectBox = new javax.swing.JCheckBox();
-            prevScroll = new java.awt.Scrollbar();
-            jLabel15 = new javax.swing.JLabel();
-            prevField = new javax.swing.JTextField();
-            preProcessBox = new javax.swing.JCheckBox();
-            colocalBox = new javax.swing.JCheckBox();
-            intensPlotBox = new javax.swing.JCheckBox();
-            trajPlotBox = new javax.swing.JCheckBox();
-            prevResBox = new javax.swing.JCheckBox();
-            analyseButton = new javax.swing.JButton();
-
-            setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-            setTitle(title);
-
-            jLabel1.setText("Channel 2 will be colocalised with Channel 1");
-
-            jLabel2.setText("Channel 1:");
-
-            jLabel3.setText("Channel 2:");
-
-            channel1Combo.setModel(new javax.swing.DefaultComboBoxModel(Co_Localise.channels));
-            channel1Combo.setSelectedItem(Co_Localise.channels[Co_Localise.RED]);
-            channel1Combo.setMaximumSize(new java.awt.Dimension(72, 20));
-            channel1Combo.setMinimumSize(new java.awt.Dimension(72, 20));
-            channel1Combo.setPreferredSize(new java.awt.Dimension(72, 20));
-            channel1Combo.setEnabled(!monoChrome);
-
-            channel2Combo.setModel(new javax.swing.DefaultComboBoxModel(Co_Localise.channels));
-            channel2Combo.setSelectedItem(Co_Localise.channels[Co_Localise.GREEN]);
-            channel2Combo.setMaximumSize(new java.awt.Dimension(72, 20));
-            channel2Combo.setMinimumSize(new java.awt.Dimension(72, 20));
-            channel2Combo.setPreferredSize(new java.awt.Dimension(72, 20));
-            channel2Combo.setEnabled(!monoChrome);
-
-            jLabel4.setText("Virus Diameter:");
-
-            virusDiamField.setText(virusDiameter + "");
-            virusDiamField.setMaximumSize(new java.awt.Dimension(72, 20));
-            virusDiamField.setMinimumSize(new java.awt.Dimension(72, 20));
-            virusDiamField.setEnabled(false);
-
-            jLabel5.setText("nm");
-
-            jLabel6.setText("Spatial Resolution:");
-
-            spatialResField.setText(spatialRes * 1000.0 + "");
-            spatialResField.setMaximumSize(new java.awt.Dimension(72, 20));
-            spatialResField.setMinimumSize(new java.awt.Dimension(72, 20));
-
-            jLabel7.setText("<html>nm pixel<sup>-1</sup></html>");
-
-            jLabel8.setText("Frames per Second:");
-
-            timeResField.setText(numFormat.format(1.0 / timeRes));
-            timeResField.setMaximumSize(new java.awt.Dimension(72, 20));
-            timeResField.setMinimumSize(new java.awt.Dimension(72, 20));
-
-            jLabel9.setText("Hz");
-
-            jLabel10.setText("Minimum Trajectory Length:");
-
-            minTrajLengthField.setText(numFormat.format(minTrajLength * timeRes));
-            minTrajLengthField.setMaximumSize(new java.awt.Dimension(72, 20));
-            minTrajLengthField.setMinimumSize(new java.awt.Dimension(72, 20));
-
-            jLabel11.setText("s");
-
-            jLabel12.setText("Trajectory Step Tolerance:");
-
-            trajStepTolField.setText(trajMaxStep + "");
-            trajStepTolField.setMaximumSize(new java.awt.Dimension(72, 20));
-            trajStepTolField.setMinimumSize(new java.awt.Dimension(72, 20));
-
-            jLabel13.setText("Minimum Peak Size (Ch 1):");
-
-            jLabel14.setText("Minimum Peak Size (Ch 2):");
-
-            ch1MinPeakField.setText(chan1MaxThresh + "");
-            ch1MinPeakField.setMaximumSize(new java.awt.Dimension(72, 20));
-            ch1MinPeakField.setMinimumSize(new java.awt.Dimension(72, 20));
-
-            ch2MinPeakField.setText(chan2MaxThresh + "");
-            ch2MinPeakField.setMaximumSize(new java.awt.Dimension(72, 20));
-            ch2MinPeakField.setMinimumSize(new java.awt.Dimension(72, 20));
-            ch2MinPeakField.setEnabled(!monoChrome);
-
-            prevDetectBox.setText("Preview Detections");
-            prevDetectBox.addActionListener(new java.awt.event.ActionListener() {
-
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    prevDetectBoxActionPerformed(evt);
-                }
-            });
-
-            prevScroll.setEnabled(prevDetectBox.isSelected());
-            prevScroll.setMaximum(stack.getSize());
-            prevScroll.setOrientation(java.awt.Scrollbar.HORIZONTAL);
-            prevScroll.addAdjustmentListener(new java.awt.event.AdjustmentListener() {
-
-                public void adjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {
-                    prevScrollAdjustmentValueChanged(evt);
-                }
-            });
-
-            jLabel15.setText("Preview Frame:");
-
-            prevField.setText(prevScroll.getValue() + "");
-            prevField.setEnabled(prevDetectBox.isSelected());
-            prevField.setMaximumSize(new java.awt.Dimension(72, 20));
-            prevField.setMinimumSize(new java.awt.Dimension(72, 20));
-            prevField.setPreferredSize(new java.awt.Dimension(72, 20));
-            prevField.addActionListener(new java.awt.event.ActionListener() {
-
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    prevScrollAdjustmentValueChanged(null);
-                }
-            });
-
-            preProcessBox.setText("Pre-Process Stack");
-            preProcessBox.setSelected(preProcess);
-
-            colocalBox.setText("Show Co-Localised Trajectories Only");
-            colocalBox.setSelected(colocal);
-            colocalBox.setEnabled(!monoChrome);
-
-            intensPlotBox.setText("Show Intensity Plots");
-            intensPlotBox.setSelected(intensPlot);
-
-            trajPlotBox.setText("Show Trajectory Plots");
-            trajPlotBox.setSelected(trajPlot);
-
-            prevResBox.setText("Preview Results");
-            prevResBox.setSelected(prevRes);
-
-            analyseButton.setText("Analyse");
-            analyseButton.addActionListener(new java.awt.event.ActionListener() {
-
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    analyseButtonActionPerformed(evt);
-                }
-            });
-
-            org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
-            getContentPane().setLayout(layout);
-            layout.setHorizontalGroup(
-                    layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().addContainerGap().add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().add(prevResBox).add(109,
-                                                    109,
-                                                    109).add(analyseButton).addContainerGap()).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().add(trajPlotBox).addContainerGap()).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().add(intensPlotBox).addContainerGap()).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().add(colocalBox).addContainerGap()).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().add(preProcessBox).addContainerGap()).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().add(jLabel15).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
-                                                                                                            62, Short.MAX_VALUE).add(prevField,
-                                                                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
-                                                                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).add(prevScroll,
-                                                                                                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 0,
-                                                                                                    Short.MAX_VALUE).add(layout.createSequentialGroup().add(jLabel10).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
-                                                                                                            org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
-                                                                                                            Short.MAX_VALUE).add(minTrajLengthField,
-                                                                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
-                                                                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).add(layout.createSequentialGroup().add(jLabel8).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
-                                                                                                            41, Short.MAX_VALUE).add(timeResField,
-                                                                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
-                                                                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).add(jLabel4).add(layout.createSequentialGroup().add(jLabel6).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
-                                                                                                            48, Short.MAX_VALUE).add(spatialResField,
-                                                                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
-                                                                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).add(layout.createSequentialGroup().add(jLabel3).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
-                                                                                                            85, Short.MAX_VALUE).add(channel2Combo,
-                                                                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
-                                                                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).add(layout.createSequentialGroup().add(jLabel2).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
-                                                                                                            85, Short.MAX_VALUE).add(channel1Combo,
-                                                                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
-                                                                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).add(jLabel1).add(org.jdesktop.layout.GroupLayout.TRAILING,
-                                                                                                    virusDiamField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE,
-                                                                                                    72,
-                                                                                                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(org.jdesktop.layout.GroupLayout.TRAILING,
-                                                                                                    layout.createSequentialGroup().add(jLabel12).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
-                                                                                                            8, Short.MAX_VALUE).add(trajStepTolField,
-                                                                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
-                                                                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).add(org.jdesktop.layout.GroupLayout.TRAILING,
-                                                                                                    layout.createSequentialGroup().add(jLabel13).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
-                                                                                                            12, Short.MAX_VALUE).add(ch1MinPeakField,
-                                                                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
-                                                                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).add(org.jdesktop.layout.GroupLayout.TRAILING,
-                                                                                                    layout.createSequentialGroup().add(jLabel14).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED,
-                                                                                                            12, Short.MAX_VALUE).add(ch2MinPeakField,
-                                                                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72,
-                                                                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(jLabel7,
-                                                                                                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE,
-                                                                                                    org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
-                                                                                                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(jLabel9).add(jLabel11).add(jLabel5)).add(26,
-                                                                                            26,
-                                                                                            26)).add(layout.createSequentialGroup().add(prevDetectBox).addContainerGap(175,
-                                                                                            Short.MAX_VALUE))))))))));
-            layout.setVerticalGroup(
-                    layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING).add(layout.createSequentialGroup().addContainerGap().add(jLabel1).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(jLabel2).add(channel1Combo,
-                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
-                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(jLabel3).add(channel2Combo,
-                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
-                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(jLabel4).add(virusDiamField,
-                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
-                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(jLabel5)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(jLabel6).add(spatialResField,
-                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
-                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(jLabel7,
-                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE,
-                                            org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
-                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(jLabel8).add(timeResField,
-                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
-                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(jLabel9)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(jLabel10).add(minTrajLengthField,
-                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
-                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(jLabel11)).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING).add(layout.createSequentialGroup().addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(trajStepTolField,
-                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
-                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(jLabel12)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(ch1MinPeakField,
-                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
-                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(jLabel13)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(ch2MinPeakField,
-                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
-                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).add(jLabel14)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(prevDetectBox).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE).add(jLabel15).add(prevField,
-                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20,
-                                                            org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(prevScroll,
-                                                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE,
-                                                    org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
-                                                    org.jdesktop.layout.GroupLayout.PREFERRED_SIZE).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(preProcessBox).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(colocalBox).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(intensPlotBox).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(trajPlotBox).addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(prevResBox).addContainerGap(29,
-                                                    Short.MAX_VALUE)).add(layout.createSequentialGroup().addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED).add(analyseButton).addContainerGap()))));
-
-            pack();
-        }// </editor-fold>
-
-        private void prevDetectBoxActionPerformed(java.awt.event.ActionEvent evt) {
-            prevField.setEnabled(prevDetectBox.isSelected());
-            prevScroll.setEnabled(prevDetectBox.isSelected());
-            prevScroll.setValue(Integer.parseInt(prevField.getText()));
-            if (preview != null) {
-                preview.close();
-            }
-            if (prevDetectBox.isSelected()) {
-                preview = new ImagePlus();
-                setVariables();
-                initialise();
-                trajectories.clear();
-            }
-        }
-
-        /**
-         * Analyses the {@link ImageStack} specified by <code>stack</code>.
-         */
-        public final void initialise() {
-            //gaussianRadius = 0.139d / spatialRes;// IsoGaussian filter radius set to 139 nm
-            calcParticleRadius(); //Virus particles are approximately 350nm in diameter
-
-            width = stack.getWidth();
-            height = stack.getHeight();
-
-            if (width > VIS_SIZE || height > VIS_SIZE) {
-                scale = 1.0;
-            } else {
-                scale = VIS_SIZE / Math.max(width, height);
-            }
-            ColorProcessor processor = new ColorProcessor(width, height);
-            if (!monoChrome) {
-                processor.setRGB(colocaliser.getPixels(colocaliser.getChannel1(), slice),
-                        colocaliser.getPixels(colocaliser.getChannel2(), slice),
-                        colocaliser.getPixels(-1, slice));
-            }
-            viewDetections(findParticles(1.0, false, slice, slice));
-        }
-
-        /**
-         * Creates a visualisation of detected particles in a given frame.
-         */
-        public void viewDetections(ParticleArray detections) {
-            width = (int) Math.round(width * scale);
-            height = (int) Math.round(height * scale);
-            int radius = (int) Math.round(scale * xyPartRad), i;
-            ImageProcessor output;
-            if (monoChrome) {
-                output = (new TypeConverter((stack.getProcessor(slice + 1)).duplicate(), true)).convertToByte().resize(width, height);
-            } else {
-                output = (new TypeConverter((stack.getProcessor(slice + 1)).duplicate(), true)).convertToRGB().resize(width, height);
-            }
-            double scaledSR = scale / spatialRes;
-            IsoGaussian c1, c2;
-            ArrayList<Particle> particles = detections.getLevel(0);
-            Color c1Color = !monoChrome ? getDrawColor(colocaliser.getChannel1()) : Color.white;
-            Color c2Color = !monoChrome ? getDrawColor(colocaliser.getChannel2()) : Color.white;
-            for (i = 0; i < particles.size(); i++) {
-                c1 = particles.get(i).getC1Gaussian();
-                c2 = particles.get(i).getC2Gaussian();
-                drawDetections(output, (int) (Math.round(scaledSR * c1.getX())),
-                        (int) (Math.round(scaledSR * c1.getY())), radius,
-                        (c1.getFit() > c1CurveFitTol), c1Color);
-                if (c2 != null) {
-                    drawDetections(output, (int) (Math.round(scaledSR * c2.getX())),
-                            (int) (Math.round(scaledSR * c2.getY())), radius,
-                            (c2.getFit() > c2CurveFitTol), c2Color);
-                }
-            }
-            preview.setProcessor("Preview of Slice " + slice, output);
-            preview.updateAndDraw();
-            preview.show();
-        }
-
-        public void drawDetections(ImageProcessor image, int x, int y, int radius,
-                boolean drawOval, Color colour) {
-            image.setColor(colour);
-            if (drawOval) {
-                image.drawOval((x - radius), (y - radius), 2 * radius, 2 * radius);
-            } else {
-                image.drawRect((x - radius), (y - radius), 2 * radius, 2 * radius);
-            }
-        }
-
-        private void prevScrollAdjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {
-            if (evt != null) {
-                prevField.setText(prevScroll.getValue() + "");
-            }
-            prevDetectBoxActionPerformed(null);
-        }
-
-        private void analyseButtonActionPerformed(java.awt.event.ActionEvent evt) {
-            dialogOKed = true;
-            if (preview != null) {
-                preview.close();
-            }
-            setVariables();
-            dispose();
-        }
-
-        public boolean wasOKed() {
-            return dialogOKed;
-        }
-
-        public boolean isValidEntries() {
-            return validEntries;
-        }
-
-        void setVariables() {
-            try {
-                colocaliser.setChannel1(channel1Combo.getSelectedIndex());
-                colocaliser.setChannel2(channel2Combo.getSelectedIndex());
-                //virusDiameter = Double.parseDouble(virusDiamField.getText());
-                spatialRes = Double.parseDouble(spatialResField.getText()) / 1000.0;
-                timeRes = 1.0 / Double.parseDouble(timeResField.getText());
-                minTrajLength = Double.parseDouble(minTrajLengthField.getText()) / timeRes;
-                trajMaxStep = Double.parseDouble(trajStepTolField.getText());
-                chan1MaxThresh = Double.parseDouble(ch1MinPeakField.getText());
-                chan2MaxThresh = Double.parseDouble(ch2MinPeakField.getText());
-                slice = Integer.parseInt(prevField.getText());
-                preProcess = preProcessBox.isSelected();
-                colocal = colocalBox.isSelected();
-                intensPlot = intensPlotBox.isSelected();
-                trajPlot = trajPlotBox.isSelected();
-                prevRes = prevResBox.isSelected();
-            } catch (NumberFormatException e) {
-                Toolkit.getDefaultToolkit().beep();
-                IJ.error("Entries in text fields must be numeric.");
-                validEntries = false;
-            }
-        }
-        // Variables declaration - do not modify
-        private javax.swing.JButton analyseButton;
-        private javax.swing.JTextField ch1MinPeakField;
-        private javax.swing.JTextField ch2MinPeakField;
-        private javax.swing.JComboBox channel1Combo;
-        private javax.swing.JComboBox channel2Combo;
-        private javax.swing.JCheckBox colocalBox;
-        private javax.swing.JCheckBox intensPlotBox;
-        private javax.swing.JLabel jLabel1;
-        private javax.swing.JLabel jLabel10;
-        private javax.swing.JLabel jLabel11;
-        private javax.swing.JLabel jLabel12;
-        private javax.swing.JLabel jLabel13;
-        private javax.swing.JLabel jLabel14;
-        private javax.swing.JLabel jLabel15;
-        private javax.swing.JLabel jLabel2;
-        private javax.swing.JLabel jLabel3;
-        private javax.swing.JLabel jLabel4;
-        private javax.swing.JLabel jLabel5;
-        private javax.swing.JLabel jLabel6;
-        private javax.swing.JLabel jLabel7;
-        private javax.swing.JLabel jLabel8;
-        private javax.swing.JLabel jLabel9;
-        private javax.swing.JTextField minTrajLengthField;
-        private javax.swing.JCheckBox preProcessBox;
-        private javax.swing.JCheckBox prevDetectBox;
-        private javax.swing.JTextField prevField;
-        private javax.swing.JCheckBox prevResBox;
-        private java.awt.Scrollbar prevScroll;
-        private javax.swing.JTextField spatialResField;
-        private javax.swing.JTextField timeResField;
-        private javax.swing.JCheckBox trajPlotBox;
-        private javax.swing.JTextField trajStepTolField;
-        private javax.swing.JTextField virusDiamField;
-        // End of variables declaration
-    }
-
+    
     private class ResultsPreviewer implements DialogListener {
 
         public ImagePlus preview;
@@ -1424,12 +926,12 @@ public class Timelapse_Analysis implements PlugIn {
             if (dialog.wasOKed() || dialog.wasCanceled()) {
                 return true;
             }
-            preview = mapTrajectories((int) ((Scrollbar) (dialog.getSliders().get(0))).getValue());
+            preview = mapTrajectories((int) ((Scrollbar) (dialog.getSliders().get(0))).getValue(), UserVariables.getSpatialRes());
             preview.show();
             return true;
         }
 
-        public ImagePlus mapTrajectories(int trajNumber) {
+        public ImagePlus mapTrajectories(int trajNumber, double spatialRes) {
             ParticleTrajectory traj = (ParticleTrajectory) (trajectories.get(trajNumber));
             stack = imp.getStack();
             Rectangle bounds = traj.getBounds();

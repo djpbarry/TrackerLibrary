@@ -65,9 +65,9 @@ public class Co_Localise implements PlugIn {
                     + ") Detections\tColocalised Channel 2 (" + channels[channel2]
                     + ") Detections\t% Colocalisation\t"
                     + "\u0394 (nm)";
-            Timelapse_Analysis.setPreProcess(true);
+            UserVariables.setPreProcess(true);
             Timelapse_Analysis analyser = new Timelapse_Analysis(stack);
-            analyser.calcParticleRadius();
+            analyser.calcParticleRadius(UserVariables.getSpatialRes());
             //Timelapse_Analysis.setGaussianRadius(0.139 / Timelapse_Analysis.getSpatialRes());
             (buildOutput(analyser)).show();
         }
@@ -86,22 +86,21 @@ public class Co_Localise implements PlugIn {
             dialog.addMessage("Channel 2 will be co-localised with Channel 1.");
             dialog.addChoice("Channel 1:", channels, channels[RED]);
             dialog.addChoice("Channel 2:", channels, channels[GREEN]);
-            dialog.addNumericField("Spatial Resolution:", Timelapse_Analysis.getSpatialRes() * 1000.0, 1, 5, "nm/pixel");
-            dialog.addNumericField("Minimum Peak Size (Ch 1):", Timelapse_Analysis.getChan1MaxThresh(), 1, 5, "");
-            dialog.addNumericField("Minimum Peak Size (Ch 2):", Timelapse_Analysis.getChan2MaxThresh(), 1, 5, "");
-            dialog.addNumericField("Curve Fit Tolerance (Ch 1):", Timelapse_Analysis.getC1CurveFitTol(), 1, 5, "");
-            dialog.addNumericField("Curve Fit Tolerance (Ch 2):", Timelapse_Analysis.getC2CurveFitTol(), 1, 5, "");
+            dialog.addNumericField("Spatial Resolution:", UserVariables.getSpatialRes() * 1000.0, 1, 5, "nm/pixel");
+            dialog.addNumericField("Minimum Peak Size (Ch 1):", UserVariables.getChan1MaxThresh(), 1, 5, "");
+            dialog.addNumericField("Minimum Peak Size (Ch 2):", UserVariables.getChan2MaxThresh(), 1, 5, "");
+            dialog.addNumericField("Curve Fit Tolerance (Ch 1):", UserVariables.getCurveFitTol(), 1, 5, "");
+            dialog.addNumericField("Curve Fit Tolerance (Ch 2):", UserVariables.getCurveFitTol(), 1, 5, "");
             dialog.addNumericField("Colocalisation Factor:", coFactor, 1, 5, "");
             dialog.addCheckbox("Include Partial Detections", partialDetect);
             dialog.showDialog();
             if (!dialog.wasCanceled()) {
                 channel1 = dialog.getNextChoiceIndex();
                 channel2 = dialog.getNextChoiceIndex();
-                Timelapse_Analysis.setSpatialRes(dialog.getNextNumber() / 1000.0);
-                Timelapse_Analysis.setChan1MaxThresh(dialog.getNextNumber());
-                Timelapse_Analysis.setChan2MaxThresh(dialog.getNextNumber());
-                Timelapse_Analysis.setC1CurveFitTol(dialog.getNextNumber());
-                Timelapse_Analysis.setC2CurveFitTol(dialog.getNextNumber());
+                UserVariables.setSpatialRes(dialog.getNextNumber() / 1000.0);
+                UserVariables.setChan1MaxThresh(dialog.getNextNumber());
+                UserVariables.setChan2MaxThresh(dialog.getNextNumber());
+                UserVariables.setCurveFitTol(dialog.getNextNumber());
                 /*
                  * Timelapse_Analysis.setC1SigmaTol(sigmaTolC1);
                  * Timelapse_Analysis.setC2SigmaTol(sigmaTolC2);
@@ -170,7 +169,7 @@ public class Co_Localise implements PlugIn {
         int colocalisation, count;
         int width = imp.getWidth(), height = imp.getHeight();
         ImageStack outStack = new ImageStack(width, height);
-        double res = Timelapse_Analysis.getSpatialRes();
+        double res = UserVariables.getSpatialRes();
         double sepsum;
         for (int i = 0; i < stack.getSize(); i++) {
             ByteProcessor tailImage = new ByteProcessor(stack.getWidth(), stack.getHeight());
@@ -185,7 +184,7 @@ public class Co_Localise implements PlugIn {
             ArrayList detections = curves.getLevel(0);
             for (int j = 0; j < detections.size(); j++) {
                 IsoGaussian c1 = ((Particle) detections.get(j)).getC1Gaussian();
-                if (Utils.draw2DGaussian(ch1proc, c1, Timelapse_Analysis.getC1CurveFitTol(), Timelapse_Analysis.spatialRes, partialDetect)) {
+                if (Utils.draw2DGaussian(ch1proc, c1, UserVariables.getCurveFitTol(), UserVariables.getSpatialRes(), partialDetect)) {
                     if (c1.getMagnitude() > displaymax) {
                         displaymax = c1.getMagnitude();
                     }
@@ -211,7 +210,7 @@ public class Co_Localise implements PlugIn {
 //                        }
 //                    } else {
                     IsoGaussian c2 = ((Particle) detections.get(j)).getC2Gaussian();
-                    if (Utils.draw2DGaussian(ch2proc, c2, Timelapse_Analysis.getC2CurveFitTol(), Timelapse_Analysis.spatialRes,
+                    if (Utils.draw2DGaussian(ch2proc, c2, UserVariables.getCurveFitTol(), UserVariables.getSpatialRes(),
                             partialDetect)) {
                         if (c2.getMagnitude() > displaymax) {
                             displaymax = c2.getMagnitude();
@@ -259,16 +258,5 @@ public class Co_Localise implements PlugIn {
 
     public int getChannel2() {
         return channel2;
-    }
-
-    public String toString() {
-        return title + "\n\nResolution (nm/pixel):\t" + numFormat.format(Timelapse_Analysis.getSpatialRes() * 1000.0)
-                + "\n" + channels[channel1] + " Minimum Peak Size:\t" + numFormat.format(Timelapse_Analysis.getChan1MaxThresh())
-                + "\n" + channels[channel2] + " Minimum Peak Size:\t" + numFormat.format(Timelapse_Analysis.getChan2MaxThresh())
-                + "\nColocalisation Factor:\t" + numFormat.format(coFactor) + "\nInclude Partial Detections:\t"
-                + partialDetect + "\n" + channels[channel1] + "Curve Fit Tolerance:\t" + Timelapse_Analysis.getC1CurveFitTol()
-                + "\n" + channels[channel2] + "Curve Fit Tolerance:\t" + Timelapse_Analysis.getC2CurveFitTol()
-                + "\n" + channels[channel1] + "\n" + channels[channel2]
-                + "\n\n\n";
     }
 }

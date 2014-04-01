@@ -27,6 +27,7 @@ import java.util.Arrays;
 public class Volume_Analysis extends Timelapse_Analysis {
 
     private int outputsize = 51, midpoint = (outputsize - 1) / 2;
+    double spatialRes = UserVariables.getSpatialRes();
 
 //    public static void main(String args[]) {
 //        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Tracking Test Sequences"), null);

@@ -5,13 +5,22 @@
  */
 package ui;
 
+import IAClasses.IsoGaussian;
 import ParticleTracking.Co_Localise;
+import ParticleTracking.Particle;
+import ParticleTracking.ParticleArray;
 import ParticleTracking.Timelapse_Analysis;
 import ParticleTracking.UserVariables;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.gui.ImageCanvas;
+import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
+import ij.process.TypeConverter;
+import java.awt.Color;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  *
@@ -19,18 +28,19 @@ import ij.process.ImageProcessor;
  */
 public class UserInterface extends javax.swing.JDialog {
 
-    private Timelapse_Analysis analyser;
-    private ImagePlus cytoImp, sigImp;
-    private ImageStack[] stacks;
-    private String title;
+    private final Timelapse_Analysis analyser;
+    private final ImagePlus imp;
+    private final String title;
     private boolean wasOKed = false;
 
     /**
      * Creates new form UserInterface
      */
     public UserInterface(java.awt.Frame parent, boolean modal, String title, Timelapse_Analysis analyser) {
-        super(parent, title, modal);
+        super(parent, modal);
+        this.title = title;
         this.analyser = analyser;
+        imp = new ImagePlus("", analyser.getStack().getProcessor(1));
         initComponents();
     }
 
@@ -64,8 +74,10 @@ public class UserInterface extends javax.swing.JDialog {
         chan2MaxThreshTextField = new javax.swing.JTextField();
         colocaliseToggleButton = new javax.swing.JToggleButton();
         preprocessToggleButton = new javax.swing.JToggleButton();
+        curveFitTolLabel = new javax.swing.JLabel();
+        curveFitTolTextField = new javax.swing.JTextField();
         jPanel2 = new javax.swing.JPanel();
-        canvas1 = new java.awt.Canvas();
+        canvas1 = new ImageCanvas(imp);
         previewScrollBar = new javax.swing.JScrollBar();
         previewTextField = new javax.swing.JTextField();
         previewToggleButton = new javax.swing.JToggleButton();
@@ -74,6 +86,7 @@ public class UserInterface extends javax.swing.JDialog {
         cancelButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle(title);
         getContentPane().setLayout(new java.awt.GridBagLayout());
 
         jPanel1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
@@ -87,7 +100,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_START;
         gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 0.1;
+        gridBagConstraints.weighty = 0.09;
         gridBagConstraints.insets = new java.awt.Insets(10, 10, 0, 10);
         jPanel1.add(jLabel1, gridBagConstraints);
 
@@ -98,7 +111,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_START;
         gridBagConstraints.weightx = 0.5;
-        gridBagConstraints.weighty = 0.1;
+        gridBagConstraints.weighty = 0.09;
         gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
         jPanel1.add(c1Label, gridBagConstraints);
 
@@ -109,7 +122,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_START;
         gridBagConstraints.weightx = 0.5;
-        gridBagConstraints.weighty = 0.1;
+        gridBagConstraints.weighty = 0.09;
         gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
         jPanel1.add(c2Label, gridBagConstraints);
 
@@ -121,7 +134,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_END;
         gridBagConstraints.weightx = 0.5;
-        gridBagConstraints.weighty = 0.1;
+        gridBagConstraints.weighty = 0.09;
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 10);
         jPanel1.add(c1ComboBox, gridBagConstraints);
 
@@ -133,7 +146,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_END;
         gridBagConstraints.weightx = 0.5;
-        gridBagConstraints.weighty = 0.1;
+        gridBagConstraints.weighty = 0.09;
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 10);
         jPanel1.add(c2ComboBox, gridBagConstraints);
 
@@ -144,7 +157,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_START;
         gridBagConstraints.weightx = 0.5;
-        gridBagConstraints.weighty = 0.1;
+        gridBagConstraints.weighty = 0.09;
         gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
         jPanel1.add(spatResLabel, gridBagConstraints);
 
@@ -155,7 +168,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_START;
         gridBagConstraints.weightx = 0.5;
-        gridBagConstraints.weighty = 0.1;
+        gridBagConstraints.weighty = 0.09;
         gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
         jPanel1.add(timeResLabel, gridBagConstraints);
 
@@ -166,7 +179,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_START;
         gridBagConstraints.weightx = 0.5;
-        gridBagConstraints.weighty = 0.1;
+        gridBagConstraints.weighty = 0.09;
         gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
         jPanel1.add(minTrajLengthLabel, gridBagConstraints);
 
@@ -177,7 +190,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_START;
         gridBagConstraints.weightx = 0.5;
-        gridBagConstraints.weighty = 0.1;
+        gridBagConstraints.weighty = 0.09;
         gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
         jPanel1.add(maxTrajStepLabel, gridBagConstraints);
 
@@ -188,7 +201,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_START;
         gridBagConstraints.weightx = 0.5;
-        gridBagConstraints.weighty = 0.1;
+        gridBagConstraints.weighty = 0.09;
         gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
         jPanel1.add(chan1MaxThreshLabel, gridBagConstraints);
 
@@ -199,7 +212,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_START;
         gridBagConstraints.weightx = 0.5;
-        gridBagConstraints.weighty = 0.1;
+        gridBagConstraints.weighty = 0.09;
         gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
         jPanel1.add(chan2MaxThreshLabel, gridBagConstraints);
 
@@ -210,7 +223,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_END;
         gridBagConstraints.weightx = 0.5;
-        gridBagConstraints.weighty = 0.1;
+        gridBagConstraints.weighty = 0.09;
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 10);
         jPanel1.add(spatResTextField, gridBagConstraints);
 
@@ -221,7 +234,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_END;
         gridBagConstraints.weightx = 0.5;
-        gridBagConstraints.weighty = 0.1;
+        gridBagConstraints.weighty = 0.09;
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 10);
         jPanel1.add(timeResTextField, gridBagConstraints);
 
@@ -232,7 +245,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_END;
         gridBagConstraints.weightx = 0.5;
-        gridBagConstraints.weighty = 0.1;
+        gridBagConstraints.weighty = 0.09;
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 10);
         jPanel1.add(minTrajLengthTextField, gridBagConstraints);
 
@@ -243,7 +256,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_END;
         gridBagConstraints.weightx = 0.5;
-        gridBagConstraints.weighty = 0.1;
+        gridBagConstraints.weighty = 0.09;
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 10);
         jPanel1.add(maxTrajStepTextField, gridBagConstraints);
 
@@ -254,7 +267,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_END;
         gridBagConstraints.weightx = 0.5;
-        gridBagConstraints.weighty = 0.1;
+        gridBagConstraints.weighty = 0.09;
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 10);
         jPanel1.add(chan1MaxThreshTextField, gridBagConstraints);
 
@@ -265,7 +278,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_END;
         gridBagConstraints.weightx = 0.5;
-        gridBagConstraints.weighty = 0.1;
+        gridBagConstraints.weighty = 0.09;
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 10);
         jPanel1.add(chan2MaxThreshTextField, gridBagConstraints);
 
@@ -278,11 +291,11 @@ public class UserInterface extends javax.swing.JDialog {
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 9;
+        gridBagConstraints.gridy = 10;
         gridBagConstraints.gridwidth = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 0.1;
+        gridBagConstraints.weighty = 0.09;
         gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 10);
         jPanel1.add(colocaliseToggleButton, gridBagConstraints);
 
@@ -290,13 +303,35 @@ public class UserInterface extends javax.swing.JDialog {
         preprocessToggleButton.setSelected(UserVariables.isPreProcess());
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 10;
+        gridBagConstraints.gridy = 11;
         gridBagConstraints.gridwidth = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 0.1;
+        gridBagConstraints.weighty = 0.09;
         gridBagConstraints.insets = new java.awt.Insets(0, 10, 10, 10);
         jPanel1.add(preprocessToggleButton, gridBagConstraints);
+
+        curveFitTolLabel.setText("Curve fit tolerance:");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 9;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_START;
+        gridBagConstraints.weightx = 0.5;
+        gridBagConstraints.weighty = 0.09;
+        gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
+        jPanel1.add(curveFitTolLabel, gridBagConstraints);
+
+        curveFitTolTextField.setText(String.valueOf(UserVariables.getCurveFitTol()));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 9;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_END;
+        gridBagConstraints.weightx = 0.5;
+        gridBagConstraints.weighty = 0.09;
+        gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 10);
+        jPanel1.add(curveFitTolTextField, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
@@ -322,7 +357,7 @@ public class UserInterface extends javax.swing.JDialog {
 
         previewScrollBar.setOrientation(javax.swing.JScrollBar.HORIZONTAL);
         previewScrollBar.setMinimum(1);
-        previewScrollBar.setMaximum(stacks[0].getSize());
+        previewScrollBar.setMaximum(analyser.getStack().getSize());
         previewScrollBar.setValue(1);
         previewScrollBar.addAdjustmentListener(new java.awt.event.AdjustmentListener() {
             public void adjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {
@@ -456,6 +491,7 @@ public class UserInterface extends javax.swing.JDialog {
             UserVariables.setSpatialRes(Double.parseDouble(spatResTextField.getText()));
             UserVariables.setTimeRes(Double.parseDouble(timeResTextField.getText()));
             UserVariables.setTrajMaxStep(Double.parseDouble(maxTrajStepTextField.getText()));
+            UserVariables.setCurveFitTol(Double.parseDouble(curveFitTolTextField.getText()));
             UserVariables.setColocal(colocaliseToggleButton.isSelected());
             UserVariables.setPreProcess(preprocessToggleButton.isSelected());
             UserVariables.setC1Index(c1ComboBox.getSelectedIndex());
@@ -465,6 +501,83 @@ public class UserInterface extends javax.swing.JDialog {
             return false;
         }
         return true;
+    }
+
+    public final void initialise() {
+        //gaussianRadius = 0.139d / spatialRes;// IsoGaussian filter radius set to 139 nm
+        analyser.calcParticleRadius(UserVariables.getSpatialRes()); 
+        int width = analyser.getStack().getWidth();
+        int height = analyser.getStack().getHeight();
+        ColorProcessor processor = new ColorProcessor(width, height);
+        if (!analyser.isMonoChrome()) {
+            processor.setRGB(getPixels(c1ComboBox.getSelectedIndex(), previewScrollBar.getValue()),
+                    getPixels(c2ComboBox.getSelectedIndex(), previewScrollBar.getValue()),
+                    getPixels(-1, previewScrollBar.getValue()));
+        }
+        viewDetections(analyser.findParticles(1.0, false, previewScrollBar.getValue(), previewScrollBar.getValue()), 3);
+    }
+
+    public void viewDetections(ParticleArray detections, int radius) {
+        ImageProcessor output;
+        int slice = previewScrollBar.getValue();
+        ImageStack stack = analyser.getStack();
+        boolean monoChrome = analyser.isMonoChrome();
+        double sr = Double.parseDouble(spatResTextField.getText());
+        if (analyser.isMonoChrome()) {
+            output = (new TypeConverter((stack.getProcessor(slice)).duplicate(), true)).convertToByte();
+        } else {
+            output = (new TypeConverter((stack.getProcessor(slice)).duplicate(), true)).convertToRGB();
+        }
+        IsoGaussian c1, c2;
+        ArrayList<Particle> particles = detections.getLevel(0);
+        Color c1Color = !monoChrome ? analyser.getDrawColor(c1ComboBox.getSelectedIndex()) : Color.white;
+        Color c2Color = !monoChrome ? analyser.getDrawColor(c2ComboBox.getSelectedIndex()) : Color.white;
+        for (int i = 0; i < particles.size(); i++) {
+            c1 = particles.get(i).getC1Gaussian();
+            c2 = particles.get(i).getC2Gaussian();
+            drawDetections(output, (int) (Math.round(sr * c1.getX())), (int) (Math.round(sr * c1.getY())), radius, (c1.getFit() > Double.parseDouble(curveFitTolTextField.getText())), c1Color);
+            if (c2 != null) {
+                drawDetections(output, (int) (Math.round(sr * c2.getX())),
+                        (int) (Math.round(sr * c2.getY())), radius,
+                        (c2.getFit() > 0.0), c2Color);
+            }
+        }
+        imp.setProcessor("", output);
+        canvas1.repaint();
+    }
+
+    public void drawDetections(ImageProcessor image, int x, int y, int radius,
+            boolean drawOval, Color colour) {
+        image.setColor(colour);
+        if (drawOval) {
+            image.drawOval((x - radius), (y - radius), 2 * radius, 2 * radius);
+        } else {
+            image.drawRect((x - radius), (y - radius), 2 * radius, 2 * radius);
+        }
+    }
+
+    public byte[] getPixels(int channel, int frame) {
+        ColorProcessor processor = (ColorProcessor) analyser.getStack().getProcessor(frame + 1);
+        int width = processor.getWidth(), height = processor.getHeight();
+        int size = width * height;
+        byte redPix[] = new byte[size], greenPix[] = new byte[size],
+                bluePix[] = new byte[size], emptyPix[] = new byte[size];
+        Arrays.fill(emptyPix, (byte) 0);
+        processor.getRGB(redPix, greenPix, bluePix);
+        switch (channel) {
+            case UserVariables.RED:
+                return redPix;
+            case UserVariables.GREEN:
+                return greenPix;
+            case UserVariables.BLUE:
+                return bluePix;
+            default:
+                return emptyPix;
+        }
+    }
+
+    public boolean isWasOKed() {
+        return wasOKed;
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -479,6 +592,8 @@ public class UserInterface extends javax.swing.JDialog {
     private javax.swing.JLabel chan2MaxThreshLabel;
     private javax.swing.JTextField chan2MaxThreshTextField;
     private javax.swing.JToggleButton colocaliseToggleButton;
+    private javax.swing.JLabel curveFitTolLabel;
+    private javax.swing.JTextField curveFitTolTextField;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;

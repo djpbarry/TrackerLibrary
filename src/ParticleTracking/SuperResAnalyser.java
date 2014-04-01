@@ -51,9 +51,9 @@ public class SuperResAnalyser extends Co_Localise {
             headings = "Image\tChannel 1 (" + channels[channel1]
                     + ") Detections\tColocalised Channel 2 (" + channels[channel2]
                     + ") Detections\t% Colocalisation";
-            Timelapse_Analysis.setPreProcess(true);
+            UserVariables.setPreProcess(true);
             Timelapse_Analysis analyser = new Timelapse_Analysis(stack);
-            analyser.calcParticleRadius();
+            analyser.calcParticleRadius(UserVariables.getSpatialRes());
             //Timelapse_Analysis.setGaussianRadius(0.139 / Timelapse_Analysis.getSpatialRes());
             //IJ.saveAs(buildOutput(analyser), "TIF", "C:\\Users\\barry05\\Desktop\\SuperResTestOutputII.tif");
             buildOutput(analyser);
@@ -64,7 +64,7 @@ public class SuperResAnalyser extends Co_Localise {
         if (image == null || g == null) {
             return false;
         }
-        double res = Timelapse_Analysis.getSpatialRes();
+        double res = UserVariables.getSpatialRes();
         int x, y, drawRad;
         double x0 = scaleFactor * g.getX() / res;
         double y0 = scaleFactor * g.getY() / res;
@@ -119,7 +119,7 @@ public class SuperResAnalyser extends Co_Localise {
             ArrayList detections = curves.getLevel(0);
             for (int j = 0; j < detections.size(); j++) {
                 IsoGaussian c1 = ((IsoGaussian[]) detections.get(j))[0];
-                if (draw2DGaussian(ch1proc, c1, Timelapse_Analysis.getC1CurveFitTol(), Timelapse_Analysis.spatialRes)) {
+                if (draw2DGaussian(ch1proc, c1, UserVariables.getCurveFitTol(), UserVariables.getSpatialRes())) {
                     count++;
                 }
                 //temp.updateAndDraw();
