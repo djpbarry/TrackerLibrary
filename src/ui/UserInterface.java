@@ -6,10 +6,12 @@
 package ui;
 
 import ParticleTracking.Co_Localise;
+import ParticleTracking.Timelapse_Analysis;
 import ParticleTracking.UserVariables;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.process.ImageProcessor;
 
 /**
  *
@@ -17,6 +19,7 @@ import ij.ImageStack;
  */
 public class UserInterface extends javax.swing.JDialog {
 
+    private Timelapse_Analysis analyser;
     private ImagePlus cytoImp, sigImp;
     private ImageStack[] stacks;
     private String title;
@@ -25,8 +28,9 @@ public class UserInterface extends javax.swing.JDialog {
     /**
      * Creates new form UserInterface
      */
-    public UserInterface(java.awt.Frame parent, boolean modal) {
-        super(parent, modal);
+    public UserInterface(java.awt.Frame parent, boolean modal, String title, Timelapse_Analysis analyser) {
+        super(parent, title, modal);
+        this.analyser = analyser;
         initComponents();
     }
 
@@ -317,6 +321,14 @@ public class UserInterface extends javax.swing.JDialog {
         jPanel2.add(canvas1, gridBagConstraints);
 
         previewScrollBar.setOrientation(javax.swing.JScrollBar.HORIZONTAL);
+        previewScrollBar.setMinimum(1);
+        previewScrollBar.setMaximum(stacks[0].getSize());
+        previewScrollBar.setValue(1);
+        previewScrollBar.addAdjustmentListener(new java.awt.event.AdjustmentListener() {
+            public void adjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {
+                previewScrollBarAdjustmentValueChanged(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 2;
@@ -340,6 +352,11 @@ public class UserInterface extends javax.swing.JDialog {
         jPanel2.add(previewTextField, gridBagConstraints);
 
         previewToggleButton.setText("Preview");
+        previewToggleButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                previewToggleButtonActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 1;
@@ -361,6 +378,11 @@ public class UserInterface extends javax.swing.JDialog {
         jPanel3.setLayout(new java.awt.GridBagLayout());
 
         okButton.setText("Run");
+        okButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                okButtonActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
@@ -399,7 +421,34 @@ public class UserInterface extends javax.swing.JDialog {
         wasOKed = false;
     }//GEN-LAST:event_cancelButtonActionPerformed
 
-boolean setVariables() {
+    private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
+        if (!setVariables()) {
+            return;
+        }
+        this.dispose();
+        wasOKed = true;
+    }//GEN-LAST:event_okButtonActionPerformed
+
+    private void previewScrollBarAdjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {//GEN-FIRST:event_previewScrollBarAdjustmentValueChanged
+//        if (!previewScrollBar.getValueIsAdjusting() || !setVariables()) {
+//            return;
+//        }
+//        ImageProcessor updates[] = analyser.generatePreview(previewScrollBar.getValue());
+//        cytoImp.setProcessor(updates[0]);
+//        cytoCanvas.repaint();
+//        if (stacks[1] != null) {
+//            sigImp.setProcessor(updates[1]);
+//            sigCanvas.repaint();
+//        }
+//        previewField.setText(String.valueOf(previewSlider.getValue()));
+    }//GEN-LAST:event_previewScrollBarAdjustmentValueChanged
+
+    private void previewToggleButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_previewToggleButtonActionPerformed
+        previewScrollBar.setEnabled(previewToggleButton.isSelected());
+        previewTextField.setEnabled(previewToggleButton.isSelected());
+    }//GEN-LAST:event_previewToggleButtonActionPerformed
+
+    boolean setVariables() {
         try {
             UserVariables.setChan1MaxThresh(Double.parseDouble(chan1MaxThreshTextField.getText()));
             UserVariables.setChan2MaxThresh(Double.parseDouble(chan2MaxThreshTextField.getText()));
