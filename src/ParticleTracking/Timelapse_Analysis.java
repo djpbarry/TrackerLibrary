@@ -2,6 +2,7 @@ package ParticleTracking;
 
 import IAClasses.IsoGaussian;
 import IAClasses.Utils;
+import UtilClasses.Utilities;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -14,6 +15,7 @@ import ij.plugin.filter.GaussianBlur;
 import ij.process.*;
 import ij.text.TextWindow;
 import java.awt.*;
+import java.io.File;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -70,15 +72,15 @@ public class Timelapse_Analysis implements PlugIn {
     protected boolean monoChrome;
 //    private double noiseTol = 0.2;
 
-//    public static void main(String args[]) {
-//        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
-//        ImageStack stack = Utils.buildStack(image);
-//        ImagePlus imp = new ImagePlus("Stack", stack);
-//        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
-//        if (instance.showDialog()) {
-//            instance.analyse();
-//        }
-//    }
+    public static void main(String args[]) {
+        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
+        ImageStack stack = Utils.buildStack(image);
+        ImagePlus imp = new ImagePlus("Stack", stack);
+        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
+        if (instance.showDialog()) {
+            instance.analyse();
+        }
+    }
 
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep,
             double chan1MaxThresh, double hystDiff, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
