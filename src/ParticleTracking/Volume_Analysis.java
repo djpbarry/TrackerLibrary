@@ -28,6 +28,11 @@ public class Volume_Analysis extends Timelapse_Analysis {
 
     private int outputsize = 51, midpoint = (outputsize - 1) / 2;
     double spatialRes = UserVariables.getSpatialRes();
+    double timeRes = UserVariables.getTimeRes();
+    double chan1MaxThresh = UserVariables.getChan1MaxThresh();
+    double minTrajLength = UserVariables.getMinTrajLength();
+    double c1CurveFitTol = UserVariables.getCurveFitTol();
+    boolean colocal = UserVariables.isColocal();
 
 //    public static void main(String args[]) {
 //        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Tracking Test Sequences"), null);
@@ -242,7 +247,7 @@ public class Volume_Analysis extends Timelapse_Analysis {
             }
         }
         if (update) {
-            updateTrajectories(particles, timeRes, trajMaxStep, chan1MaxThresh, hystDiff, spatialRes, true);
+            updateTrajectories(particles, timeRes, UserVariables.getTrajMaxStep(), chan1MaxThresh, hystDiff, spatialRes, true);
         }
         return particles;
     }

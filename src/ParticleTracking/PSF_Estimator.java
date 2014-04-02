@@ -81,7 +81,7 @@ public class PSF_Estimator extends Timelapse_Analysis {
             IJ.showProgress(i, noOfImages);
             pix = (byte[]) (new TypeConverter(stack.getProcessor(i + 1).duplicate(), true).convertToByte().getPixels());
             FloatProcessor floatProc = preProcess(new ByteProcessor(width, height, pix, null));
-            ByteProcessor maxima = Utils.findLocalMaxima(xyPartRad, xyPartRad, FOREGROUND, floatProc, chan1MaxThresh, true);
+            ByteProcessor maxima = Utils.findLocalMaxima(xyPartRad, xyPartRad, FOREGROUND, floatProc, UserVariables.getChan1MaxThresh(), true);
             for (x = 0; x < width; x++) {
                 for (y = 0; y < height; y++) {
                     if (maxima.getPixel(x, y) == FOREGROUND) {
@@ -96,7 +96,7 @@ public class PSF_Estimator extends Timelapse_Analysis {
                         NonIsoGaussianFitter fitter = new NonIsoGaussianFitter(xCoords, yCoords, pixValues);
                         fitter.doFit(xySigEst);
                         //if (c1GF.getXsig() < (c1SigmaTol * xySigEst)) {
-                        NonIsoGaussian gaussian = new NonIsoGaussian(fitter, c1CurveFitTol);
+                        NonIsoGaussian gaussian = new NonIsoGaussian(fitter, UserVariables.getCurveFitTol());
                         results.append(i + "\t" + x + "\t" + y + "\t"
                                 + numFormat.format(gaussian.getMagnitude())
                                 + "\t" + numFormat.format(gaussian.getxSigma() * UserVariables.getSpatialRes() * 1000.0)
@@ -122,13 +122,13 @@ public class PSF_Estimator extends Timelapse_Analysis {
         }
         GenericDialog gd = new GenericDialog(psfTitle);
         gd.addNumericField("Spatial Resolution", UserVariables.getSpatialRes() * 1000.0, 5, 5, "nm");
-        gd.addNumericField("Peak Threshold", chan1MaxThresh, 5);
+        gd.addNumericField("Peak Threshold", UserVariables.getChan1MaxThresh(), 5);
         gd.showDialog();
         if (gd.wasCanceled()) {
             return false;
         }
         UserVariables.setSpatialRes(gd.getNextNumber() / 1000.0);
-        chan1MaxThresh = gd.getNextNumber();
+        UserVariables.setChan1MaxThresh(gd.getNextNumber());
         return true;
     }
 }

@@ -284,11 +284,6 @@ public class UserInterface extends javax.swing.JDialog {
 
         colocaliseToggleButton.setText("Co-Localised Only");
         colocaliseToggleButton.setSelected(UserVariables.isColocal());
-        colocaliseToggleButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                colocaliseToggleButtonActionPerformed(evt);
-            }
-        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 10;
@@ -345,111 +340,109 @@ public class UserInterface extends javax.swing.JDialog {
         jPanel2.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         jPanel2.setLayout(new java.awt.GridBagLayout());
 
-        canvas1.setPreferredSize(new java.awt.Dimension(256, 256));
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.gridwidth = 2;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weighty = 0.8;
-        gridBagConstraints.insets = new java.awt.Insets(10, 10, 0, 10);
-        jPanel2.add(canvas1, gridBagConstraints);
+        canvas1.setPreferredSize(new java.awt.Dimension(
+            imp.getProcessor().getWidth(), imp.getProcessor().getHeight()));
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 0;
+    gridBagConstraints.gridy = 0;
+    gridBagConstraints.gridwidth = 2;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+    gridBagConstraints.weightx = 1.0;
+    gridBagConstraints.weighty = 0.8;
+    gridBagConstraints.insets = new java.awt.Insets(10, 10, 0, 10);
+    jPanel2.add(canvas1, gridBagConstraints);
 
-        previewScrollBar.setOrientation(javax.swing.JScrollBar.HORIZONTAL);
-        previewScrollBar.setMinimum(1);
-        previewScrollBar.setMaximum(analyser.getStack().getSize());
-        previewScrollBar.setValue(1);
-        previewScrollBar.addAdjustmentListener(new java.awt.event.AdjustmentListener() {
-            public void adjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {
-                previewScrollBarAdjustmentValueChanged(evt);
-            }
-        });
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 2;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-        gridBagConstraints.weightx = 0.8;
-        gridBagConstraints.weighty = 0.1;
-        gridBagConstraints.insets = new java.awt.Insets(0, 10, 10, 0);
-        jPanel2.add(previewScrollBar, gridBagConstraints);
+    previewScrollBar.setOrientation(javax.swing.JScrollBar.HORIZONTAL);
+    previewScrollBar.setMinimum(1);
+    previewScrollBar.setMaximum(analyser.getStack().getSize());
+    previewScrollBar.setValue(1);
+    previewScrollBar.addAdjustmentListener(new java.awt.event.AdjustmentListener() {
+        public void adjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {
+            previewScrollBarAdjustmentValueChanged(evt);
+        }
+    });
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 0;
+    gridBagConstraints.gridy = 2;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+    gridBagConstraints.weightx = 0.8;
+    gridBagConstraints.weighty = 0.1;
+    gridBagConstraints.insets = new java.awt.Insets(0, 10, 10, 0);
+    jPanel2.add(previewScrollBar, gridBagConstraints);
 
-        previewTextField.setText("jTextField7");
-        previewTextField.setEditable(false);
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 2;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
-        gridBagConstraints.weightx = 0.2;
-        gridBagConstraints.weighty = 0.1;
-        gridBagConstraints.insets = new java.awt.Insets(0, 0, 10, 10);
-        jPanel2.add(previewTextField, gridBagConstraints);
+    previewTextField.setText("jTextField7");
+    previewTextField.setEditable(false);
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 1;
+    gridBagConstraints.gridy = 2;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+    gridBagConstraints.weightx = 0.2;
+    gridBagConstraints.weighty = 0.1;
+    gridBagConstraints.insets = new java.awt.Insets(0, 0, 10, 10);
+    jPanel2.add(previewTextField, gridBagConstraints);
 
-        previewToggleButton.setText("Preview");
-        previewToggleButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                previewToggleButtonActionPerformed(evt);
-            }
-        });
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 1;
-        gridBagConstraints.gridwidth = 2;
-        gridBagConstraints.weighty = 0.1;
-        gridBagConstraints.insets = new java.awt.Insets(10, 10, 10, 10);
-        jPanel2.add(previewToggleButton, gridBagConstraints);
+    previewToggleButton.setText("Preview");
+    previewToggleButton.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            previewToggleButtonActionPerformed(evt);
+        }
+    });
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 0;
+    gridBagConstraints.gridy = 1;
+    gridBagConstraints.gridwidth = 2;
+    gridBagConstraints.weighty = 0.1;
+    gridBagConstraints.insets = new java.awt.Insets(10, 10, 10, 10);
+    jPanel2.add(previewToggleButton, gridBagConstraints);
 
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-        gridBagConstraints.weightx = 0.8;
-        gridBagConstraints.weighty = 0.8;
-        getContentPane().add(jPanel2, gridBagConstraints);
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 1;
+    gridBagConstraints.gridy = 0;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+    gridBagConstraints.weightx = 0.8;
+    gridBagConstraints.weighty = 0.8;
+    getContentPane().add(jPanel2, gridBagConstraints);
 
-        jPanel3.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-        jPanel3.setLayout(new java.awt.GridBagLayout());
+    jPanel3.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+    jPanel3.setLayout(new java.awt.GridBagLayout());
 
-        okButton.setText("Run");
-        okButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                okButtonActionPerformed(evt);
-            }
-        });
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-        jPanel3.add(okButton, gridBagConstraints);
+    okButton.setText("Run");
+    okButton.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            okButtonActionPerformed(evt);
+        }
+    });
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 0;
+    gridBagConstraints.gridy = 0;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+    jPanel3.add(okButton, gridBagConstraints);
 
-        cancelButton.setText("Cancel");
-        cancelButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cancelButtonActionPerformed(evt);
-            }
-        });
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-        jPanel3.add(cancelButton, gridBagConstraints);
+    cancelButton.setText("Cancel");
+    cancelButton.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            cancelButtonActionPerformed(evt);
+        }
+    });
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 1;
+    gridBagConstraints.gridy = 0;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+    jPanel3.add(cancelButton, gridBagConstraints);
 
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 1;
-        gridBagConstraints.gridwidth = 2;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weighty = 0.2;
-        getContentPane().add(jPanel3, gridBagConstraints);
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 0;
+    gridBagConstraints.gridy = 1;
+    gridBagConstraints.gridwidth = 2;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+    gridBagConstraints.weighty = 0.2;
+    getContentPane().add(jPanel3, gridBagConstraints);
 
-        pack();
+    pack();
     }// </editor-fold>//GEN-END:initComponents
-
-    private void colocaliseToggleButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_colocaliseToggleButtonActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_colocaliseToggleButtonActionPerformed
 
     private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed
         this.dispose();
@@ -465,17 +458,11 @@ public class UserInterface extends javax.swing.JDialog {
     }//GEN-LAST:event_okButtonActionPerformed
 
     private void previewScrollBarAdjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {//GEN-FIRST:event_previewScrollBarAdjustmentValueChanged
-//        if (!previewScrollBar.getValueIsAdjusting() || !setVariables()) {
-//            return;
-//        }
-//        ImageProcessor updates[] = analyser.generatePreview(previewScrollBar.getValue());
-//        cytoImp.setProcessor(updates[0]);
-//        cytoCanvas.repaint();
-//        if (stacks[1] != null) {
-//            sigImp.setProcessor(updates[1]);
-//            sigCanvas.repaint();
-//        }
-//        previewField.setText(String.valueOf(previewSlider.getValue()));
+        if (!previewScrollBar.getValueIsAdjusting() || !setVariables()) {
+            return;
+        }
+        initialise();
+        previewTextField.setText(String.valueOf(previewScrollBar.getValue()));
     }//GEN-LAST:event_previewScrollBarAdjustmentValueChanged
 
     private void previewToggleButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_previewToggleButtonActionPerformed
@@ -504,8 +491,7 @@ public class UserInterface extends javax.swing.JDialog {
     }
 
     public final void initialise() {
-        //gaussianRadius = 0.139d / spatialRes;// IsoGaussian filter radius set to 139 nm
-        analyser.calcParticleRadius(UserVariables.getSpatialRes()); 
+        analyser.calcParticleRadius(UserVariables.getSpatialRes());
         int width = analyser.getStack().getWidth();
         int height = analyser.getStack().getHeight();
         ColorProcessor processor = new ColorProcessor(width, height);
@@ -522,19 +508,20 @@ public class UserInterface extends javax.swing.JDialog {
         int slice = previewScrollBar.getValue();
         ImageStack stack = analyser.getStack();
         boolean monoChrome = analyser.isMonoChrome();
-        double sr = Double.parseDouble(spatResTextField.getText());
         if (analyser.isMonoChrome()) {
             output = (new TypeConverter((stack.getProcessor(slice)).duplicate(), true)).convertToByte();
         } else {
             output = (new TypeConverter((stack.getProcessor(slice)).duplicate(), true)).convertToRGB();
         }
+        double mag = 1.0 / scaleImage(output);
+        double sr = 1.0/Double.parseDouble(spatResTextField.getText());
         IsoGaussian c1, c2;
         ArrayList<Particle> particles = detections.getLevel(0);
         Color c1Color = !monoChrome ? analyser.getDrawColor(c1ComboBox.getSelectedIndex()) : Color.white;
         Color c2Color = !monoChrome ? analyser.getDrawColor(c2ComboBox.getSelectedIndex()) : Color.white;
-        for (int i = 0; i < particles.size(); i++) {
-            c1 = particles.get(i).getC1Gaussian();
-            c2 = particles.get(i).getC2Gaussian();
+        for (Particle particle : particles) {
+            c1 = particle.getC1Gaussian();
+            c2 = particle.getC2Gaussian();
             drawDetections(output, (int) (Math.round(sr * c1.getX())), (int) (Math.round(sr * c1.getY())), radius, (c1.getFit() > Double.parseDouble(curveFitTolTextField.getText())), c1Color);
             if (c2 != null) {
                 drawDetections(output, (int) (Math.round(sr * c2.getX())),
@@ -543,6 +530,7 @@ public class UserInterface extends javax.swing.JDialog {
             }
         }
         imp.setProcessor("", output);
+        ((ImageCanvas)canvas1).setMagnification(mag);
         canvas1.repaint();
     }
 
@@ -578,6 +566,16 @@ public class UserInterface extends javax.swing.JDialog {
 
     public boolean isWasOKed() {
         return wasOKed;
+    }
+
+    double scaleImage(ImageProcessor image) {
+        int iWidth = image.getWidth();
+        int iHeight = image.getHeight();
+        int cWidth = canvas1.getWidth();
+        int cHeight = canvas1.getHeight();
+        double hScale = ((double) iHeight) / cHeight;
+        double wScale = ((double) iWidth) / cWidth;
+        return Math.max(hScale, wScale);
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
