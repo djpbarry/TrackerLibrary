@@ -64,15 +64,13 @@ public class Timelapse_Analysis implements PlugIn {
     protected Co_Localise colocaliser;
     protected boolean monoChrome;
 
-    public static void main(String args[]) {
-        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
-        ImageStack stack = Utils.buildStack(image);
-        ImagePlus imp = new ImagePlus("Stack", stack);
-        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
-        if (instance.showDialog()) {
-            instance.analyse();
-        }
-    }
+//    public static void main(String args[]) {
+//        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
+//        ImageStack stack = Utils.buildStack(image);
+//        ImagePlus imp = new ImagePlus("Stack", stack);
+//        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
+//        instance.run(null);
+//    }
 
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep,
             double chan1MaxThresh, double hystDiff, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
@@ -107,8 +105,11 @@ public class Timelapse_Analysis implements PlugIn {
      * Implements run method from {@link PlugIn}.
      */
     public void run(String arg) {
+        Utilities.setLookAndFeel(UserInterface.class);
         title = title + "_v" + VERSION + "." + intFormat.format(Revision.Revision.revisionNumber);
-        imp = WindowManager.getCurrentImage();
+        if (IJ.getInstance() != null) {
+            imp = WindowManager.getCurrentImage();
+        }
         if (showDialog()) {
             analyse();
         }
@@ -487,8 +488,8 @@ public class Timelapse_Analysis implements PlugIn {
                     }
                 }
             }
-            for (int l = 0; l < trajectories.size(); l++) {
-                traj = (ParticleTrajectory) trajectories.get(l);
+            for (ParticleTrajectory trajectorie : trajectories) {
+                traj = (ParticleTrajectory) trajectorie;
                 Particle temp = traj.getTemp();
                 if (temp != null) {
                     int row = traj.getTempRow();

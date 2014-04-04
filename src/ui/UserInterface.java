@@ -371,7 +371,7 @@ public class UserInterface extends javax.swing.JDialog {
     gridBagConstraints.insets = new java.awt.Insets(0, 10, 10, 0);
     jPanel2.add(previewScrollBar, gridBagConstraints);
 
-    previewTextField.setText("jTextField7");
+    previewTextField.setText(String.valueOf(previewScrollBar.getValue()));
     previewTextField.setEditable(false);
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 1;
@@ -458,7 +458,7 @@ public class UserInterface extends javax.swing.JDialog {
     }//GEN-LAST:event_okButtonActionPerformed
 
     private void previewScrollBarAdjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {//GEN-FIRST:event_previewScrollBarAdjustmentValueChanged
-        if (!previewScrollBar.getValueIsAdjusting() || !setVariables()) {
+        if (previewScrollBar.getValueIsAdjusting() || !setVariables()) {
             return;
         }
         initialise();
@@ -468,6 +468,7 @@ public class UserInterface extends javax.swing.JDialog {
     private void previewToggleButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_previewToggleButtonActionPerformed
         previewScrollBar.setEnabled(previewToggleButton.isSelected());
         previewTextField.setEnabled(previewToggleButton.isSelected());
+        previewScrollBarAdjustmentValueChanged(null);
     }//GEN-LAST:event_previewToggleButtonActionPerformed
 
     boolean setVariables() {
@@ -513,8 +514,8 @@ public class UserInterface extends javax.swing.JDialog {
         } else {
             output = (new TypeConverter((stack.getProcessor(slice)).duplicate(), true)).convertToRGB();
         }
-        double mag = 1.0 / scaleImage(output);
-        double sr = 1.0/Double.parseDouble(spatResTextField.getText());
+        double mag = 1.0 / getMagnification(output);
+        double sr = 1.0 / Double.parseDouble(spatResTextField.getText());
         IsoGaussian c1, c2;
         ArrayList<Particle> particles = detections.getLevel(0);
         Color c1Color = !monoChrome ? analyser.getDrawColor(c1ComboBox.getSelectedIndex()) : Color.white;
@@ -530,7 +531,8 @@ public class UserInterface extends javax.swing.JDialog {
             }
         }
         imp.setProcessor("", output);
-        ((ImageCanvas)canvas1).setMagnification(mag);
+        ((ImageCanvas) canvas1).setMagnification(mag);
+
         canvas1.repaint();
     }
 
@@ -568,7 +570,7 @@ public class UserInterface extends javax.swing.JDialog {
         return wasOKed;
     }
 
-    double scaleImage(ImageProcessor image) {
+    double getMagnification(ImageProcessor image) {
         int iWidth = image.getWidth();
         int iHeight = image.getHeight();
         int cWidth = canvas1.getWidth();
