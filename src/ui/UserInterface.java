@@ -21,6 +21,7 @@ import ij.process.TypeConverter;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
+import javax.swing.DefaultBoundedRangeModel;
 
 /**
  *
@@ -353,9 +354,8 @@ public class UserInterface extends javax.swing.JDialog {
     jPanel2.add(canvas1, gridBagConstraints);
 
     previewScrollBar.setOrientation(javax.swing.JScrollBar.HORIZONTAL);
-    previewScrollBar.setMinimum(1);
-    previewScrollBar.setMaximum(analyser.getStack().getSize());
-    previewScrollBar.setValue(1);
+    previewScrollBar.setModel(new DefaultBoundedRangeModel(1, 0, 1, analyser.getStack().getSize()));
+    previewScrollBar.setEnabled(previewToggleButton.isSelected());
     previewScrollBar.addAdjustmentListener(new java.awt.event.AdjustmentListener() {
         public void adjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {
             previewScrollBarAdjustmentValueChanged(evt);
@@ -373,6 +373,7 @@ public class UserInterface extends javax.swing.JDialog {
 
     previewTextField.setText(String.valueOf(previewScrollBar.getValue()));
     previewTextField.setEditable(false);
+    previewTextField.setEnabled(previewToggleButton.isSelected());
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 1;
     gridBagConstraints.gridy = 2;
@@ -461,7 +462,7 @@ public class UserInterface extends javax.swing.JDialog {
         if (previewScrollBar.getValueIsAdjusting() || !setVariables()) {
             return;
         }
-        initialise();
+        viewDetections();
         previewTextField.setText(String.valueOf(previewScrollBar.getValue()));
     }//GEN-LAST:event_previewScrollBarAdjustmentValueChanged
 
@@ -491,20 +492,9 @@ public class UserInterface extends javax.swing.JDialog {
         return true;
     }
 
-    public final void initialise() {
+    public void viewDetections() {
         analyser.calcParticleRadius(UserVariables.getSpatialRes());
-        int width = analyser.getStack().getWidth();
-        int height = analyser.getStack().getHeight();
-        ColorProcessor processor = new ColorProcessor(width, height);
-        if (!analyser.isMonoChrome()) {
-            processor.setRGB(getPixels(c1ComboBox.getSelectedIndex(), previewScrollBar.getValue()),
-                    getPixels(c2ComboBox.getSelectedIndex(), previewScrollBar.getValue()),
-                    getPixels(-1, previewScrollBar.getValue()));
-        }
-        viewDetections(analyser.findParticles(1.0, false, previewScrollBar.getValue(), previewScrollBar.getValue()), 3);
-    }
-
-    public void viewDetections(ParticleArray detections, int radius) {
+        ParticleArray detections = analyser.findParticles(1.0, false, previewScrollBar.getValue()-1, previewScrollBar.getValue()-1);
         ImageProcessor output;
         int slice = previewScrollBar.getValue();
         ImageStack stack = analyser.getStack();
@@ -516,10 +506,12 @@ public class UserInterface extends javax.swing.JDialog {
         }
         double mag = 1.0 / getMagnification(output);
         double sr = 1.0 / Double.parseDouble(spatResTextField.getText());
+        int radius = (int)Math.round(sr);
         IsoGaussian c1, c2;
         ArrayList<Particle> particles = detections.getLevel(0);
         Color c1Color = !monoChrome ? analyser.getDrawColor(c1ComboBox.getSelectedIndex()) : Color.white;
         Color c2Color = !monoChrome ? analyser.getDrawColor(c2ComboBox.getSelectedIndex()) : Color.white;
+        output.setLineWidth(1);
         for (Particle particle : particles) {
             c1 = particle.getC1Gaussian();
             c2 = particle.getC2Gaussian();

@@ -323,7 +323,7 @@
             <EventHandler event="adjustmentValueChanged" listener="java.awt.event.AdjustmentListener" parameters="java.awt.event.AdjustmentEvent" handler="previewScrollBarAdjustmentValueChanged"/>
           </Events>
           <AuxValues>
-            <AuxValue name="JavaCodeGenerator_InitCodePost" type="java.lang.String" value="previewScrollBar.setMinimum(1);&#xa;previewScrollBar.setMaximum(analyser.getStack().getSize());&#xa;previewScrollBar.setValue(1);"/>
+            <AuxValue name="JavaCodeGenerator_InitCodePost" type="java.lang.String" value="previewScrollBar.setModel(new DefaultBoundedRangeModel(1, 0, 1, analyser.getStack().getSize()));&#xa;previewScrollBar.setEnabled(previewToggleButton.isSelected());"/>
           </AuxValues>
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
@@ -338,7 +338,7 @@
             </Property>
           </Properties>
           <AuxValues>
-            <AuxValue name="JavaCodeGenerator_InitCodePost" type="java.lang.String" value="previewTextField.setEditable(false);"/>
+            <AuxValue name="JavaCodeGenerator_InitCodePost" type="java.lang.String" value="previewTextField.setEditable(false);&#xa;previewTextField.setEnabled(previewToggleButton.isSelected());"/>
           </AuxValues>
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
