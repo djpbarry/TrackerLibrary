@@ -20,7 +20,7 @@ public class UserVariables {
     private static double chan2MaxThresh = 0.0;
     private static double curveFitTol = 0.8d;
     private static boolean colocal = false, preProcess = true;
-    private static final String[] channels = {"Red", "Green", "Blue"};
+    public static final String[] channels = {"Red", "Green", "Blue"};
     private static int c1Index = RED;
     private static int c2Index = GREEN;
 

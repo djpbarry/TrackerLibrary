@@ -68,8 +68,8 @@ public class Volume_Analysis extends Timelapse_Analysis {
             findParticles(1.0, true, 0, stack.getSize() - 1);
 
             TextWindow results = new TextWindow(title + " Results", "X\tY\tFrame\tChannel 1 ("
-                    + Co_Localise.channels[colocaliser.getChannel1()]
-                    + ")\tChannel 2 (" + Co_Localise.channels[colocaliser.getChannel2()]
+                    + UserVariables.channels[UserVariables.getC1Index()]
+                    + ")\tChannel 2 (" + UserVariables.channels[UserVariables.getC2Index()]
                     + ")\tChannel 2 " + '\u03C3' + "x\tChannel 2 " + '\u03C3' + "y\t" + '\u03B8',
                     null, 1000, 500);
             results.append(imp.getTitle() + "\n\n");
@@ -78,8 +78,8 @@ public class Volume_Analysis extends Timelapse_Analysis {
                     + "m)\tVelocity (" + IJ.micronSymbol + "m/s)\tDirectionality\tDiffusion Coefficient ("
                     + IJ.micronSymbol + "m^2/s)" + "\tFractal Dimension"
                     + "\tFluorescence Ratio ("
-                    + Co_Localise.channels[colocaliser.getChannel2()] + "/"
-                    + Co_Localise.channels[colocaliser.getChannel1()]
+                    + UserVariables.channels[UserVariables.getC2Index()] + "/"
+                    + UserVariables.channels[UserVariables.getC1Index()]
                     + ")\tAngle Spread\tStep Spread\tDC\tCurvature\tC2 Fluor Area\tC2 Fluor Skew",
                     null, 1200, 500);
             resultSummary.append(imp.getTitle() + "\n\n");
@@ -200,11 +200,10 @@ public class Volume_Analysis extends Timelapse_Analysis {
             IJ.showStatus("Analysing Frame " + i);
             IJ.showProgress(i, noOfImages);
             if (!monoChrome) {
-                ColorProcessor colProc = new ColorProcessor(width, height);
-                colProc.setRGB(colocaliser.getPixels(colocaliser.getChannel1(), i),
-                        colocaliser.getPixels(colocaliser.getChannel2(), i),
-                        colocaliser.getPixels(-1, i));
-                ((ColorProcessor) colProc).getRGB(c1Pix, c2Pix, c3Pix);
+                byte[][] tempPix = new byte[3][size];
+                ((ColorProcessor) stack.getProcessor(i + 1)).getRGB(tempPix[0], tempPix[1], tempPix[2]);
+                c1Pix = tempPix[UserVariables.getC1Index()];
+                c2Pix = tempPix[UserVariables.getC2Index()];
             } else {
                 c1Pix = (byte[]) (new TypeConverter(stack.getProcessor(i + 1).duplicate(), true).convertToByte().getPixels());
                 c2Pix = null;

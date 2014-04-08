@@ -127,7 +127,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
         jPanel1.add(c2Label, gridBagConstraints);
 
-        c1ComboBox.setModel(new javax.swing.DefaultComboBoxModel(Co_Localise.channels));
+        c1ComboBox.setModel(new javax.swing.DefaultComboBoxModel(UserVariables.channels));
         c1ComboBox.setSelectedIndex(UserVariables.getC1Index());
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
@@ -139,7 +139,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 10);
         jPanel1.add(c1ComboBox, gridBagConstraints);
 
-        c2ComboBox.setModel(new javax.swing.DefaultComboBoxModel(Co_Localise.channels));
+        c2ComboBox.setModel(new javax.swing.DefaultComboBoxModel(UserVariables.channels));
         c2ComboBox.setSelectedIndex(UserVariables.getC2Index());
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;

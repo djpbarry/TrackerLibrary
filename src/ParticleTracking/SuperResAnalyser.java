@@ -48,8 +48,8 @@ public class SuperResAnalyser extends Co_Localise {
             return;
         }
         if (showDialog()) {
-            headings = "Image\tChannel 1 (" + channels[channel1]
-                    + ") Detections\tColocalised Channel 2 (" + channels[channel2]
+            headings = "Image\tChannel 1 (" + UserVariables.channels[channel1]
+                    + ") Detections\tColocalised Channel 2 (" + UserVariables.channels[channel2]
                     + ") Detections\t% Colocalisation";
             UserVariables.setPreProcess(true);
             Timelapse_Analysis analyser = new Timelapse_Analysis(stack);
@@ -102,8 +102,6 @@ public class SuperResAnalyser extends Co_Localise {
             analyser = new Timelapse_Analysis(stack);
         }
         DecimalFormat format = new DecimalFormat("000");
-        analyser.setColocaliser(this);
-        int count;
         int width = imp.getWidth() * scaleFactor, height = imp.getHeight() * scaleFactor;
         //ImageStack outStack = new ImageStack(width, height);
         ProgressDialog dialog = new ProgressDialog(null, "Processing...", false, false, TITLE);
@@ -111,7 +109,6 @@ public class SuperResAnalyser extends Co_Localise {
         FloatProcessor ch1proc = new FloatProcessor(width, height);
         for (int i = 0; i < stack.getSize(); i++) {
             dialog.updateProgress(i, stack.getSize());
-            count = 0;
             ParticleArray curves = analyser.findParticles(coFactor, false, i, i);
             //ImagePlus temp = new ImagePlus("", ch1proc);
             //temp.show();
@@ -120,7 +117,6 @@ public class SuperResAnalyser extends Co_Localise {
             for (int j = 0; j < detections.size(); j++) {
                 IsoGaussian c1 = ((IsoGaussian[]) detections.get(j))[0];
                 if (draw2DGaussian(ch1proc, c1, UserVariables.getCurveFitTol(), UserVariables.getSpatialRes())) {
-                    count++;
                 }
                 //temp.updateAndDraw();
             }

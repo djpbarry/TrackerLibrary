@@ -19,7 +19,7 @@ public class Co_Localise implements PlugIn {
     protected ImagePlus imp;
     protected ImageStack stack;
     protected final String title = "Colocaliser v1.06";
-    public static final String[] channels = {"Red", "Green", "Blue"};
+//    public static final String[] channels = {"Red", "Green", "Blue"};
     protected String headings;
     protected static double coFactor = 2.5;
     protected static int channel1 = 0, channel2 = 1;
@@ -61,8 +61,8 @@ public class Co_Localise implements PlugIn {
             return;
         }
         if (showDialog()) {
-            headings = "Image\tChannel 1 (" + channels[channel1]
-                    + ") Detections\tColocalised Channel 2 (" + channels[channel2]
+            headings = "Image\tChannel 1 (" + UserVariables.channels[channel1]
+                    + ") Detections\tColocalised Channel 2 (" + UserVariables.channels[channel2]
                     + ") Detections\t% Colocalisation\t"
                     + "\u0394 (nm)";
             UserVariables.setPreProcess(true);
@@ -84,8 +84,8 @@ public class Co_Localise implements PlugIn {
             valid = true;
             GenericDialog dialog = new GenericDialog(title, IJ.getInstance());
             dialog.addMessage("Channel 2 will be co-localised with Channel 1.");
-            dialog.addChoice("Channel 1:", channels, channels[RED]);
-            dialog.addChoice("Channel 2:", channels, channels[GREEN]);
+            dialog.addChoice("Channel 1:", UserVariables.channels, UserVariables.channels[RED]);
+            dialog.addChoice("Channel 2:", UserVariables.channels, UserVariables.channels[GREEN]);
             dialog.addNumericField("Spatial Resolution:", UserVariables.getSpatialRes() * 1000.0, 1, 5, "nm/pixel");
             dialog.addNumericField("Minimum Peak Size (Ch 1):", UserVariables.getChan1MaxThresh(), 1, 5, "");
             dialog.addNumericField("Minimum Peak Size (Ch 2):", UserVariables.getChan2MaxThresh(), 1, 5, "");
@@ -165,7 +165,6 @@ public class Co_Localise implements PlugIn {
             analyser = new Timelapse_Analysis(stack);
         }
         double displaymax = 0.0;
-        analyser.setColocaliser(this);
         int colocalisation, count;
         int width = imp.getWidth(), height = imp.getHeight();
         ImageStack outStack = new ImageStack(width, height);

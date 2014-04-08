@@ -61,17 +61,16 @@ public class Timelapse_Analysis implements PlugIn {
     protected DecimalFormat intFormat = new DecimalFormat("000");
     String title = "Particle Tracker";
     protected static boolean msdPlot = false, intensPlot = false, trajPlot = false, prevRes = false;
-    protected Co_Localise colocaliser;
+//    protected Co_Localise colocaliser;
     protected boolean monoChrome;
 
-//    public static void main(String args[]) {
-//        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
-//        ImageStack stack = Utils.buildStack(image);
-//        ImagePlus imp = new ImagePlus("Stack", stack);
-//        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
-//        instance.run(null);
-//    }
-
+    public static void main(String args[]) {
+        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
+        ImageStack stack = Utils.buildStack(image);
+        ImagePlus imp = new ImagePlus("Stack", stack);
+        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
+        instance.run(null);
+    }
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep,
             double chan1MaxThresh, double hystDiff, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
         UserVariables.setSpatialRes(spatialRes);
@@ -84,9 +83,6 @@ public class Timelapse_Analysis implements PlugIn {
         this.imp = imp;
         this.stack = imp.getStack();
         this.scale = scale;
-        colocaliser = new Co_Localise(imp);
-        colocaliser.setChannel1(0);
-        colocaliser.setChannel2(2);
     }
 
     public Timelapse_Analysis() {
@@ -121,7 +117,6 @@ public class Timelapse_Analysis implements PlugIn {
             IJ.error("No image stack open.");
             return false;
         }
-        colocaliser = new Co_Localise(imp);
         stack = imp.getImageStack();
         monoChrome = !(stack.getProcessor(1).getNChannels() > 1);
         UserInterface ui = new UserInterface(null, true, title, this);
@@ -166,8 +161,8 @@ public class Timelapse_Analysis implements PlugIn {
             findParticles(1.0, true, 0, stack.getSize() - 1);
 
             TextWindow results = new TextWindow(title + " Results", "X\tY\tFrame\tChannel 1 ("
-                    + Co_Localise.channels[colocaliser.getChannel1()]
-                    + ")\tChannel 2 (" + Co_Localise.channels[colocaliser.getChannel2()]
+                    + UserVariables.channels[UserVariables.getC1Index()]
+                    + ")\tChannel 2 (" + UserVariables.channels[UserVariables.getC2Index()]
                     + ")\tChannel 2 " + '\u03C3' + "x\tChannel 2 " + '\u03C3' + "y\t" + '\u03B8',
                     null, 1000, 500);
             results.append(imp.getTitle() + "\n\n");
@@ -176,8 +171,8 @@ public class Timelapse_Analysis implements PlugIn {
                     + "m)\tVelocity (" + IJ.micronSymbol + "m/s)\tDirectionality\tDiffusion Coefficient ("
                     + IJ.micronSymbol + "m^2/s)" + "\tFractal Dimension"
                     + "\tFluorescence Ratio ("
-                    + Co_Localise.channels[colocaliser.getChannel2()] + "/"
-                    + Co_Localise.channels[colocaliser.getChannel1()]
+                    + UserVariables.channels[UserVariables.getC2Index()] + "/"
+                    + UserVariables.channels[UserVariables.getC1Index()]
                     + ")\tAngle Spread\tStep Spread\tDC\tCurvature\tC2 Fluor Area\tC2 Fluor Skew",
                     null, 1200, 500);
             resultSummary.append(imp.getTitle() + "\n\n");
@@ -263,11 +258,10 @@ public class Timelapse_Analysis implements PlugIn {
             IJ.showStatus("Finding Particles...");
             IJ.showProgress(i, noOfImages);
             if (!monoChrome) {
-                ColorProcessor colProc = new ColorProcessor(width, height);
-                colProc.setRGB(colocaliser.getPixels(colocaliser.getChannel1(), i),
-                        colocaliser.getPixels(colocaliser.getChannel2(), i),
-                        colocaliser.getPixels(-1, i));
-                ((ColorProcessor) colProc).getRGB(c1Pix, c2Pix, c3Pix);
+                byte[][] tempPix = new byte[3][size];
+                ((ColorProcessor) stack.getProcessor(i + 1)).getRGB(tempPix[0], tempPix[1], tempPix[2]);
+                c1Pix = tempPix[UserVariables.getC1Index()];
+                c2Pix = tempPix[UserVariables.getC2Index()];
             } else {
                 c1Pix = (byte[]) (new TypeConverter(stack.getProcessor(i + 1).duplicate(), true).convertToByte().getPixels());
                 c2Pix = null;
@@ -851,10 +845,6 @@ public class Timelapse_Analysis implements PlugIn {
             default:
                 return Color.white;
         }
-    }
-
-    public void setColocaliser(Co_Localise colocaliser) {
-        this.colocaliser = colocaliser;
     }
 
     public ArrayList<ParticleTrajectory> getTrajectories() {

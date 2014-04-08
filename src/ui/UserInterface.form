@@ -75,7 +75,7 @@
         <Component class="javax.swing.JComboBox" name="c1ComboBox">
           <Properties>
             <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
-              <Connection code="new javax.swing.DefaultComboBoxModel(Co_Localise.channels)" type="code"/>
+              <Connection code="new javax.swing.DefaultComboBoxModel(UserVariables.channels)" type="code"/>
             </Property>
           </Properties>
           <AuxValues>
@@ -90,7 +90,7 @@
         <Component class="javax.swing.JComboBox" name="c2ComboBox">
           <Properties>
             <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
-              <Connection code="new javax.swing.DefaultComboBoxModel(Co_Localise.channels)" type="code"/>
+              <Connection code="new javax.swing.DefaultComboBoxModel(UserVariables.channels)" type="code"/>
             </Property>
           </Properties>
           <AuxValues>
