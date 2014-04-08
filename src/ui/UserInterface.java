@@ -6,11 +6,11 @@
 package ui;
 
 import IAClasses.IsoGaussian;
-import ParticleTracking.Co_Localise;
 import ParticleTracking.Particle;
 import ParticleTracking.ParticleArray;
 import ParticleTracking.Timelapse_Analysis;
 import ParticleTracking.UserVariables;
+import UIClasses.UIMethods;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -504,7 +504,7 @@ public class UserInterface extends javax.swing.JDialog {
         } else {
             output = (new TypeConverter((stack.getProcessor(slice)).duplicate(), true)).convertToRGB();
         }
-        double mag = 1.0 / getMagnification(output);
+        double mag = 1.0 / UIMethods.getMagnification(output, canvas1);
         double sr = 1.0 / Double.parseDouble(spatResTextField.getText());
         int radius = (int)Math.round(sr);
         IsoGaussian c1, c2;
@@ -560,16 +560,6 @@ public class UserInterface extends javax.swing.JDialog {
 
     public boolean isWasOKed() {
         return wasOKed;
-    }
-
-    double getMagnification(ImageProcessor image) {
-        int iWidth = image.getWidth();
-        int iHeight = image.getHeight();
-        int cWidth = canvas1.getWidth();
-        int cHeight = canvas1.getHeight();
-        double hScale = ((double) iHeight) / cHeight;
-        double wScale = ((double) iWidth) / cWidth;
-        return Math.max(hScale, wScale);
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

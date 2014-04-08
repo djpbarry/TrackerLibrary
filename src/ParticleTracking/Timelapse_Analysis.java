@@ -27,6 +27,7 @@ import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Random;
+import ui.ResultsPreviewInterface;
 import ui.UserInterface;
 
 /**
@@ -60,7 +61,7 @@ public class Timelapse_Analysis implements PlugIn {
     protected DecimalFormat numFormat = new DecimalFormat("0.000");
     protected DecimalFormat intFormat = new DecimalFormat("000");
     String title = "Particle Tracker";
-    protected static boolean msdPlot = false, intensPlot = false, trajPlot = false, prevRes = false;
+    protected static boolean msdPlot = false, intensPlot = false, trajPlot = false, prevRes = true;
     protected boolean monoChrome;
 
     public static void main(String args[]) {
@@ -70,6 +71,7 @@ public class Timelapse_Analysis implements PlugIn {
         Timelapse_Analysis instance = new Timelapse_Analysis(imp);
         instance.run(null);
     }
+
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep,
             double chan1MaxThresh, double hystDiff, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
         UserVariables.setSpatialRes(spatialRes);
@@ -177,7 +179,7 @@ public class Timelapse_Analysis implements PlugIn {
                 previewResults();
             }
             n = trajectories.size();
-            mapTrajectories(stack, monoChrome, trajectories, scale, UserVariables.getSpatialRes(), xyPartRad, UserVariables.getMinTrajLength(), UserVariables.getTimeRes(), true);
+            mapTrajectories(stack, trajectories, scale, UserVariables.getSpatialRes(), UserVariables.getMinTrajLength(), UserVariables.getTimeRes(), true, (int) Math.round(xyPartRad * scale), 0, trajectories.size() - 1);
             for (i = 0, count = 1; i < n; i++) {
                 ParticleTrajectory traj = (ParticleTrajectory) trajectories.get(i);
                 if (traj.getSize() > UserVariables.getMinTrajLength() && ((traj.getType(colocalThresh) == ParticleTrajectory.COLOCAL)
@@ -638,12 +640,12 @@ public class Timelapse_Analysis implements PlugIn {
      * Constructed trajectories are drawn onto the original image sequence and
      * displayed as a stack sequence.
      */
-    public ImageStack mapTrajectories(ImageStack stack, boolean monoChrome, ArrayList<ParticleTrajectory> trajectories, double scale, double spatialRes, double xyPartRad, double minTrajLength, double timeRes, boolean tracks) {
+    public ImageStack mapTrajectories(ImageStack stack, ArrayList<ParticleTrajectory> trajectories, double scale, double spatialRes, double minTrajLength, double timeRes, boolean tracks, int radius, int startT, int endT) {
         if (stack == null) {
             return null;
         }
         int i, j, width = (int) Math.round(stack.getWidth() * scale), height = (int) Math.round(stack.getHeight() * scale),
-                type, frames = stack.getSize(), radius = (int) Math.round(xyPartRad * scale);
+                type, frames = stack.getSize();
         double lastX, lastY;
         ImageStack outputStack = new ImageStack(width, height);
         Particle current;
@@ -671,7 +673,7 @@ public class Timelapse_Analysis implements PlugIn {
             outputStack.addSlice("" + i, processor.resize(width, height));
         }
         Random r = new Random();
-        for (i = 0, count = 1; i < n; i++) {
+        for (i = startT, count = 1; i <= endT && i < n; i++) {
             IJ.showStatus("Mapping Output...");
             IJ.showProgress(i, n);
             traj = (ParticleTrajectory) (trajectories.get(i));
@@ -733,7 +735,6 @@ public class Timelapse_Analysis implements PlugIn {
                 count++;
             }
         }
-        (new ImagePlus("Trajectories", outputStack)).show();
 
         return outputStack;
     }
@@ -780,6 +781,8 @@ public class Timelapse_Analysis implements PlugIn {
      * Timelapse_Analysis.c2SigmaTol = c2SigmaTol; }
      */
     public void previewResults() {
+        ResultsPreviewInterface previewUI = new ResultsPreviewInterface(IJ.getInstance(), true, title, this);
+        previewUI.setVisible(true);
         if (trajectories.size() < 1) {
             return;
         }
@@ -813,11 +816,11 @@ public class Timelapse_Analysis implements PlugIn {
 
     public Color getDrawColor(int key) {
         switch (key) {
-            case Co_Localise.RED:
+            case UserVariables.RED:
                 return Color.red;
-            case Co_Localise.GREEN:
+            case UserVariables.GREEN:
                 return Color.green;
-            case Co_Localise.BLUE:
+            case UserVariables.BLUE:
                 return Color.blue;
             default:
                 return Color.white;
