@@ -61,7 +61,6 @@ public class Timelapse_Analysis implements PlugIn {
     protected DecimalFormat intFormat = new DecimalFormat("000");
     String title = "Particle Tracker";
     protected static boolean msdPlot = false, intensPlot = false, trajPlot = false, prevRes = false;
-//    protected Co_Localise colocaliser;
     protected boolean monoChrome;
 
     public static void main(String args[]) {
@@ -121,21 +120,7 @@ public class Timelapse_Analysis implements PlugIn {
         monoChrome = !(stack.getProcessor(1).getNChannels() > 1);
         UserInterface ui = new UserInterface(null, true, title, this);
         ui.setVisible(true);
-        if (ui.isWasOKed()) {
-            return true;
-        } else {
-            return false;
-        }
-//        boolean valid = false;
-//        while (!valid) {
-//            InputDialog dialog = new InputDialog(IJ.getInstance(), true);
-//            dialog.setVisible(true);
-//            if (dialog.wasOKed()) {
-//                valid = dialog.isValidEntries();
-//            } else {
-//                return false;
-//            }
-//        }
+        return ui.isWasOKed();
     }
 
     /**
@@ -222,7 +207,6 @@ public class Timelapse_Analysis implements PlugIn {
      * @param processor the image to be pre-processed.
      */
     public FloatProcessor preProcess(ByteProcessor processor) {
-        //TODO Consider Kalman Filtering for noise reduction
         if (processor == null) {
             return null;
         }
@@ -244,8 +228,8 @@ public class Timelapse_Analysis implements PlugIn {
         }
         int i, noOfImages = stack.getSize(), width = stack.getWidth(), height = stack.getHeight(),
                 size = width * height, arraySize = endSlice - startSlice + 1;
-        byte c1Pix[] = new byte[size], c2Pix[] = new byte[size],
-                c3Pix[] = new byte[size];
+        byte c1Pix[], c2Pix[];
+        byte[][] tempPix = new byte[3][size];
         int c1X, c1Y, pSize = 2 * xyPartRad + 1;
         int c2Points[][];
         double[] xCoords = new double[pSize];
@@ -258,7 +242,6 @@ public class Timelapse_Analysis implements PlugIn {
             IJ.showStatus("Finding Particles...");
             IJ.showProgress(i, noOfImages);
             if (!monoChrome) {
-                byte[][] tempPix = new byte[3][size];
                 ((ColorProcessor) stack.getProcessor(i + 1)).getRGB(tempPix[0], tempPix[1], tempPix[2]);
                 c1Pix = tempPix[UserVariables.getC1Index()];
                 c2Pix = tempPix[UserVariables.getC2Index()];
@@ -308,9 +291,6 @@ public class Timelapse_Analysis implements PlugIn {
                             c2Gaussian = new IsoGaussian((c2GF.getX0() + c2Points[0][0] - xyPartRad) * spatialRes,
                                     (c2GF.getY0() + c2Points[0][1] - xyPartRad) * spatialRes, c2GF.getMag(),
                                     c2GF.getXsig(), c2GF.getYsig(), c2GF.getRSquared());
-//                            FloatProcessor image = new FloatProcessor(25, 25);
-//                            c2Gaussian.draw(image, spatialRes);
-//                            IJ.saveAs((new ImagePlus("", image)), "TIF", "C:/users/barry05/desktop/tail.tif");
                         }
                         /*
                          * A particle has been isolated - trajectories need to
@@ -494,9 +474,6 @@ public class Timelapse_Analysis implements PlugIn {
                     }
                 }
             }
-//            if (IJ.getInstance() != null) {
-//                IJ.getTextPanel().append("Frame:\t" + m + "\tTotal Count:\t" + trajectories.size());
-//            }
         }
     }
 
@@ -887,9 +864,6 @@ public class Timelapse_Analysis implements PlugIn {
             return false;
         }
         if (this.startTime != other.startTime) {
-            return false;
-        }
-        if (this.numFormat != other.numFormat && (this.numFormat == null || !this.numFormat.equals(other.numFormat))) {
             return false;
         }
         return true;
