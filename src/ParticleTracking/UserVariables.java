@@ -15,11 +15,11 @@ public class UserVariables {
     private static double spatialRes = 0.212;
     private static double timeRes = 1.0;
     private static double trajMaxStep = 2.5;
-    private static double minTrajLength = 0.0;
+    private static double minTrajLength = 30.0;
     private static double chan1MaxThresh = 100.0;
-    private static double chan2MaxThresh = 0.0;
+    private static double chan2MaxThresh = 50.0;
     private static double curveFitTol = 0.8d;
-    private static boolean colocal = false, preProcess = true;
+    private static boolean colocal = true, preProcess = true;
     public static final String[] channels = {"Red", "Green", "Blue"};
     private static int c1Index = RED;
     private static int c2Index = GREEN;

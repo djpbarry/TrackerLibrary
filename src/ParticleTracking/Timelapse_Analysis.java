@@ -7,10 +7,11 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.WindowManager;
-import ij.gui.DialogListener;
-import ij.gui.GenericDialog;
 import ij.gui.Plot;
+import ij.gui.PolygonRoi;
+import ij.gui.Roi;
 import ij.plugin.PlugIn;
+import ij.plugin.Straightener;
 import ij.plugin.filter.GaussianBlur;
 import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
@@ -21,7 +22,6 @@ import ij.text.TextWindow;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Rectangle;
-import java.awt.Scrollbar;
 import java.awt.Toolkit;
 import java.io.File;
 import java.text.DecimalFormat;
@@ -197,6 +197,11 @@ public class Timelapse_Analysis implements PlugIn {
                         printData(i, resultSummary, count);
                         traj.printTrajectory(count, results, numFormat, title);
                         count++;
+                        ImageProcessor signals[] = extractSignalValues(traj, TRACK_LENGTH, 10);
+                        for (int s = 0; s < signals.length; s++) {
+                            IJ.saveAs((new ImagePlus("", signals[s])), "TIF",
+                                    "c:/users/barry05/desktop/signal_extract_test/" + String.valueOf(s));
+                        }
                     }
                 }
             }
@@ -235,9 +240,8 @@ public class Timelapse_Analysis implements PlugIn {
             return null;
         }
         int i, noOfImages = stack.getSize(), width = stack.getWidth(), height = stack.getHeight(),
-                size = width * height, arraySize = endSlice - startSlice + 1;
+                arraySize = endSlice - startSlice + 1;
         byte c1Pix[], c2Pix[];
-        byte[][] tempPix = new byte[3][size];
         int c1X, c1Y, pSize = 2 * xyPartRad + 1;
         int c2Points[][];
         double[] xCoords = new double[pSize];
@@ -250,9 +254,9 @@ public class Timelapse_Analysis implements PlugIn {
             IJ.showStatus("Finding Particles...");
             IJ.showProgress(i, noOfImages);
             if (!monoChrome) {
-                ((ColorProcessor) stack.getProcessor(i + 1)).getRGB(tempPix[0], tempPix[1], tempPix[2]);
-                c1Pix = tempPix[UserVariables.getC1Index()];
-                c2Pix = tempPix[UserVariables.getC2Index()];
+                ColorProcessor slice = (ColorProcessor) stack.getProcessor(i + 1);
+                c1Pix = Utils.getPixels(slice, UserVariables.getC1Index());
+                c2Pix = Utils.getPixels(slice, UserVariables.getC2Index());
             } else {
                 c1Pix = (byte[]) (new TypeConverter(stack.getProcessor(i + 1).duplicate(), true).convertToByte().getPixels());
                 c2Pix = null;
@@ -658,11 +662,11 @@ public class Timelapse_Analysis implements PlugIn {
         ParticleTrajectory traj;
         int length, n = trajectories.size();
         ImageProcessor processor;
-        Rectangle bounds;
-        ByteProcessor trajImage;
+//        Rectangle bounds;
+//        ByteProcessor trajImage;
         double scaledSR = scale / spatialRes;
         int lastTP;
-        double ptScale = ParticleTrajectory.scale;
+//        double ptScale = ParticleTrajectory.scale;
 
         if (n < 1) {
             return null;
@@ -687,11 +691,11 @@ public class Timelapse_Analysis implements PlugIn {
                 Color thiscolor = new Color(r.nextInt(256), r.nextInt(256), r.nextInt(256));
                 length = traj.getSize();
                 type = traj.getType(colocalThresh);
-                bounds = traj.getBounds();
-                trajImage = new ByteProcessor(bounds.width, bounds.height);
-                trajImage.setColor(Color.white);
-                trajImage.fill();
-                trajImage.setColor(Color.black);
+//                bounds = traj.getBounds();
+//                trajImage = new ByteProcessor(bounds.width, bounds.height);
+//                trajImage.setColor(Color.white);
+//                trajImage.fill();
+//                trajImage.setColor(Color.black);
                 if (length > minTrajLength && ((type == ParticleTrajectory.COLOCAL)
                         || ((type == ParticleTrajectory.NON_COLOCAL) && !UserVariables.isColocal()))) {
                     current = traj.getEnd();
@@ -718,12 +722,12 @@ public class Timelapse_Analysis implements PlugIn {
                                         (int) Math.round(lastY * scaledSR));
                             }
                         }
-                        if (tracks) {
-                            trajImage.drawLine((int) Math.round(ptScale * current.getX() - traj.getBounds().x),
-                                    (int) Math.round(ptScale * current.getY() - traj.getBounds().y),
-                                    (int) Math.round(ptScale * lastX - traj.getBounds().x),
-                                    (int) Math.round(ptScale * lastY - traj.getBounds().y));
-                        }
+//                        if (tracks) {
+//                            trajImage.drawLine((int) Math.round(ptScale * current.getX() - traj.getBounds().x),
+//                                    (int) Math.round(ptScale * current.getY() - traj.getBounds().y),
+//                                    (int) Math.round(ptScale * lastX - traj.getBounds().x),
+//                                    (int) Math.round(ptScale * lastY - traj.getBounds().y));
+//                        }
                         lastX = current.getX();
                         lastY = current.getY();
                         lastTP = current.getTimePoint();
@@ -816,6 +820,32 @@ public class Timelapse_Analysis implements PlugIn {
         return monoChrome;
     }
 
+    ImageProcessor[] extractSignalValues(ParticleTrajectory ptraj, int length, int width) {
+        Particle current = ptraj.getEnd();
+        int size = Math.min(length, ptraj.getSize());
+        float xpoints[] = new float[size];
+        float ypoints[] = new float[size];
+        ImageProcessor[] output = new ImageProcessor[size];
+        for (int index = 0; index < size; index++) {
+            xpoints[index] = (float) (current.getC1Gaussian().getX() / UserVariables.getSpatialRes());
+            ypoints[index] = (float) (current.getC1Gaussian().getY() / UserVariables.getSpatialRes());
+            current = current.getLink();
+        }
+        PolygonRoi proi = new PolygonRoi(xpoints, ypoints, size, Roi.POLYLINE);
+        current = ptraj.getEnd();
+        Straightener straightener = new Straightener();
+        for (int index = 0; index < size; index++) {
+            ByteProcessor slice = new ByteProcessor(stack.getWidth(), stack.getHeight(),
+                    Utils.getPixels((ColorProcessor) stack.getProcessor(current.getTimePoint() + 1),
+                            UserVariables.getC2Index()));
+            ImagePlus imp = new ImagePlus("", slice);
+            imp.setRoi(proi);
+            output[index] = straightener.straighten(imp, proi, width);
+            current = current.getLink();
+        }
+        return output;
+    }
+
     public boolean equals(Object obj) {
         if (obj == null) {
             return false;
@@ -837,9 +867,6 @@ public class Timelapse_Analysis implements PlugIn {
             return false;
         }
         if (this.stack != other.stack && (this.stack == null || !this.stack.equals(other.stack))) {
-            return false;
-        }
-        if (this.startTime != other.startTime) {
             return false;
         }
         return true;
