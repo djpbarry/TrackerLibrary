@@ -63,6 +63,7 @@ public class Timelapse_Analysis implements PlugIn {
     String title = "Particle Tracker";
     protected static boolean msdPlot = false, intensPlot = false, trajPlot = false, prevRes = true;
     protected boolean monoChrome;
+    private final int TRACK_LENGTH = 20;
 
     public static void main(String args[]) {
         File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
@@ -174,31 +175,36 @@ public class Timelapse_Analysis implements PlugIn {
                     n--;
                 }
             }
-
             if (prevRes) {
-                previewResults();
+                ArrayList<Integer> excludeList = previewResults();
+                for (Integer e : excludeList) {
+                    trajectories.set(e, null);
+                }
             }
             n = trajectories.size();
-            mapTrajectories(stack, trajectories, scale, UserVariables.getSpatialRes(), UserVariables.getMinTrajLength(), UserVariables.getTimeRes(), true, (int) Math.round(xyPartRad * scale), 0, trajectories.size() - 1);
+            ImageStack maps = mapTrajectories(stack, trajectories, scale, UserVariables.getSpatialRes(), UserVariables.getMinTrajLength(), UserVariables.getTimeRes(), true, (int) Math.round(xyPartRad * scale), 0, trajectories.size() - 1, 1);
             for (i = 0, count = 1; i < n; i++) {
                 ParticleTrajectory traj = (ParticleTrajectory) trajectories.get(i);
-                if (traj.getSize() > UserVariables.getMinTrajLength() && ((traj.getType(colocalThresh) == ParticleTrajectory.COLOCAL)
-                        || ((traj.getType(colocalThresh) == ParticleTrajectory.NON_COLOCAL) && !UserVariables.isColocal()))) {
-                    if (intensPlot) {
-                        plotIntensity(i, count);
+                if (traj != null) {
+                    if (traj.getSize() > UserVariables.getMinTrajLength() && ((traj.getType(colocalThresh) == ParticleTrajectory.COLOCAL)
+                            || ((traj.getType(colocalThresh) == ParticleTrajectory.NON_COLOCAL) && !UserVariables.isColocal()))) {
+                        if (intensPlot) {
+                            plotIntensity(i, count);
+                        }
+                        if (trajPlot) {
+                            plotTrajectory(width, height, i, count);
+                        }
+                        printData(i, resultSummary, count);
+                        traj.printTrajectory(count, results, numFormat, title);
+                        count++;
                     }
-                    if (trajPlot) {
-                        plotTrajectory(width, height, i, count);
-                    }
-                    printData(i, resultSummary, count);
-                    traj.printTrajectory(count, results, numFormat, title);
-                    count++;
                 }
             }
             resultSummary.append("\nAnalysis Time (s): " + numFormat.format((System.currentTimeMillis() - startTime) / 1000.0));
             results.append(toString());
             results.setVisible(true);
             resultSummary.setVisible(true);
+            (new ImagePlus("Trajectory Maps", maps)).show();
         }
     }
 
@@ -640,7 +646,7 @@ public class Timelapse_Analysis implements PlugIn {
      * Constructed trajectories are drawn onto the original image sequence and
      * displayed as a stack sequence.
      */
-    public ImageStack mapTrajectories(ImageStack stack, ArrayList<ParticleTrajectory> trajectories, double scale, double spatialRes, double minTrajLength, double timeRes, boolean tracks, int radius, int startT, int endT) {
+    public ImageStack mapTrajectories(ImageStack stack, ArrayList<ParticleTrajectory> trajectories, double scale, double spatialRes, double minTrajLength, double timeRes, boolean tracks, int radius, int startT, int endT, int index) {
         if (stack == null) {
             return null;
         }
@@ -650,7 +656,7 @@ public class Timelapse_Analysis implements PlugIn {
         ImageStack outputStack = new ImageStack(width, height);
         Particle current;
         ParticleTrajectory traj;
-        int length, n = trajectories.size(), count;
+        int length, n = trajectories.size();
         ImageProcessor processor;
         Rectangle bounds;
         ByteProcessor trajImage;
@@ -673,69 +679,68 @@ public class Timelapse_Analysis implements PlugIn {
             outputStack.addSlice("" + i, processor.resize(width, height));
         }
         Random r = new Random();
-        for (i = startT, count = 1; i <= endT && i < n; i++) {
+        for (i = startT; i <= endT && i < n; i++) {
             IJ.showStatus("Mapping Output...");
             IJ.showProgress(i, n);
             traj = (ParticleTrajectory) (trajectories.get(i));
-            Color thiscolor = new Color(r.nextInt(256), r.nextInt(256), r.nextInt(256));
-            length = traj.getSize();
-            type = traj.getType(colocalThresh);
-            bounds = traj.getBounds();
-            trajImage = new ByteProcessor(bounds.width, bounds.height);
-            trajImage.setColor(Color.white);
-            trajImage.fill();
-            trajImage.setColor(Color.black);
-            if (length > minTrajLength && ((type == ParticleTrajectory.COLOCAL)
-                    || ((type == ParticleTrajectory.NON_COLOCAL) && !UserVariables.isColocal()))) {
-                current = traj.getEnd();
-                lastX = current.getX();
-                lastY = current.getY();
-                lastTP = current.getTimePoint();
-                current = current.getLink();
-                while (current != null) {
-                    for (j = frames - 1; j >= lastTP; j--) {
-                        processor = outputStack.getProcessor(j + 1);
-                        if (!monoChrome) {
-//                            if (type == ParticleTrajectory.NON_COLOCAL) {
-                            processor.setColor(thiscolor);
-//                            }
-                        } else {
-                            processor.setValue(255);
-                        }
-                        if (j - 1 < lastTP) {
-                            markParticle(processor, (int) Math.round(lastX * scaledSR) - radius,
-                                    (int) Math.round(lastY * scaledSR) - radius, radius, true, "" + count);
-                        }
-                        if (tracks && j <= lastTP + 20.0 / timeRes) {
-                            int x = (int) (Math.round(current.getX() * scaledSR));
-                            int y = (int) (Math.round(current.getY() * scaledSR));
-                            processor.drawLine(x, y, (int) Math.round(lastX * scaledSR),
-                                    (int) Math.round(lastY * scaledSR));
-                        }
-                    }
-                    if (tracks) {
-                        trajImage.drawLine((int) Math.round(ptScale * current.getX() - traj.getBounds().x),
-                                (int) Math.round(ptScale * current.getY() - traj.getBounds().y),
-                                (int) Math.round(ptScale * lastX - traj.getBounds().x),
-                                (int) Math.round(ptScale * lastY - traj.getBounds().y));
-                    }
+            if (traj != null) {
+                Color thiscolor = new Color(r.nextInt(256), r.nextInt(256), r.nextInt(256));
+                length = traj.getSize();
+                type = traj.getType(colocalThresh);
+                bounds = traj.getBounds();
+                trajImage = new ByteProcessor(bounds.width, bounds.height);
+                trajImage.setColor(Color.white);
+                trajImage.fill();
+                trajImage.setColor(Color.black);
+                if (length > minTrajLength && ((type == ParticleTrajectory.COLOCAL)
+                        || ((type == ParticleTrajectory.NON_COLOCAL) && !UserVariables.isColocal()))) {
+                    current = traj.getEnd();
                     lastX = current.getX();
                     lastY = current.getY();
                     lastTP = current.getTimePoint();
                     current = current.getLink();
+                    while (current != null) {
+                        for (j = frames - 1; j >= lastTP; j--) {
+                            processor = outputStack.getProcessor(j + 1);
+                            if (!monoChrome) {
+                                processor.setColor(thiscolor);
+                            } else {
+                                processor.setValue(255);
+                            }
+                            if (j - 1 < lastTP) {
+                                markParticle(processor, (int) Math.round(lastX * scaledSR) - radius,
+                                        (int) Math.round(lastY * scaledSR) - radius, radius, true, "" + index);
+                            }
+                            if (tracks && j <= lastTP + TRACK_LENGTH / timeRes) {
+                                int x = (int) (Math.round(current.getX() * scaledSR));
+                                int y = (int) (Math.round(current.getY() * scaledSR));
+                                processor.drawLine(x, y, (int) Math.round(lastX * scaledSR),
+                                        (int) Math.round(lastY * scaledSR));
+                            }
+                        }
+                        if (tracks) {
+                            trajImage.drawLine((int) Math.round(ptScale * current.getX() - traj.getBounds().x),
+                                    (int) Math.round(ptScale * current.getY() - traj.getBounds().y),
+                                    (int) Math.round(ptScale * lastX - traj.getBounds().x),
+                                    (int) Math.round(ptScale * lastY - traj.getBounds().y));
+                        }
+                        lastX = current.getX();
+                        lastY = current.getY();
+                        lastTP = current.getTimePoint();
+                        current = current.getLink();
+                    }
+                    processor = outputStack.getProcessor(lastTP + 1);
+                    if (!monoChrome) {
+                        processor.setColor(thiscolor);
+                    } else {
+                        processor.setValue(255);
+                    }
+                    markParticle(processor, (int) Math.round(lastX * scaledSR) - radius,
+                            (int) Math.round(lastY * scaledSR) - radius, radius, true, "" + index);
+                    index++;
                 }
-                processor = outputStack.getProcessor(lastTP + 1);
-                if (!monoChrome) {
-                    processor.setColor(thiscolor);
-                } else {
-                    processor.setValue(255);
-                }
-                markParticle(processor, (int) Math.round(lastX * scaledSR) - radius,
-                        (int) Math.round(lastY * scaledSR) - radius, radius, true, "" + count);
-                count++;
             }
         }
-
         return outputStack;
     }
 
@@ -773,45 +778,13 @@ public class Timelapse_Analysis implements PlugIn {
         return true;
     }
 
-    /*
-     * public static void setC1SigmaTol(double c1SigmaTol) {
-     * Timelapse_Analysis.c1SigmaTol = c1SigmaTol; }
-     *
-     * public static void setC2SigmaTol(double c2SigmaTol) {
-     * Timelapse_Analysis.c2SigmaTol = c2SigmaTol; }
-     */
-    public void previewResults() {
+    public ArrayList<Integer> previewResults() {
+        if (trajectories.size() < 1) {
+            return null;
+        }
         ResultsPreviewInterface previewUI = new ResultsPreviewInterface(IJ.getInstance(), true, title, this);
         previewUI.setVisible(true);
-        if (trajectories.size() < 1) {
-            return;
-        }
-        int remove = 0;
-        boolean done = false;
-        stack = imp.getImageStack();
-        while (!done) {
-            GenericDialog dialog = new GenericDialog("Verify Individual Trajectories", IJ.getInstance());
-            if (remove > trajectories.size() - 1) {
-                remove--;
-            }
-            dialog.addSlider("Select Trajectory:", 0, trajectories.size() - 1, remove);
-            dialog.setModal(false);
-            dialog.setOKLabel("Reject");
-            ResultsPreviewer previewer = new ResultsPreviewer();
-            dialog.addDialogListener(previewer);
-            dialog.showDialog();
-            while (!(dialog.wasCanceled() || dialog.wasOKed()));
-            previewer.preview.close();
-            if (dialog.wasOKed()) {
-                remove = (int) dialog.getNextNumber();
-                removeTrajectory(remove);
-                if (trajectories.size() < 1) {
-                    return;
-                }
-            } else {
-                done = true;
-            }
-        }
+        return previewUI.getRemoveList();
     }
 
     public Color getDrawColor(int key) {
@@ -870,89 +843,5 @@ public class Timelapse_Analysis implements PlugIn {
             return false;
         }
         return true;
-    }
-
-    private class ResultsPreviewer implements DialogListener {
-
-        public ImagePlus preview;
-
-        public ResultsPreviewer() {
-        }
-
-        public boolean dialogItemChanged(GenericDialog dialog, java.awt.AWTEvent event) {
-            if (preview != null) {
-                preview.close();
-            }
-            if (dialog.wasOKed() || dialog.wasCanceled()) {
-                return true;
-            }
-            preview = mapTrajectories((int) ((Scrollbar) (dialog.getSliders().get(0))).getValue(), UserVariables.getSpatialRes());
-            preview.show();
-            return true;
-        }
-
-        public ImagePlus mapTrajectories(int trajNumber, double spatialRes) {
-            ParticleTrajectory traj = (ParticleTrajectory) (trajectories.get(trajNumber));
-            stack = imp.getStack();
-            Rectangle bounds = traj.getBounds();
-            int visScale = 2, border = 2 * xyPartRad;
-            int i, j, width = (bounds.width + 2 * border) * visScale, height = (bounds.height + 2 * border) * visScale,
-                    currentX, currentY, lastX, lastY, type, frames = stack.getSize(),
-                    xOffset = bounds.x - border, yOffset = bounds.y - border;
-            ImageStack outputStack = new ImageStack(width, height);
-            Particle current;
-            ImageProcessor processor;
-            double lastTP;
-            Rectangle newBounds = new Rectangle(bounds.x - border, bounds.y - border,
-                    bounds.width + 2 * border, bounds.height + 2 * border);
-
-            for (i = 0; i < frames; i++) {
-                if (monoChrome) {
-                    processor = (new TypeConverter(stack.getProcessor(i + 1).duplicate(), true).convertToByte());
-                } else {
-                    processor = (new TypeConverter(stack.getProcessor(i + 1).duplicate(), true).convertToRGB());
-                }
-                processor.setRoi(newBounds);
-                outputStack.addSlice("" + i, (processor.crop()).resize(width, height));
-            }
-
-            type = traj.getType(0.1);
-            current = traj.getEnd();
-            currentX = lastX = (int) (Math.round(current.getX() / spatialRes - xOffset)) * visScale;
-            currentY = lastY = (int) (Math.round(current.getY() / spatialRes - yOffset)) * visScale;
-            lastTP = current.getTimePoint();
-            current = current.getLink();
-            while (current != null) {
-                for (j = frames - 1; j >= lastTP; j--) {
-                    if (j <= lastTP + 10.0 / UserVariables.getTimeRes()) {
-                        processor = outputStack.getProcessor(j + 1);
-                        if (!monoChrome) {
-//                            if (type == ParticleTrajectory.NON_COLOCAL) {
-                            processor.setColor(Color.WHITE);
-//                            } else {
-//                                processor.setColor(getDrawColor(colocaliser.getChannel2()));
-//                            }
-                        } else {
-                            processor.setColor(255);
-                        }
-                        currentX = (int) (Math.round(current.getX() / spatialRes - xOffset)) * visScale;
-                        currentY = (int) (Math.round(current.getY() / spatialRes - yOffset)) * visScale;
-                        processor.drawLine(currentX, currentY, lastX, lastY);
-                    }
-                }
-                processor = outputStack.getProcessor(j + 1);
-                if (!monoChrome) {
-                    processor.setColor(Color.WHITE);
-                } else {
-                    processor.setColor(255);
-                }
-                processor.drawOval(currentX - 2, currentY - 2, 5, 5);
-                lastX = currentX;
-                lastY = currentY;
-                lastTP = current.getTimePoint();
-                current = current.getLink();
-            }
-            return new ImagePlus("Trajectory Number " + (trajNumber + 1), outputStack);
-        }
     }
 }

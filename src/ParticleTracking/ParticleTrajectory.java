@@ -27,7 +27,7 @@ public class ParticleTrajectory {
     public final static int NON_COLOCAL = 0, UNKNOWN = 1, COLOCAL = 2; //Flags
     protected double tempScore = Double.MAX_VALUE, xVelocity, yVelocity, projectXVel,
             projectYVel, diffCoeff, boxCountFD = 0.0, angleSpread = 0.0,
-            startTime = 0.0, stepSpread, timeRes, specFD, meanKappa, logDC, directionality,
+            stepSpread, timeRes, specFD, meanKappa, logDC, directionality,
             peakIntens, peakTime;
     private double[] kappa;
     private double[] smoothXPoints, smoothYPoints;
@@ -35,6 +35,7 @@ public class ParticleTrajectory {
     public static double scale;
     private static final int segment = 5;
     private double xFluorSpread, yFluorSpread;
+    private int startTimeIndex;
 
     public ParticleTrajectory() {
     }
@@ -66,7 +67,7 @@ public class ParticleTrajectory {
         int newX = (int) Math.round(scale * end.getX());
         int newY = (int) Math.round(scale * end.getY());
         if (size < 1) {
-            startTime = particle.getTimePoint() * timeRes;
+            startTimeIndex = particle.getTimePoint();
             bounds = new Rectangle(newX, newY, 0, 0);
         }
         if (newX < bounds.x) {
@@ -599,5 +600,9 @@ public class ParticleTrajectory {
 
     public double getPeakTime() {
         return peakTime;
+    }
+
+    public int getStartTimeIndex() {
+        return startTimeIndex;
     }
 }
