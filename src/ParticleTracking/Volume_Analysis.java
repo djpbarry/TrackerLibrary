@@ -270,7 +270,7 @@ public class Volume_Analysis extends Timelapse_Analysis {
         double fluorMaj = Math.max(traj.getxFluorSpread(), traj.getyFluorSpread());
         double fluorMin = Math.min(traj.getxFluorSpread(), traj.getyFluorSpread());
         double fluorArea = Math.PI * 4.0 * fluorMin * fluorMaj * spatialRes * spatialRes;
-        double displacement = traj.getDisplacement();
+        double displacement = traj.getDisplacement(traj.getEnd(), traj.getSize());
         double duration = traj.getSize() * timeRes;
         int type = traj.getType(0.1);
         String trajType = null;

@@ -132,8 +132,7 @@ public class ParticleTrajectory {
     }
 
     /**
-     * Returns the number of
-     * <code>Particle</code>s in this trajectory.
+     * Returns the number of <code>Particle</code>s in this trajectory.
      */
     public int getSize() {
         return size;
@@ -142,16 +141,18 @@ public class ParticleTrajectory {
     /**
      * Returns the total distance travelled on this trajectory.
      */
-    public double getDisplacement() {
+    public double getDisplacement(Particle start, int steps) {
         double displacement = 0.0;
-        Particle current = end;
+        Particle current = start;
         if (current == null) {
             return 0.0;
         }
-        while (current.getLink() != null) {
+        int s = 0;
+        while (current.getLink() != null && s < steps) {
             displacement += Utils.calcDistance(current.getX(), current.getY(),
                     (current.getLink()).getX(), (current.getLink()).getY());
             current = current.getLink();
+            s++;
         }
         return displacement;
     }
@@ -178,16 +179,15 @@ public class ParticleTrajectory {
     }
 
     /**
-     * Returns the most recently-added
-     * <code>Particle</code> in this trajectory.
+     * Returns the most recently-added <code>Particle</code> in this trajectory.
      */
     public Particle getEnd() {
         return end;
     }
 
     /**
-     * Returns the most recently-added temporary
-     * <code>Particle</code> in this trajectory.
+     * Returns the most recently-added temporary <code>Particle</code> in this
+     * trajectory.
      */
     public Particle getTemp() {
         return temp;
@@ -443,14 +443,12 @@ public class ParticleTrajectory {
 
     /**
      * Calculates the directionality of the trajectory specified by
-     * <code>particleNumber</code>, where directionality (
-     * <code>D</code>) is calculated according to: <br> <br>
+     * <code>particleNumber</code>, where directionality ( <code>D</code>) is
+     * calculated according to: <br> <br>
      * <code>D = 1 / (1 + &lambda<sub>1</sub> &lambda<sub>2</sub><sup>-1</sup>)</code>
-     * <br> <br> where
-     * <code>&lambda<sub>1</sub></code> and
+     * <br> <br> where <code>&lambda<sub>1</sub></code> and
      * <code>&lambda<sub>2</sub></code> are the eigenvalues of the trajectory
-     * data and
-     * <code>&lambda<sub>1</sub> <
+     * data and      <code>&lambda<sub>1</sub> <
      * &lambda<sub>2</sub></code>.
      *
      * @param particleNumber the trajectory index.
@@ -477,8 +475,8 @@ public class ParticleTrajectory {
     }
 
     /**
-     * Calculates the Mean Square Displacement (MSD) of the given {@link ParticleTrajectory}.
-     * The result can be accessed via the
+     * Calculates the Mean Square Displacement (MSD) of the given
+     * {@link ParticleTrajectory}. The result can be accessed via the
      * <code>getDiffCoeff()</code> method of <ParticleTrajectory</code>.
      *
      * @param traj the trajectory to be analysed.

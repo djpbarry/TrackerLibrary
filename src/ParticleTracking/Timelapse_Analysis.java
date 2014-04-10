@@ -14,15 +14,16 @@ import ij.gui.Roi;
 import ij.plugin.PlugIn;
 import ij.plugin.Straightener;
 import ij.plugin.filter.GaussianBlur;
+import ij.process.Blitter;
 import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
+import ij.process.FloatBlitter;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import ij.process.TypeConverter;
 import ij.text.TextWindow;
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.io.File;
 import java.text.DecimalFormat;
@@ -64,7 +65,7 @@ public class Timelapse_Analysis implements PlugIn {
     String title = "Particle Tracker";
     protected static boolean msdPlot = false, intensPlot = false, trajPlot = false, prevRes = true;
     protected boolean monoChrome;
-    private final int TRACK_LENGTH = 20;
+    private final int TRACK_LENGTH = 25;
 
     public static void main(String args[]) {
         File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
@@ -198,15 +199,9 @@ public class Timelapse_Analysis implements PlugIn {
                         printData(i, resultSummary, count);
                         traj.printTrajectory(count, results, numFormat, title);
                         count++;
-                        ImageProcessor signals[] = extractSignalValues(traj, TRACK_LENGTH, 10);
-                        String currentDir = "c:/users/barry05/desktop/signal_extract_test/" + String.valueOf(i);
-                        GenUtils.createDirectory(currentDir);
-                        for (int s = 0; s < signals.length; s++) {
-                            if (signals[s] != null) {
-                                IJ.saveAs((new ImagePlus("", signals[s])), "TIF",
-                                        currentDir + "/" + String.valueOf(s));
-                            }
-                        }
+                        ImageStack signals = extractSignalValues(traj, TRACK_LENGTH, 15);
+                        String currentDir = "c:/users/barry05/desktop/signal_extract_test/";
+                        IJ.saveAs((new ImagePlus("", signals)), "TIF", currentDir + "/" + String.valueOf(i));
                     }
                 }
             }
@@ -567,7 +562,7 @@ public class Timelapse_Analysis implements PlugIn {
         traj.calcAngleSpread();
         traj.calcStepSpread();
         traj.calcDirectionality();
-        double displacement = traj.getDisplacement();
+        double displacement = traj.getDisplacement(traj.getEnd(), traj.getSize());
         double duration = traj.getDuration();
         int type = traj.getType(colocalThresh);
         String trajType = null;
@@ -825,13 +820,14 @@ public class Timelapse_Analysis implements PlugIn {
         return monoChrome;
     }
 
-    ImageProcessor[] extractSignalValues(ParticleTrajectory ptraj, int length, int width) {
+    ImageStack extractSignalValues(ParticleTrajectory ptraj, int length, int width) {
         Particle sigStartP = ptraj.getEnd();
         int size = Math.min(length, ptraj.getSize());
         int iterations = 1 + ptraj.getSize() - size;
         float xpoints[] = new float[size];
         float ypoints[] = new float[size];
-        ImageProcessor[] output = new ImageProcessor[iterations];
+        ImageProcessor[] temps = new ImageProcessor[iterations];
+        int maxlength = -1;
         for (int i = 0; i < iterations; i++) {
             Particle current = sigStartP;
             for (int index = 0; index < size; index++) {
@@ -846,8 +842,20 @@ public class Timelapse_Analysis implements PlugIn {
                             UserVariables.getC2Index()));
             ImagePlus sigImp = new ImagePlus("", slice);
             sigImp.setRoi(proi);
-            output[i] = straightener.straighten(sigImp, proi, width);
+            temps[i] = straightener.straighten(sigImp, proi, width);
+            if (temps[i] != null && temps[i].getWidth() > maxlength) {
+                maxlength = temps[i].getWidth();
+            }
             sigStartP = sigStartP.getLink();
+        }
+        ImageStack output = new ImageStack(maxlength, width);
+        for (int j = 0; j < iterations; j++) {
+            if (temps[j] != null) {
+                FloatProcessor slice = new FloatProcessor(maxlength, width);
+                FloatBlitter blitter = new FloatBlitter(slice);
+                blitter.copyBits(temps[j], 0, 0, Blitter.COPY);
+                output.addSlice(slice);
+            }
         }
         return output;
     }
