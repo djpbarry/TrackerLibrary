@@ -2,6 +2,7 @@ package ParticleTracking;
 
 import IAClasses.IsoGaussian;
 import IAClasses.Utils;
+import UtilClasses.GenUtils;
 import UtilClasses.Utilities;
 import ij.IJ;
 import ij.ImagePlus;
@@ -198,9 +199,13 @@ public class Timelapse_Analysis implements PlugIn {
                         traj.printTrajectory(count, results, numFormat, title);
                         count++;
                         ImageProcessor signals[] = extractSignalValues(traj, TRACK_LENGTH, 10);
+                        String currentDir = "c:/users/barry05/desktop/signal_extract_test/" + String.valueOf(i);
+                        GenUtils.createDirectory(currentDir);
                         for (int s = 0; s < signals.length; s++) {
-                            IJ.saveAs((new ImagePlus("", signals[s])), "TIF",
-                                    "c:/users/barry05/desktop/signal_extract_test/" + String.valueOf(s));
+                            if (signals[s] != null) {
+                                IJ.saveAs((new ImagePlus("", signals[s])), "TIF",
+                                        currentDir + "/" + String.valueOf(s));
+                            }
                         }
                     }
                 }
@@ -821,27 +826,28 @@ public class Timelapse_Analysis implements PlugIn {
     }
 
     ImageProcessor[] extractSignalValues(ParticleTrajectory ptraj, int length, int width) {
-        Particle current = ptraj.getEnd();
+        Particle sigStartP = ptraj.getEnd();
         int size = Math.min(length, ptraj.getSize());
+        int iterations = 1 + ptraj.getSize() - size;
         float xpoints[] = new float[size];
         float ypoints[] = new float[size];
-        ImageProcessor[] output = new ImageProcessor[size];
-        for (int index = 0; index < size; index++) {
-            xpoints[index] = (float) (current.getC1Gaussian().getX() / UserVariables.getSpatialRes());
-            ypoints[index] = (float) (current.getC1Gaussian().getY() / UserVariables.getSpatialRes());
-            current = current.getLink();
-        }
-        PolygonRoi proi = new PolygonRoi(xpoints, ypoints, size, Roi.POLYLINE);
-        current = ptraj.getEnd();
-        Straightener straightener = new Straightener();
-        for (int index = 0; index < size; index++) {
+        ImageProcessor[] output = new ImageProcessor[iterations];
+        for (int i = 0; i < iterations; i++) {
+            Particle current = sigStartP;
+            for (int index = 0; index < size; index++) {
+                xpoints[index] = (float) (current.getC1Gaussian().getX() / UserVariables.getSpatialRes());
+                ypoints[index] = (float) (current.getC1Gaussian().getY() / UserVariables.getSpatialRes());
+                current = current.getLink();
+            }
+            PolygonRoi proi = new PolygonRoi(xpoints, ypoints, size, Roi.POLYLINE);
+            Straightener straightener = new Straightener();
             ByteProcessor slice = new ByteProcessor(stack.getWidth(), stack.getHeight(),
-                    Utils.getPixels((ColorProcessor) stack.getProcessor(current.getTimePoint() + 1),
+                    Utils.getPixels((ColorProcessor) stack.getProcessor(sigStartP.getTimePoint() + 1),
                             UserVariables.getC2Index()));
-            ImagePlus imp = new ImagePlus("", slice);
-            imp.setRoi(proi);
-            output[index] = straightener.straighten(imp, proi, width);
-            current = current.getLink();
+            ImagePlus sigImp = new ImagePlus("", slice);
+            sigImp.setRoi(proi);
+            output[i] = straightener.straighten(sigImp, proi, width);
+            sigStartP = sigStartP.getLink();
         }
         return output;
     }
