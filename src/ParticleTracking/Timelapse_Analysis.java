@@ -2,7 +2,6 @@ package ParticleTracking;
 
 import IAClasses.IsoGaussian;
 import IAClasses.Utils;
-import UtilClasses.GenUtils;
 import UtilClasses.Utilities;
 import ij.IJ;
 import ij.ImagePlus;
@@ -65,16 +64,17 @@ public class Timelapse_Analysis implements PlugIn {
     String title = "Particle Tracker";
     protected static boolean msdPlot = false, intensPlot = false, trajPlot = false, prevRes = true;
     protected boolean monoChrome;
-    private final int TRACK_LENGTH = 25;
+    private final double TRACK_LENGTH = 4.0;
+    private final double TRACK_WIDTH = 2.0;
+    private final double TRACK_OFFSET = 2.0;
 
-    public static void main(String args[]) {
-        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
-        ImageStack stack = Utils.buildStack(image);
-        ImagePlus imp = new ImagePlus("Stack", stack);
-        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
-        instance.run(null);
-    }
-
+//    public static void main(String args[]) {
+//        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
+//        ImageStack stack = Utils.buildStack(image);
+//        ImagePlus imp = new ImagePlus("Stack", stack);
+//        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
+//        instance.run(null);
+//    }
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep,
             double chan1MaxThresh, double hystDiff, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
         UserVariables.setSpatialRes(spatialRes);
@@ -179,12 +179,14 @@ public class Timelapse_Analysis implements PlugIn {
             }
             if (prevRes) {
                 ArrayList<Integer> excludeList = previewResults();
-                for (Integer e : excludeList) {
-                    trajectories.set(e, null);
+                if (excludeList != null) {
+                    for (Integer e : excludeList) {
+                        trajectories.set(e, null);
+                    }
                 }
             }
             n = trajectories.size();
-            ImageStack maps = mapTrajectories(stack, trajectories, scale, UserVariables.getSpatialRes(), UserVariables.getMinTrajLength(), UserVariables.getTimeRes(), true, (int) Math.round(xyPartRad * scale), 0, trajectories.size() - 1, 1);
+            ImageStack maps = mapTrajectories(stack, trajectories, scale, UserVariables.getSpatialRes(), UserVariables.getMinTrajLength(), UserVariables.getTimeRes(), true, (int) Math.round(xyPartRad * scale), 0, trajectories.size() - 1, 1, false);
             for (i = 0, count = 1; i < n; i++) {
                 ParticleTrajectory traj = (ParticleTrajectory) trajectories.get(i);
                 if (traj != null) {
@@ -198,10 +200,13 @@ public class Timelapse_Analysis implements PlugIn {
                         }
                         printData(i, resultSummary, count);
                         traj.printTrajectory(count, results, numFormat, title);
-                        count++;
-                        ImageStack signals = extractSignalValues(traj, TRACK_LENGTH, 15);
+
+                        ImageStack signals = extractSignalValues(traj,
+                                (int) Math.round(TRACK_LENGTH / UserVariables.getSpatialRes()),
+                                (int) Math.round(TRACK_WIDTH / UserVariables.getSpatialRes()));
                         String currentDir = "c:/users/barry05/desktop/signal_extract_test/";
-                        IJ.saveAs((new ImagePlus("", signals)), "TIF", currentDir + "/" + String.valueOf(i));
+                        IJ.saveAs((new ImagePlus("", signals)), "TIF", currentDir + "/" + String.valueOf(count));
+                        count++;
                     }
                 }
             }
@@ -650,7 +655,7 @@ public class Timelapse_Analysis implements PlugIn {
      * Constructed trajectories are drawn onto the original image sequence and
      * displayed as a stack sequence.
      */
-    public ImageStack mapTrajectories(ImageStack stack, ArrayList<ParticleTrajectory> trajectories, double scale, double spatialRes, double minTrajLength, double timeRes, boolean tracks, int radius, int startT, int endT, int index) {
+    public ImageStack mapTrajectories(ImageStack stack, ArrayList<ParticleTrajectory> trajectories, double scale, double spatialRes, double minTrajLength, double timeRes, boolean tracks, int radius, int startT, int endT, int index, boolean preview) {
         if (stack == null) {
             return null;
         }
@@ -683,6 +688,7 @@ public class Timelapse_Analysis implements PlugIn {
             outputStack.addSlice("" + i, processor.resize(width, height));
         }
         Random r = new Random();
+        int tLength = (int) Math.round(TRACK_LENGTH / UserVariables.getSpatialRes());
         for (i = startT; i <= endT && i < n; i++) {
             IJ.showStatus("Mapping Output...");
             IJ.showProgress(i, n);
@@ -706,16 +712,16 @@ public class Timelapse_Analysis implements PlugIn {
                     while (current != null) {
                         for (j = frames - 1; j >= lastTP; j--) {
                             processor = outputStack.getProcessor(j + 1);
-                            if (!monoChrome) {
+                            if (!monoChrome && !preview) {
                                 processor.setColor(thiscolor);
                             } else {
-                                processor.setValue(255);
+                                processor.setColor(Color.white);
                             }
                             if (j - 1 < lastTP) {
                                 markParticle(processor, (int) Math.round(lastX * scaledSR) - radius,
                                         (int) Math.round(lastY * scaledSR) - radius, radius, true, "" + index);
                             }
-                            if (tracks && j <= lastTP + TRACK_LENGTH / timeRes) {
+                            if (tracks && j <= lastTP + tLength / timeRes) {
                                 int x = (int) (Math.round(current.getX() * scaledSR));
                                 int y = (int) (Math.round(current.getY() * scaledSR));
                                 processor.drawLine(x, y, (int) Math.round(lastX * scaledSR),
@@ -734,10 +740,10 @@ public class Timelapse_Analysis implements PlugIn {
                         current = current.getLink();
                     }
                     processor = outputStack.getProcessor(lastTP + 1);
-                    if (!monoChrome) {
+                    if (!monoChrome && !preview) {
                         processor.setColor(thiscolor);
                     } else {
-                        processor.setValue(255);
+                        processor.setColor(Color.white);
                     }
                     markParticle(processor, (int) Math.round(lastX * scaledSR) - radius,
                             (int) Math.round(lastY * scaledSR) - radius, radius, true, "" + index);
@@ -788,7 +794,11 @@ public class Timelapse_Analysis implements PlugIn {
         }
         ResultsPreviewInterface previewUI = new ResultsPreviewInterface(IJ.getInstance(), true, title, this);
         previewUI.setVisible(true);
-        return previewUI.getRemoveList();
+        if (previewUI.isWasOKed()) {
+            return previewUI.getRemoveList();
+        } else {
+            return null;
+        }
     }
 
     public Color getDrawColor(int key) {
@@ -828,6 +838,7 @@ public class Timelapse_Analysis implements PlugIn {
         float ypoints[] = new float[size];
         ImageProcessor[] temps = new ImageProcessor[iterations];
         int maxlength = -1;
+        int offset = 1 - (int) Math.round(TRACK_OFFSET * UserVariables.getTimeRes());
         for (int i = 0; i < iterations; i++) {
             Particle current = sigStartP;
             for (int index = 0; index < size; index++) {
@@ -838,7 +849,7 @@ public class Timelapse_Analysis implements PlugIn {
             PolygonRoi proi = new PolygonRoi(xpoints, ypoints, size, Roi.POLYLINE);
             Straightener straightener = new Straightener();
             ByteProcessor slice = new ByteProcessor(stack.getWidth(), stack.getHeight(),
-                    Utils.getPixels((ColorProcessor) stack.getProcessor(sigStartP.getTimePoint() + 1),
+                    Utils.getPixels((ColorProcessor) stack.getProcessor(sigStartP.getTimePoint() + offset),
                             UserVariables.getC2Index()));
             ImagePlus sigImp = new ImagePlus("", slice);
             sigImp.setRoi(proi);

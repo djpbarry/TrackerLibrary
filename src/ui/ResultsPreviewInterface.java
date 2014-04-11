@@ -44,6 +44,7 @@ public class ResultsPreviewInterface extends javax.swing.JDialog {
         imp = new ImagePlus("", stack.getProcessor(1));
         trajectories = analyser.getTrajectories();
         initComponents();
+        trajScrollBarAdjustmentValueChanged(null);
     }
 
     /**
@@ -213,7 +214,7 @@ public class ResultsPreviewInterface extends javax.swing.JDialog {
 
     private void trajScrollBarAdjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {//GEN-FIRST:event_trajScrollBarAdjustmentValueChanged
         updateTextField(trajTextField, trajScrollBar.getValue());
-        stack = analyser.mapTrajectories(analyser.getStack(), trajectories, 1.0, UserVariables.getSpatialRes(), UserVariables.getMinTrajLength(), UserVariables.getTimeRes(), true, (int) Math.round(1.0 / UserVariables.getSpatialRes()), trajScrollBar.getValue(), trajScrollBar.getValue(), trajScrollBar.getValue());
+        stack = analyser.mapTrajectories(analyser.getStack(), trajectories, 1.0, UserVariables.getSpatialRes(), UserVariables.getMinTrajLength(), UserVariables.getTimeRes(), true, (int) Math.round(1.0 / UserVariables.getSpatialRes()), trajScrollBar.getValue(), trajScrollBar.getValue(), trajScrollBar.getValue(), true);
         imageScrollBar.setValue((trajectories.get(trajScrollBar.getValue())).getStartTimeIndex() + 1);
         imageScrollBarAdjustmentValueChanged(null);
     }//GEN-LAST:event_trajScrollBarAdjustmentValueChanged
