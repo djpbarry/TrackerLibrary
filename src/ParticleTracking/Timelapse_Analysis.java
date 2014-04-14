@@ -71,13 +71,13 @@ public class Timelapse_Analysis implements PlugIn {
     private static File directory;
     private final String delimiter = GenUtils.getDelimiter();
 
-//    public static void main(String args[]) {
-//        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
-//        ImageStack stack = Utils.buildStack(image);
-//        ImagePlus imp = new ImagePlus("Stack", stack);
-//        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
-//        instance.run(null);
-//    }
+    public static void main(String args[]) {
+        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
+        ImageStack stack = Utils.buildStack(image);
+        ImagePlus imp = new ImagePlus("Stack", stack);
+        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
+        instance.run(null);
+    }
 
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep,
             double chan1MaxThresh, double hystDiff, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
@@ -280,29 +280,28 @@ public class Timelapse_Analysis implements PlugIn {
             for (c1X = 0; c1X < width; c1X++) {
                 for (c1Y = 0; c1Y < height; c1Y++) {
                     if (thisC1Max.getPixel(c1X, c1Y) == FOREGROUND) {
-                        IsoGaussian c1Gaussian;
+//                        IsoGaussian c1Gaussian;
                         IsoGaussian c2Gaussian = null;
                         /*
                          * Search for local maxima in green image within
                          * <code>xyPartRad</code> pixels of maxima in red image:
                          */
                         Utils.extractValues(xCoords, yCoords, pixValues, c1X, c1Y, chan1Proc);
-                        /*
-                         * Remove adjacent Gaussians
-                         */
-//                        removeAdjacentGaussians(xCoords, yCoords, pixValues, chan1Proc, thisC1Max);
-                        IsoGaussianFitter c1GF = new IsoGaussianFitter(xCoords, yCoords, pixValues);
-                        c1GF.doFit(xySigEst);
-                        if (c1GF.getRSquared() > UserVariables.getCurveFitTol()) {
-                            c1Gaussian = new IsoGaussian((c1GF.getX0() + c1X - xyPartRad) * spatialRes,
-                                    (c1GF.getY0() + c1Y - xyPartRad) * spatialRes, c1GF.getMag(),
-                                    c1GF.getXsig(), c1GF.getYsig(), c1GF.getRSquared());
-                        } else {
-                            c1Gaussian = new IsoGaussian(c1X
-                                    * spatialRes, c1Y * spatialRes,
-                                    chan1Proc.getPixelValue(c1X, c1Y), xySigEst,
-                                    xySigEst, c1GF.getRSquared());
-                        }
+//                        IsoGaussianFitter c1GF = new IsoGaussianFitter(xCoords, yCoords, pixValues);
+//                        c1GF.doFit(xySigEst);
+//                        if (c1GF.getRSquared() > UserVariables.getCurveFitTol()) {
+//                            c1Gaussian = new IsoGaussian((c1GF.getX0() + c1X - xyPartRad) * spatialRes,
+//                                    (c1GF.getY0() + c1Y - xyPartRad) * spatialRes, c1GF.getMag(),
+//                                    c1GF.getXsig(), c1GF.getYsig(), c1GF.getRSquared());
+//                        } else {
+//                            c1Gaussian = new IsoGaussian(c1X
+//                                    * spatialRes, c1Y * spatialRes,
+//                                    chan1Proc.getPixelValue(c1X, c1Y), xySigEst,
+//                                    xySigEst, c1GF.getRSquared());
+//                        }
+                        MultiGaussFitter fitter = new MultiGaussFitter(2, xyPartRad, pSize);
+                        fitter.fit(pixValues, xySigEst);
+                        ArrayList<IsoGaussian> c1Fits = fitter.getFits(spatialRes, c1X - xyPartRad, c1Y - xyPartRad, UserVariables.getChan1MaxThresh());
                         c2Points = Utils.searchNeighbourhood(c1X, c1Y, (int) Math.round(xyPartRad * searchScale), FOREGROUND,
                                 C2Max);
                         if (c2Points != null) {
@@ -318,8 +317,10 @@ public class Timelapse_Analysis implements PlugIn {
                          * A particle has been isolated - trajectories need to
                          * be updated:
                          */
-                        particles.addDetection(i - startSlice,
-                                new Particle((i - startSlice), c1Gaussian, c2Gaussian, null, -1));
+                        for (int f = 0; f < c1Fits.size(); f++) {
+                            particles.addDetection(i - startSlice,
+                                    new Particle((i - startSlice), c1Fits.get(f), c2Gaussian, null, -1));
+                        }
                     }
                 }
             }
@@ -328,58 +329,6 @@ public class Timelapse_Analysis implements PlugIn {
             updateTrajectories(particles, UserVariables.getTimeRes(), UserVariables.getTrajMaxStep(), UserVariables.getChan1MaxThresh(), hystDiff, spatialRes, true);
         }
         return particles;
-    }
-
-    public void removeAdjacentGaussians(double[] xCoords, double[] yCoords,
-            double[][] values, ImageProcessor image, ImageProcessor maxima) {
-        int radius = (values.length - 1) / 2;
-        int currentX = (int) Math.round(xCoords[radius]);
-        int currentY = (int) Math.round(yCoords[radius]);
-        int pSize = 3 * radius + 1;
-        int localMax[][] = Utils.searchNeighbourhood(currentX, currentY, radius,
-                FOREGROUND, maxima);
-        int m = localMax.length;
-        if (m < 2) {
-            return;
-        }
-        for (int i = 0; i < m; i++) {
-            int xc = localMax[i][0];
-            int yc = localMax[i][1];
-            if (!(xc == currentX && yc == currentY)) {
-                double cX[] = new double[pSize];
-                double cY[] = new double[pSize];
-                double cV[][] = new double[pSize][pSize];
-                Utils.extractValues(cX, cY, cV, xc, yc, image);
-                MultiGaussFitter gf = new MultiGaussFitter(cV, m);
-                double maxz = -Double.MAX_VALUE, minz = -maxz;
-                ByteProcessor region = new ByteProcessor(values.length, values.length);
-                for (int y = 0; y < pSize; y++) {
-                    for (int x = 0; x < pSize; x++) {
-                        if (cV[x][y] > maxz) {
-                            maxz = cV[x][y];
-                        }
-                        if (cV[x][y] < minz) {
-                            minz = cV[x][y];
-                        }
-                        if (x < values.length && y < values.length) {
-                            region.putPixelValue(x, y, values[x][y]);
-                        }
-                    }
-                }
-                double estimates[] = {minz, maxz, xc - cX[0], yc - cY[0],
-                    2.0, maxz, currentX - cX[0], currentY - cY[0], 2.0};
-                gf.doFit(estimates);
-                double params[] = gf.getParams();
-                IsoGaussian g = new IsoGaussian((params[2] + cX[0]), (params[3] + cY[0]),
-                        params[1], params[4], params[4], gf.getRSquared() - UserVariables.getCurveFitTol());
-                for (int y = 0; y < values.length; y++) {
-                    for (int x = 0; x < values.length; x++) {
-                        values[x][y] -= g.evaluate(xCoords[x], yCoords[y]);
-                        region.putPixelValue(x, y, values[x][y]);
-                    }
-                }
-            }
-        }
     }
 
     public void updateTrajectories(ParticleArray objects, double timeRes, double trajMaxStep,
