@@ -2,6 +2,7 @@ package ParticleTracking;
 
 import IAClasses.IsoGaussian;
 import IAClasses.Utils;
+import UtilClasses.GenUtils;
 import UtilClasses.Utilities;
 import ij.IJ;
 import ij.ImagePlus;
@@ -64,9 +65,11 @@ public class Timelapse_Analysis implements PlugIn {
     String title = "Particle Tracker";
     protected static boolean msdPlot = false, intensPlot = false, trajPlot = false, prevRes = true;
     protected boolean monoChrome;
-    private final double TRACK_LENGTH = 4.0;
+    private final double TRACK_LENGTH = 2.0;
     private final double TRACK_WIDTH = 2.0;
     private final double TRACK_OFFSET = 2.0;
+    private static File directory;
+    private final String delimiter = GenUtils.getDelimiter();
 
 //    public static void main(String args[]) {
 //        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
@@ -75,6 +78,7 @@ public class Timelapse_Analysis implements PlugIn {
 //        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
 //        instance.run(null);
 //    }
+
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep,
             double chan1MaxThresh, double hystDiff, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
         UserVariables.setSpatialRes(spatialRes);
@@ -132,6 +136,8 @@ public class Timelapse_Analysis implements PlugIn {
      * Analyses the {@link ImageStack} specified by <code>stack</code>.
      */
     public void analyse() {
+        directory = Utilities.getFolder(directory, "Specify directory for output files...");
+        String parentDir = GenUtils.openResultsDirectory(directory + delimiter + title, delimiter);
         if (monoChrome) {
             UserVariables.setColocal(false);
         }
@@ -204,8 +210,7 @@ public class Timelapse_Analysis implements PlugIn {
                         ImageStack signals = extractSignalValues(traj,
                                 (int) Math.round(TRACK_LENGTH / UserVariables.getSpatialRes()),
                                 (int) Math.round(TRACK_WIDTH / UserVariables.getSpatialRes()));
-                        String currentDir = "c:/users/barry05/desktop/signal_extract_test/";
-                        IJ.saveAs((new ImagePlus("", signals)), "TIF", currentDir + "/" + String.valueOf(count));
+                        IJ.saveAs((new ImagePlus("", signals)), "TIF", parentDir + "/" + String.valueOf(count));
                         count++;
                     }
                 }
