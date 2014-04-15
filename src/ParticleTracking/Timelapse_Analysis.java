@@ -70,6 +70,7 @@ public class Timelapse_Analysis implements PlugIn {
     private final double TRACK_OFFSET = 2.0;
     private static File directory;
     private final String delimiter = GenUtils.getDelimiter();
+    String parentDir;
 
     public static void main(String args[]) {
         File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
@@ -137,7 +138,7 @@ public class Timelapse_Analysis implements PlugIn {
      */
     public void analyse() {
         directory = Utilities.getFolder(directory, "Specify directory for output files...");
-        String parentDir = GenUtils.openResultsDirectory(directory + delimiter + title, delimiter);
+        parentDir = GenUtils.openResultsDirectory(directory + delimiter + title, delimiter);
         if (monoChrome) {
             UserVariables.setColocal(false);
         }
@@ -219,7 +220,9 @@ public class Timelapse_Analysis implements PlugIn {
             results.append(toString());
             results.setVisible(true);
             resultSummary.setVisible(true);
-            (new ImagePlus("Trajectory Maps", maps)).show();
+            if (maps != null) {
+                (new ImagePlus("Trajectory Maps", maps)).show();
+            }
         }
     }
 
@@ -259,7 +262,10 @@ public class Timelapse_Analysis implements PlugIn {
         double[][] pixValues = new double[pSize][pSize];
         double spatialRes = UserVariables.getSpatialRes();
         ParticleArray particles = new ParticleArray(arraySize);
+        ImageStack output = new ImageStack(stack.getWidth(), stack.getHeight());
+        ImageStack maxima = new ImageStack(stack.getWidth(), stack.getHeight());
         for (i = startSlice; i < noOfImages && i <= endSlice; i++) {
+            ByteProcessor oslice = new ByteProcessor(output.getWidth(), output.getHeight());
             IJ.freeMemory();
             IJ.showStatus("Finding Particles...");
             IJ.showProgress(i, noOfImages);
@@ -276,6 +282,7 @@ public class Timelapse_Analysis implements PlugIn {
                     ? preProcess(new ByteProcessor(width, height, c2Pix, null)) : null;
             // TODO Maybe express threshold as a percentage? See Ponti et al., 2003
             ByteProcessor thisC1Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, FOREGROUND, chan1Proc, UserVariables.getChan1MaxThresh(), true);
+            maxima.addSlice(thisC1Max);
             ByteProcessor C2Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, FOREGROUND, chan2Proc, UserVariables.getChan2MaxThresh(), true);
             for (c1X = 0; c1X < width; c1X++) {
                 for (c1Y = 0; c1Y < height; c1Y++) {
@@ -320,11 +327,15 @@ public class Timelapse_Analysis implements PlugIn {
                         for (int f = 0; f < c1Fits.size(); f++) {
                             particles.addDetection(i - startSlice,
                                     new Particle((i - startSlice), c1Fits.get(f), c2Gaussian, null, -1));
+                            Utils.draw2DGaussian(oslice, c1Fits.get(f), UserVariables.getCurveFitTol(), UserVariables.getSpatialRes(), false);
                         }
                     }
                 }
             }
+            output.addSlice(oslice);
         }
+        IJ.saveAs(new ImagePlus("", output), "TIF", parentDir + "/all_detections.tif");
+        IJ.saveAs(new ImagePlus("", maxima), "TIF", parentDir + "/all_maxima.tif");
         if (update) {
             updateTrajectories(particles, UserVariables.getTimeRes(), UserVariables.getTrajMaxStep(), UserVariables.getChan1MaxThresh(), hystDiff, spatialRes, true);
         }
@@ -729,7 +740,7 @@ public class Timelapse_Analysis implements PlugIn {
 
     public void calcParticleRadius(double spatialRes) {
         double airyRad = 1.22 * LAMBDA / (2.0 * NUM_AP); //Airy radius
-        xyPartRad = (int) Math.ceil(airyRad / (spatialRes * 1000.0));
+        xyPartRad = (int) Math.ceil(2.0 * airyRad / (spatialRes * 1000.0));
         xySigEst = airyRad / (2.0 * spatialRes * 1000.0);
     }
 

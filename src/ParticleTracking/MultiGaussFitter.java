@@ -2,6 +2,7 @@ package ParticleTracking;
 
 import IAClasses.IsoGaussian;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * 2D Gaussian Curve Fitter based on ImageJ's <code>CurveFitter</code>.
@@ -13,8 +14,7 @@ import java.util.ArrayList;
  */
 public class MultiGaussFitter {
 
-    public static final int IterFactor = 500;
-    double _2sig2, _maxThresh, xyStepSize, magStepSize, bgStepSize;
+    double _2sig2, xyStepSize, magStepSize, bgStepSize;
     int N_MAX = 1, FIT_RADIUS = 3, FIT_SIZE = 7;
     int STEP_TOL = 2000, ITERATIONS = 100;
     double XY_STEP_SIZE = 0.1, MAG_STEP_SIZE = 10.0, BG_STEP_SIZE = 1.0f;
@@ -43,6 +43,7 @@ public class MultiGaussFitter {
         mag = new double[N_MAX][N_MAX];
         bg = new double[N_MAX][N_MAX];
         r = new double[N_MAX];
+        Arrays.fill(r, -Double.MAX_VALUE);
         initialiseFitting(A, FIT_RADIUS, xe, ye, mag, bg, r);
     }
 
@@ -51,10 +52,10 @@ public class MultiGaussFitter {
         mag[0][0] = image[FIT_RADIUS + 1][FIT_RADIUS + 1];
         doMultiFit(image, index, 0, xe, ye, mag, bg, r);
         for (int n = 1; n < N_MAX; n++) {
-            mag[n][0] = 0.0;
-            bg[n][0] = 0.0;
-            xe[n][0] = 0.0;
-            ye[n][0] = 0.0;
+            mag[n][n] = 0.0;
+            bg[n][n] = 0.0;
+            xe[n][n] = 0.0;
+            ye[n][n] = 0.0;
             for (int j = 0; j < FIT_SIZE; j++) {
                 for (int i = index - FIT_RADIUS; i < index - FIT_RADIUS + FIT_SIZE; i++) {
                     double residual = image[i][j];
@@ -65,11 +66,11 @@ public class MultiGaussFitter {
                         bg[n][m] = bg[n - 1][m];
                         residual -= multiEvaluate(xe[n][m], ye[n][m], mag[n][m], bg[n][m], i, j);
                     }
-                    if (residual > mag[n][0]) {
-                        mag[n][0] = residual;
-                        bg[n][0] = 0.0f;
-                        xe[n][0] = i;
-                        ye[n][0] = j;
+                    if (residual > mag[n][n]) {
+                        mag[n][n] = residual;
+                        bg[n][n] = 0.0f;
+                        xe[n][n] = i;
+                        ye[n][n] = j;
                     }
                 }
             }
