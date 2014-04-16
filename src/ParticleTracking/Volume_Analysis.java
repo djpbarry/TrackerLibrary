@@ -95,7 +95,7 @@ public class Volume_Analysis extends Timelapse_Analysis {
                 }
             }
             n = trajectories.size();
-            mapTrajectories(stack, trajectories, scale, spatialRes, minTrajLength, timeRes, true, (int) Math.round(xyPartRad * scale), 0, trajectories.size() - 1, 1, false);
+            mapTrajectories(stack, trajectories, scale, spatialRes, minTrajLength, timeRes, true, 0, trajectories.size() - 1, 1, false);
             ArrayList distributions = new ArrayList();
             int cropRad = 4 * xyPartRad + 1;
             for (i = 0, count = 1; i < n; i++) {

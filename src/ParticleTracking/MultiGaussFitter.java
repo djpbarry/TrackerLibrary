@@ -76,14 +76,7 @@ public class MultiGaussFitter {
             }
             doMultiFit(image, index, n, xe, ye, mag, bg, r);
         }
-        best = -1;
-        double max = -Double.MAX_VALUE;
-        for (int i = 0; i < N_MAX; i++) {
-            if (r[i] > max) {
-                max = r[i];
-                best = i;
-            }
-        }
+        getBestModel();
     }
 
     void centreOfMass(double[][] x, double[][] y, double[][] bg, int index, double[][] image) {
@@ -120,12 +113,12 @@ public class MultiGaussFitter {
                 ye[N][j] -= (r4 - r3) * xyStepSize;
                 mag[N][j] -= (r6 - r5) * magStepSize;
                 bg[N][j] -= (r8 - r7) * bgStepSize;
-                if (mag[N][j] < 0.0f) {
-                    mag[N][j] = 0.0f;
-                }
-                if (bg[N][j] < 0.0f) {
-                    bg[N][j] = 0.0f;
-                }
+//                if (mag[N][j] < 0.0f) {
+//                    mag[N][j] = 0.0f;
+//                }
+//                if (bg[N][j] < 0.0f) {
+//                    bg[N][j] = 0.0f;
+//                }
                 if (bg[N][j] > mag[N][j]) {
                     bg[N][j] = mag[N][j];
                 }
@@ -177,8 +170,23 @@ public class MultiGaussFitter {
     }
 
     public ArrayList<IsoGaussian> getFits(double spatialRes, int xoffset, int yoffset, double magThresh) {
+        getBestModel();
         if (best < 0) {
             return null;
+        }
+//        for (int i = 0; i <= best; i++) {
+//            if (!(xe[best][i] > sigEst && ye[best][i] > sigEst && xe[best][i] < FIT_SIZE - 1 - sigEst
+//                    && ye[best][i] < FIT_SIZE - 1 - sigEst)) {
+//                r[best] = -Double.MAX_VALUE;
+//                return getFits(spatialRes, xoffset, yoffset, magThresh);
+//            }
+//        }
+        for (int i = 0; i <= best; i++) {
+            if (!(xe[best][i] > 0.0 && ye[best][i] > 0.0 && xe[best][i] < FIT_SIZE - 1.0
+                    && ye[best][i] < FIT_SIZE - 1.0)) {
+                r[best] = -Double.MAX_VALUE;
+                return getFits(spatialRes, xoffset, yoffset, magThresh);
+            }
         }
         ArrayList<IsoGaussian> fits = new ArrayList();
         for (int i = 0; i <= best; i++) {
@@ -189,5 +197,16 @@ public class MultiGaussFitter {
             }
         }
         return fits;
+    }
+
+    void getBestModel() {
+        best = -1;
+        double max = -Double.MAX_VALUE;
+        for (int i = 0; i < N_MAX; i++) {
+            if (r[i] > max) {
+                max = r[i];
+                best = i;
+            }
+        }
     }
 }

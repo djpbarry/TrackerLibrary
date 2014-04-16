@@ -56,8 +56,8 @@ public class TestGenerator {
             ByteProcessor image = new ByteProcessor(width, height);
             IsoGaussian g1 = new IsoGaussian((i * 0.2 + 320) * res, 240.0 * res, 100.0, 2.0 * res, 2.0 * res, 0.1);
             IsoGaussian g2 = new IsoGaussian((320 - i * 0.2) * res, 240.0 * res, 100.0, 2.0 * res, 2.0 * res, 0.1);
-            Utils.draw2DGaussian(image, g1, 0.0, UserVariables.getSpatialRes(), false);
-            Utils.draw2DGaussian(image, g2, 0.0, UserVariables.getSpatialRes(), false);
+            Utils.draw2DGaussian(image, g1, 0.0, UserVariables.getSpatialRes(), false, false);
+            Utils.draw2DGaussian(image, g2, 0.0, UserVariables.getSpatialRes(), false, false);
             IJ.saveAs(new ImagePlus("", image.duplicate()), "PNG",
                     "C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences\\Simulation\\"
                     + indFormat.format(i));
@@ -78,7 +78,7 @@ public class TestGenerator {
             image.setColor(255);
             for (int j = 0; j < n; j++) {
                 if (particles[j] != null) {
-                    Utils.draw2DGaussian(image, particles[j], 0.0, res, false);
+                    Utils.draw2DGaussian(image, particles[j], 0.0, res, false, false);
                     particles[j].updateVelocity();
                     particles[j].updatePosition();
                     double x = particles[j].getX() / res;

@@ -183,7 +183,7 @@ public class Co_Localise implements PlugIn {
             ArrayList detections = curves.getLevel(0);
             for (int j = 0; j < detections.size(); j++) {
                 IsoGaussian c1 = ((Particle) detections.get(j)).getC1Gaussian();
-                if (Utils.draw2DGaussian(ch1proc, c1, UserVariables.getCurveFitTol(), UserVariables.getSpatialRes(), partialDetect)) {
+                if (Utils.draw2DGaussian(ch1proc, c1, UserVariables.getCurveFitTol(), UserVariables.getSpatialRes(), partialDetect, false)) {
                     if (c1.getMagnitude() > displaymax) {
                         displaymax = c1.getMagnitude();
                     }
@@ -210,7 +210,7 @@ public class Co_Localise implements PlugIn {
 //                    } else {
                     IsoGaussian c2 = ((Particle) detections.get(j)).getC2Gaussian();
                     if (Utils.draw2DGaussian(ch2proc, c2, UserVariables.getCurveFitTol(), UserVariables.getSpatialRes(),
-                            partialDetect)) {
+                            partialDetect, false)) {
                         if (c2.getMagnitude() > displaymax) {
                             displaymax = c2.getMagnitude();
                         }

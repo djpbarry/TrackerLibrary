@@ -43,6 +43,7 @@ public class UserInterface extends javax.swing.JDialog {
         this.analyser = analyser;
         imp = new ImagePlus("", analyser.getStack().getProcessor(1));
         initComponents();
+        UIMethods.centreDialog(this);
     }
 
     /**
@@ -506,7 +507,8 @@ public class UserInterface extends javax.swing.JDialog {
         }
         double mag = 1.0 / UIMethods.getMagnification(output, canvas1);
         double sr = 1.0 / Double.parseDouble(spatResTextField.getText());
-        int radius = (int)Math.round(sr);
+//        int radius = (int)Math.round(sr);
+        int radius = analyser.getXyPartRad();
         IsoGaussian c1, c2;
         ArrayList<Particle> particles = detections.getLevel(0);
         Color c1Color = !monoChrome ? analyser.getDrawColor(c1ComboBox.getSelectedIndex()) : Color.white;
@@ -515,11 +517,11 @@ public class UserInterface extends javax.swing.JDialog {
         for (Particle particle : particles) {
             c1 = particle.getC1Gaussian();
             c2 = particle.getC2Gaussian();
-            drawDetections(output, (int) (Math.round(sr * c1.getX())), (int) (Math.round(sr * c1.getY())), radius, (c1.getFit() > Double.parseDouble(curveFitTolTextField.getText())), c1Color);
+            drawDetections(output, (int) (Math.round(sr * c1.getX())), (int) (Math.round(sr * c1.getY())), radius, false, c1Color);
             if (c2 != null) {
                 drawDetections(output, (int) (Math.round(sr * c2.getX())),
                         (int) (Math.round(sr * c2.getY())), radius,
-                        (c2.getFit() > 0.0), c2Color);
+                        false, c2Color);
             }
         }
         imp.setProcessor("", output);

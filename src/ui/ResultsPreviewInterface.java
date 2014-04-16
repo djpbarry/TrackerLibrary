@@ -13,6 +13,8 @@ import ij.ImagePlus;
 import ij.ImageStack;
 import ij.gui.ImageCanvas;
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.Scanner;
@@ -45,6 +47,7 @@ public class ResultsPreviewInterface extends javax.swing.JDialog {
         trajectories = analyser.getTrajectories();
         initComponents();
         trajScrollBarAdjustmentValueChanged(null);
+        UIMethods.centreDialog(this);
     }
 
     /**
@@ -214,7 +217,7 @@ public class ResultsPreviewInterface extends javax.swing.JDialog {
 
     private void trajScrollBarAdjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {//GEN-FIRST:event_trajScrollBarAdjustmentValueChanged
         updateTextField(trajTextField, trajScrollBar.getValue());
-        stack = analyser.mapTrajectories(analyser.getStack(), trajectories, 1.0, UserVariables.getSpatialRes(), UserVariables.getMinTrajLength(), UserVariables.getTimeRes(), true, (int) Math.round(1.0 / UserVariables.getSpatialRes()), trajScrollBar.getValue(), trajScrollBar.getValue(), trajScrollBar.getValue(), true);
+        stack = analyser.mapTrajectories(analyser.getStack(), trajectories, 1.0, UserVariables.getSpatialRes(), UserVariables.getMinTrajLength(), UserVariables.getTimeRes(), true, trajScrollBar.getValue(), trajScrollBar.getValue(), trajScrollBar.getValue(), true);
         imageScrollBar.setValue((trajectories.get(trajScrollBar.getValue())).getStartTimeIndex() + 1);
         imageScrollBarAdjustmentValueChanged(null);
     }//GEN-LAST:event_trajScrollBarAdjustmentValueChanged
