@@ -223,6 +223,7 @@ public class Timelapse_Analysis implements PlugIn {
             resultSummary.setVisible(true);
             if (maps != null) {
                 (new ImagePlus("Trajectory Maps", maps)).show();
+                IJ.saveAs((new ImagePlus("", maps)), "TIF", parentDir + "/trajectories.tif");
             }
         }
     }
