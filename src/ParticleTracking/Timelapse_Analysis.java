@@ -256,7 +256,8 @@ public class Timelapse_Analysis implements PlugIn {
         int i, noOfImages = stack.getSize(), width = stack.getWidth(), height = stack.getHeight(),
                 arraySize = endSlice - startSlice + 1;
         byte c1Pix[], c2Pix[];
-        int c1X, c1Y, pSize = 2 * xyPartRad + 1;
+        int fitRad = (int)Math.ceil(xyPartRad * 4.0 / 3.0);
+        int c1X, c1Y, pSize = 2 * fitRad + 1;
         int c2Points[][];
         double[] xCoords = new double[pSize];
         double[] yCoords = new double[pSize];
@@ -296,9 +297,9 @@ public class Timelapse_Analysis implements PlugIn {
                          * <code>xyPartRad</code> pixels of maxima in red image:
                          */
                         Utils.extractValues(xCoords, yCoords, pixValues, c1X, c1Y, chan1Proc);
-                        MultiGaussFitter fitter = new MultiGaussFitter(2, xyPartRad, pSize);
+                        MultiGaussFitter fitter = new MultiGaussFitter(2, fitRad, pSize);
                         fitter.fit(pixValues, xySigEst);
-                        ArrayList<IsoGaussian> c1Fits = fitter.getFits(spatialRes, c1X - xyPartRad, c1Y - xyPartRad, UserVariables.getChan1MaxThresh());
+                        ArrayList<IsoGaussian> c1Fits = fitter.getFits(spatialRes, c1X - fitRad, c1Y - fitRad, UserVariables.getChan1MaxThresh());
                         c2Points = Utils.searchNeighbourhood(c1X, c1Y, (int) Math.round(xyPartRad * searchScale), FOREGROUND,
                                 C2Max);
                         if (c2Points != null) {
@@ -744,7 +745,7 @@ public class Timelapse_Analysis implements PlugIn {
         double airyRad = 1.22 * LAMBDA / (2.0 * NUM_AP); //Airy radius
 //        xyPartRad = (int) Math.ceil(2.0*airyRad / (spatialRes * 1000.0));
         xySigEst = airyRad / (2.0 * spatialRes * 1000.0);
-        xyPartRad = (int) Math.ceil(6.0 * xySigEst);
+        xyPartRad = (int) Math.ceil(3.0 * xySigEst);
     }
 
     public boolean removeTrajectory(int index) {
