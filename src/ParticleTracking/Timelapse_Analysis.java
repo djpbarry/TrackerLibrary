@@ -317,11 +317,10 @@ public class Timelapse_Analysis implements PlugIn {
                          * be updated:
                          */
                         if (c1Fits != null) {
-                            for (int f = 0; f < c1Fits.size(); f++) {
-                                particles.addDetection(i - startSlice,
-                                        new Particle((i - startSlice), c1Fits.get(f), c2Gaussian, null, -1));
-                                Utils.draw2DGaussian(oslice, c1Fits.get(f), UserVariables.getCurveFitTol(), UserVariables.getSpatialRes(), false, false);
-                                Utils.draw2DGaussian(chan1Proc, c1Fits.get(f), UserVariables.getCurveFitTol(), UserVariables.getSpatialRes(), false, true);
+                            for (IsoGaussian c1Fit : c1Fits) {
+                                particles.addDetection(i - startSlice, new Particle(i - startSlice, c1Fit, c2Gaussian, null, -1));
+                                Utils.draw2DGaussian(oslice, c1Fit, UserVariables.getCurveFitTol(), UserVariables.getSpatialRes(), false, false);
+                                Utils.draw2DGaussian(chan1Proc, c1Fit, UserVariables.getCurveFitTol(), UserVariables.getSpatialRes(), false, true);
                             }
                         }
                     }
@@ -730,32 +729,11 @@ public class Timelapse_Analysis implements PlugIn {
         }
     }
 
-    /*
-     * public static void setGaussianRadius(double gaussianRadius) {
-     * Timelapse_Analysis.gaussianRadius = gaussianRadius; }
-     */
-    public void setSigmaEstimate(double sigmaEstimate) {
-        this.xySigEst = sigmaEstimate;
-    }
-
-    public int getParticleRadius() {
-        return xyPartRad;
-    }
-
     public void calcParticleRadius(double spatialRes) {
         double airyRad = 1.22 * LAMBDA / (2.0 * NUM_AP); //Airy radius
 //        xyPartRad = (int) Math.ceil(2.0*airyRad / (spatialRes * 1000.0));
         xySigEst = airyRad / (2.0 * spatialRes * 1000.0);
         xyPartRad = (int) Math.ceil(3.0 * xySigEst);
-    }
-
-    public boolean removeTrajectory(int index) {
-        if (trajectories.size() < 1) {
-            return false;
-        }
-        trajectories.remove(index);
-
-        return true;
     }
 
     public ArrayList<Integer> previewResults() {
@@ -786,10 +764,6 @@ public class Timelapse_Analysis implements PlugIn {
 
     public ArrayList<ParticleTrajectory> getTrajectories() {
         return trajectories;
-    }
-
-    public void setTrajectories(ArrayList<ParticleTrajectory> trajectories) {
-        this.trajectories = trajectories;
     }
 
     public ImageStack getStack() {
@@ -843,31 +817,5 @@ public class Timelapse_Analysis implements PlugIn {
 
     public int getXyPartRad() {
         return xyPartRad;
-    }
-
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final Timelapse_Analysis other = (Timelapse_Analysis) obj;
-        if (Double.doubleToLongBits(this.scale) != Double.doubleToLongBits(other.scale)) {
-            return false;
-        }
-        if (this.xyPartRad != other.xyPartRad) {
-            return false;
-        }
-        if (this.trajectories != other.trajectories && (this.trajectories == null || !this.trajectories.equals(other.trajectories))) {
-            return false;
-        }
-        if (this.imp != other.imp && (this.imp == null || !this.imp.equals(other.imp))) {
-            return false;
-        }
-        if (this.stack != other.stack && (this.stack == null || !this.stack.equals(other.stack))) {
-            return false;
-        }
-        return true;
     }
 }
