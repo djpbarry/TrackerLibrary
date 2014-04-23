@@ -14,6 +14,7 @@ import ij.gui.PolygonRoi;
 import ij.gui.Roi;
 import ij.plugin.PlugIn;
 import ij.plugin.Straightener;
+import ij.plugin.TextReader;
 import ij.plugin.filter.GaussianBlur;
 import ij.process.Blitter;
 import ij.process.ByteProcessor;
@@ -776,6 +777,10 @@ public class Timelapse_Analysis implements PlugIn {
     }
 
     ImageStack extractSignalValues(ParticleTrajectory ptraj, int length, int width) {
+        TextReader reader = new TextReader();
+        ImageProcessor xcoeffs = reader.open("c:/users/barry05/xcoeffs.txt");
+        ImageProcessor ycoeffs = reader.open("c:/users/barry05/ycoeffs.txt");
+        ImageProcessor coords = reader.open("c:/users/barry05/coords.txt");
         Particle sigStartP = ptraj.getEnd();
         int size = Math.min(length, ptraj.getSize());
         int iterations = 1 + ptraj.getSize() - size;
@@ -787,8 +792,10 @@ public class Timelapse_Analysis implements PlugIn {
         for (int i = 0; i < iterations; i++) {
             Particle current = sigStartP;
             for (int index = 0; index < size; index++) {
-                xpoints[index] = (float) (current.getC1Gaussian().getX() / UserVariables.getSpatialRes());
-                ypoints[index] = (float) (current.getC1Gaussian().getY() / UserVariables.getSpatialRes());
+                double xg = goshtasbyeval(xcoeffs, coords, current.getC1Gaussian().getX(), current.getC1Gaussian().getY());
+                double yg = goshtasbyeval(ycoeffs, coords, current.getC1Gaussian().getX(), current.getC1Gaussian().getY());
+                xpoints[index] = (float) (xg / UserVariables.getSpatialRes());
+                ypoints[index] = (float) (yg / UserVariables.getSpatialRes());
                 current = current.getLink();
             }
             PolygonRoi proi = new PolygonRoi(xpoints, ypoints, size, Roi.POLYLINE);
@@ -818,5 +825,18 @@ public class Timelapse_Analysis implements PlugIn {
 
     public int getXyPartRad() {
         return xyPartRad;
+    }
+
+    double goshtasbyeval(ImageProcessor coeffs, ImageProcessor coords, double x, double y) {
+        int l = coeffs.getHeight();
+        double sum = 0.0;
+        for (int i = 3; i < l; i++) {
+            double r = Math.pow((x - coords.getPixelValue(0, i - 3)), 2.0) + Math.pow((y - coords.getPixelValue(1, i - 3)), 2.0);
+            if (r > 0.0) {
+                double R = r * Math.log(r);
+                sum = sum + coeffs.getPixelValue(0,i) * R;
+            }
+        }
+        return coeffs.getPixelValue(0, 0) + coeffs.getPixelValue(0,1) * x + coeffs.getPixelValue(0,2) * y + sum;
     }
 }
