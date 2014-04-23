@@ -73,14 +73,13 @@ public class Timelapse_Analysis implements PlugIn {
     private final String delimiter = GenUtils.getDelimiter();
     String parentDir;
 
-    public static void main(String args[]) {
-        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
-        ImageStack stack = Utils.buildStack(image);
-        ImagePlus imp = new ImagePlus("Stack", stack);
-        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
-        instance.run(null);
-    }
-
+//    public static void main(String args[]) {
+//        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
+//        ImageStack stack = Utils.buildStack(image);
+//        ImagePlus imp = new ImagePlus("Stack", stack);
+//        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
+//        instance.run(null);
+//    }
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep,
             double chan1MaxThresh, double hystDiff, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
         UserVariables.setSpatialRes(spatialRes);
@@ -198,8 +197,9 @@ public class Timelapse_Analysis implements PlugIn {
             for (i = 0, count = 1; i < n; i++) {
                 ParticleTrajectory traj = (ParticleTrajectory) trajectories.get(i);
                 if (traj != null) {
-                    if (traj.getSize() > UserVariables.getMinTrajLength() && ((traj.getType(colocalThresh) == ParticleTrajectory.COLOCAL)
-                            || ((traj.getType(colocalThresh) == ParticleTrajectory.NON_COLOCAL) && !UserVariables.isColocal()))) {
+                    int type = traj.getType(colocalThresh);
+                    if (traj.getSize() > UserVariables.getMinTrajLength() && ((type == ParticleTrajectory.COLOCAL)
+                            || ((type == ParticleTrajectory.NON_COLOCAL) && !UserVariables.isColocal()))) {
                         if (intensPlot) {
                             plotIntensity(i, count);
                         }
@@ -208,11 +208,12 @@ public class Timelapse_Analysis implements PlugIn {
                         }
                         printData(i, resultSummary, count);
                         traj.printTrajectory(count, results, numFormat, title);
-
-                        ImageStack signals = extractSignalValues(traj,
-                                (int) Math.round(TRACK_LENGTH / UserVariables.getSpatialRes()),
-                                (int) Math.round(TRACK_WIDTH / UserVariables.getSpatialRes()));
-                        IJ.saveAs((new ImagePlus("", signals)), "TIF", parentDir + "/" + String.valueOf(count));
+                        if (type == ParticleTrajectory.COLOCAL) {
+                            ImageStack signals = extractSignalValues(traj,
+                                    (int) Math.round(TRACK_LENGTH / UserVariables.getSpatialRes()),
+                                    (int) Math.round(TRACK_WIDTH / UserVariables.getSpatialRes()));
+                            IJ.saveAs((new ImagePlus("", signals)), "TIF", parentDir + "/" + String.valueOf(count));
+                        }
                         count++;
                     }
                 }
@@ -257,7 +258,7 @@ public class Timelapse_Analysis implements PlugIn {
         int i, noOfImages = stack.getSize(), width = stack.getWidth(), height = stack.getHeight(),
                 arraySize = endSlice - startSlice + 1;
         byte c1Pix[], c2Pix[];
-        int fitRad = (int)Math.ceil(xyPartRad * 4.0 / 3.0);
+        int fitRad = (int) Math.ceil(xyPartRad * 4.0 / 3.0);
         int c1X, c1Y, pSize = 2 * fitRad + 1;
         int c2Points[][];
         double[] xCoords = new double[pSize];
@@ -265,13 +266,13 @@ public class Timelapse_Analysis implements PlugIn {
         double[][] pixValues = new double[pSize][pSize];
         double spatialRes = UserVariables.getSpatialRes();
         ParticleArray particles = new ParticleArray(arraySize);
-        ImageStack detect_output = new ImageStack(stack.getWidth(), stack.getHeight());
-        ImageStack maxima = new ImageStack(stack.getWidth(), stack.getHeight());
-        ImageStack input_output = new ImageStack(stack.getWidth(), stack.getHeight());
+//        ImageStack detect_output = new ImageStack(stack.getWidth(), stack.getHeight());
+//        ImageStack maxima = new ImageStack(stack.getWidth(), stack.getHeight());
+//        ImageStack input_output = new ImageStack(stack.getWidth(), stack.getHeight());
         ProgressDialog progress = new ProgressDialog(null, "Finding Particles...", false, true, title);
         progress.setVisible(true);
         for (i = startSlice; i < noOfImages && i <= endSlice; i++) {
-            ByteProcessor oslice = new ByteProcessor(detect_output.getWidth(), detect_output.getHeight());
+//            ByteProcessor oslice = new ByteProcessor(detect_output.getWidth(), detect_output.getHeight());
             IJ.freeMemory();
             progress.updateProgress(i - startSlice, arraySize);
             if (!monoChrome) {
@@ -287,7 +288,7 @@ public class Timelapse_Analysis implements PlugIn {
                     ? preProcess(new ByteProcessor(width, height, c2Pix, null)) : null;
             // TODO Maybe express threshold as a percentage? See Ponti et al., 2003
             ByteProcessor thisC1Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, FOREGROUND, chan1Proc, UserVariables.getChan1MaxThresh(), true);
-            maxima.addSlice(thisC1Max);
+//            maxima.addSlice(thisC1Max);
             ByteProcessor C2Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, FOREGROUND, chan2Proc, UserVariables.getChan2MaxThresh(), true);
             for (c1X = 0; c1X < width; c1X++) {
                 for (c1Y = 0; c1Y < height; c1Y++) {
@@ -298,9 +299,9 @@ public class Timelapse_Analysis implements PlugIn {
                          * <code>xyPartRad</code> pixels of maxima in red image:
                          */
                         Utils.extractValues(xCoords, yCoords, pixValues, c1X, c1Y, chan1Proc);
-                        MultiGaussFitter fitter = new MultiGaussFitter(2, fitRad, pSize);
+                        MultiGaussFitter fitter = new MultiGaussFitter(1, fitRad, pSize);
                         fitter.fit(pixValues, xySigEst);
-                        ArrayList<IsoGaussian> c1Fits = fitter.getFits(spatialRes, c1X - fitRad, c1Y - fitRad, UserVariables.getChan1MaxThresh());
+                        ArrayList<IsoGaussian> c1Fits = fitter.getFits(spatialRes, c1X - fitRad, c1Y - fitRad, UserVariables.getChan1MaxThresh(), UserVariables.getCurveFitTol());
                         c2Points = Utils.searchNeighbourhood(c1X, c1Y, (int) Math.round(xyPartRad * searchScale), FOREGROUND,
                                 C2Max);
                         if (c2Points != null) {
@@ -319,20 +320,20 @@ public class Timelapse_Analysis implements PlugIn {
                         if (c1Fits != null) {
                             for (IsoGaussian c1Fit : c1Fits) {
                                 particles.addDetection(i - startSlice, new Particle(i - startSlice, c1Fit, c2Gaussian, null, -1));
-                                Utils.draw2DGaussian(oslice, c1Fit, UserVariables.getCurveFitTol(), UserVariables.getSpatialRes(), false, false);
-                                Utils.draw2DGaussian(chan1Proc, c1Fit, UserVariables.getCurveFitTol(), UserVariables.getSpatialRes(), false, true);
+//                                Utils.draw2DGaussian(oslice, c1Fit, UserVariables.getCurveFitTol(), UserVariables.getSpatialRes(), false, false);
+//                                Utils.draw2DGaussian(chan1Proc, c1Fit, UserVariables.getCurveFitTol(), UserVariables.getSpatialRes(), false, true);
                             }
                         }
                     }
                 }
             }
-            detect_output.addSlice(oslice);
-            input_output.addSlice(chan1Proc.duplicate());
+//            detect_output.addSlice(oslice);
+//            input_output.addSlice(chan1Proc.duplicate());
         }
         progress.dispose();
-        IJ.saveAs(new ImagePlus("", detect_output), "TIF", parentDir + "/all_detections.tif");
-        IJ.saveAs(new ImagePlus("", maxima), "TIF", parentDir + "/all_maxima.tif");
-        IJ.saveAs(new ImagePlus("", input_output), "TIF", parentDir + "/input_output.tif");
+//        IJ.saveAs(new ImagePlus("", detect_output), "TIF", parentDir + "/all_detections.tif");
+//        IJ.saveAs(new ImagePlus("", maxima), "TIF", parentDir + "/all_maxima.tif");
+//        IJ.saveAs(new ImagePlus("", input_output), "TIF", parentDir + "/input_output.tif");
         if (update) {
             updateTrajectories(particles, UserVariables.getTimeRes(), UserVariables.getTrajMaxStep(),
                     UserVariables.getChan1MaxThresh(), hystDiff, spatialRes, true);

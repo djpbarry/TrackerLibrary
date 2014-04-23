@@ -169,28 +169,21 @@ public class MultiGaussFitter {
         return mag * Math.exp(-(((x - x0) * (x - x0) + (y - y0) * (y - y0)) / (_2sig2))) + bg;
     }
 
-    public ArrayList<IsoGaussian> getFits(double spatialRes, int xoffset, int yoffset, double magThresh) {
+    public ArrayList<IsoGaussian> getFits(double spatialRes, int xoffset, int yoffset, double magThresh, double fitThresh) {
         getBestModel();
         if (best < 0) {
             return null;
         }
-//        for (int i = 0; i <= best; i++) {
-//            if (!(xe[best][i] > sigEst && ye[best][i] > sigEst && xe[best][i] < FIT_SIZE - 1 - sigEst
-//                    && ye[best][i] < FIT_SIZE - 1 - sigEst)) {
-//                r[best] = -Double.MAX_VALUE;
-//                return getFits(spatialRes, xoffset, yoffset, magThresh);
-//            }
-//        }
         for (int i = 0; i <= best; i++) {
             if (!(xe[best][i] > 0.0 && ye[best][i] > 0.0 && xe[best][i] < FIT_SIZE - 1.0
                     && ye[best][i] < FIT_SIZE - 1.0)) {
                 r[best] = -Double.MAX_VALUE;
-                return getFits(spatialRes, xoffset, yoffset, magThresh);
+                return getFits(spatialRes, xoffset, yoffset, magThresh, fitThresh);
             }
         }
         ArrayList<IsoGaussian> fits = new ArrayList();
         for (int i = 0; i <= best; i++) {
-            if (mag[best][i] > magThresh) {
+            if (mag[best][i] > magThresh && r[i] > fitThresh) {
                 fits.add(new IsoGaussian((xe[best][i] + xoffset) * spatialRes,
                         (ye[best][i] + yoffset) * spatialRes, mag[best][i],
                         sigEst, sigEst, r[best]));
