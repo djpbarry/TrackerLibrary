@@ -47,13 +47,6 @@ public class PSF_Estimator extends Timelapse_Analysis {
         stack = imp.getImageStack();
         if (stack != null) {
             IJ.register(this.getClass());
-            int width = stack.getWidth(), height = stack.getHeight();
-            if (width > VIS_SIZE || height > VIS_SIZE) {
-                scale = 1.0;
-            } else {
-                scale = VIS_SIZE / Math.max(width, height);
-            }
-
             results = new TextWindow(psfTitle + " Results", "frame\tx\ty\tA\tsigma_x\tsigma_y\tR^2",
                     null, 1000, 500);
             results.append(imp.getTitle() + "\n\n");

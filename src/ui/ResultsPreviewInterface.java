@@ -217,7 +217,7 @@ public class ResultsPreviewInterface extends javax.swing.JDialog {
 
     private void trajScrollBarAdjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {//GEN-FIRST:event_trajScrollBarAdjustmentValueChanged
         updateTextField(trajTextField, trajScrollBar.getValue());
-        stack = analyser.mapTrajectories(analyser.getStack(), trajectories, 1.0, UserVariables.getSpatialRes(), UserVariables.getMinTrajLength(), UserVariables.getTimeRes(), true, trajScrollBar.getValue(), trajScrollBar.getValue(), trajScrollBar.getValue(), true);
+        stack = analyser.mapTrajectories(analyser.getStack(), trajectories, UserVariables.getSpatialRes(), UserVariables.getMinTrajLength(), UserVariables.getTimeRes(), true, trajScrollBar.getValue(), trajScrollBar.getValue(), trajScrollBar.getValue(), true);
         imageScrollBar.setValue((trajectories.get(trajScrollBar.getValue())).getStartTimeIndex() + 1);
         imageScrollBarAdjustmentValueChanged(null);
     }//GEN-LAST:event_trajScrollBarAdjustmentValueChanged

@@ -25,7 +25,7 @@ public class ParticleTrajectory {
     protected Particle end = null, temp = null;
     private int size = 0, dualScore = 0, tempRow = -1, tempColumn = -1;
     public final static int NON_COLOCAL = 0, UNKNOWN = 1, COLOCAL = 2; //Flags
-    protected double tempScore = Double.MAX_VALUE, xVelocity, yVelocity, projectXVel,
+    protected double tempScore = Double.MAX_VALUE, xVelocity = 0.0, yVelocity = 0.0, projectXVel,
             projectYVel, diffCoeff, boxCountFD = 0.0, angleSpread = 0.0,
             stepSpread, timeRes, specFD, meanKappa, logDC, directionality,
             peakIntens, peakTime;

@@ -48,14 +48,12 @@ import ui.UserInterface;
 public class Timelapse_Analysis implements PlugIn {
 
 //    protected static double hystDiff = 1.25;
-    protected double scale, //Scale factor for visualisation
-            xySigEst; //Initial estimate of standard deviation for IsoGaussian fitting
+    protected double xySigEst; //Initial estimate of standard deviation for IsoGaussian fitting
     protected int xyPartRad; //Radius over which to draw particles in visualisation
     public final static int FOREGROUND = 255, //Integer value of foreground pixels
             SHOW_RESULTS = -1,
             VERSION = 4;
-    protected final static double VIS_SIZE = 750.0,
-            LAMBDA = 650.0, //Wavelength of light
+    protected final static double LAMBDA = 650.0, //Wavelength of light
             NUM_AP = 1.4; //Numerical aperture of system
     protected static double colocalThresh = 0.1;
     protected ArrayList<ParticleTrajectory> trajectories = new ArrayList(); //Trajectories of the detected particles
@@ -81,6 +79,7 @@ public class Timelapse_Analysis implements PlugIn {
         Timelapse_Analysis instance = new Timelapse_Analysis(imp);
         instance.run(null);
     }
+
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep, double chan1MaxThresh, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
         UserVariables.setSpatialRes(spatialRes);
         UserVariables.setTimeRes(timeRes);
@@ -91,7 +90,6 @@ public class Timelapse_Analysis implements PlugIn {
         this.monoChrome = monoChrome;
         this.imp = imp;
         this.stack = imp.getStack();
-        this.scale = scale;
     }
 
     public Timelapse_Analysis() {
@@ -149,12 +147,6 @@ public class Timelapse_Analysis implements PlugIn {
             calcParticleRadius(UserVariables.getSpatialRes());
             int i, count;
             int width = stack.getWidth(), height = stack.getHeight();
-            if (width > VIS_SIZE || height > VIS_SIZE) {
-                scale = 1.0;
-            } else {
-                scale = VIS_SIZE / Math.max(width, height);
-            }
-
             findParticles(1.0, true, 0, stack.getSize() - 1);
 
             TextWindow results = new TextWindow(title + " Results", "X\tY\tFrame\tChannel 1 ("
@@ -193,7 +185,7 @@ public class Timelapse_Analysis implements PlugIn {
                 }
             }
             n = trajectories.size();
-            ImageStack maps = mapTrajectories(stack, trajectories, scale, UserVariables.getSpatialRes(), UserVariables.getMinTrajLength(), UserVariables.getTimeRes(), true, 0, trajectories.size() - 1, 1, false);
+            ImageStack maps = mapTrajectories(stack, trajectories, UserVariables.getSpatialRes(), UserVariables.getMinTrajLength(), UserVariables.getTimeRes(), true, 0, trajectories.size() - 1, 1, false);
             for (i = 0, count = 1; i < n; i++) {
                 ParticleTrajectory traj = (ParticleTrajectory) trajectories.get(i);
                 if (traj != null) {
@@ -290,7 +282,8 @@ public class Timelapse_Analysis implements PlugIn {
             double c1Threshold = Utils.getPercentileThresh(chan1Proc, UserVariables.getChan1MaxThresh());
             ByteProcessor thisC1Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, FOREGROUND, chan1Proc, c1Threshold, true);
 //            maxima.addSlice(thisC1Max);
-            ByteProcessor C2Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, FOREGROUND, chan2Proc, UserVariables.getChan2MaxThresh(), true);
+            double c2Threshold = Utils.getPercentileThresh(chan2Proc, UserVariables.getChan1MaxThresh());
+            ByteProcessor C2Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, FOREGROUND, chan2Proc, c2Threshold, true);
             for (c1X = 0; c1X < width; c1X++) {
                 for (c1Y = 0; c1Y < height; c1Y++) {
                     if (thisC1Max.getPixel(c1X, c1Y) == FOREGROUND) {
@@ -341,7 +334,7 @@ public class Timelapse_Analysis implements PlugIn {
         return particles;
     }
 
-    public void updateTrajectories(ParticleArray objects, double timeRes, double trajMaxStep, double spatialRes, boolean projectVel) {
+    public void updateTrajectories(ParticleArray objects, double timeRes, double trajMaxStep, double spatialRes, boolean projectPos) {
         if (objects == null) {
             return;
         }
@@ -394,25 +387,16 @@ public class Timelapse_Analysis implements PlugIn {
                                      */
                                     x = ch1G.getX();
                                     y = ch1G.getY();
-                                    // TODO Variation in C1 intensity could be interpreted as movement in Z-direction
-                                    if (projectVel) {
-                                        traj.projectVelocity(x, y);
-                                        double vector1[] = {x, y, currentParticle.getTimePoint(),
-                                            ch1G.getMagnitude() / 255.0,
-                                            traj.getProjectXVel(),
-                                            traj.getProjectYVel()};
-                                        double vector2[] = {last.getX(), last.getY(),
-                                            last.getTimePoint(), last.getC1Intensity() / 255.0,
-                                            traj.getXVelocity(),
-                                            traj.getYVelocity()};
-                                        score = Utils.calcEuclidDist(vector1, vector2);
-                                    } else {
-                                        double vector1[] = {x, y, currentParticle.getTimePoint(),
-                                            ch1G.getMagnitude() / 255.0};
-                                        double vector2[] = {last.getX(), last.getY(),
-                                            last.getTimePoint(), last.getC1Intensity() / 255.0};
-                                        //TODO Useful cost function described in Vallotton et al., 2003
-                                        score = Utils.calcEuclidDist(vector1, vector2);
+                                    double vector1[] = {x, y, currentParticle.getTimePoint(),
+                                        ch1G.getMagnitude() / 255.0};
+                                    double vector2[] = {last.getX(), last.getY(),
+                                        last.getTimePoint(), last.getC1Intensity() / 255.0};
+                                    score = Utils.calcEuclidDist(vector1, vector2);
+                                    if (projectPos) {
+                                        double vector3[] = {x, y};
+                                        double vector4[] = {last.getX() + traj.getXVelocity(),
+                                            last.getY() + traj.getYVelocity()};
+                                        score += Utils.calcEuclidDist(vector3, vector4);
                                     }
                                     if (score < minScore) {
                                         minScore = score;
@@ -425,7 +409,6 @@ public class Timelapse_Analysis implements PlugIn {
                              * the particle is temporarily assigned to the
                              * "winning" trajectory:
                              */
-                            // TODO This could probably be extended to find a 'globally optimal' solution, so no 'scoreTol' threshold is required.
                             if (traj != null) {
                                 if (minScoreIndex > -1) {
                                     traj = (ParticleTrajectory) trajectories.get(minScoreIndex);
@@ -615,12 +598,12 @@ public class Timelapse_Analysis implements PlugIn {
      * Constructed trajectories are drawn onto the original image sequence and
      * displayed as a stack sequence.
      */
-    public ImageStack mapTrajectories(ImageStack stack, ArrayList<ParticleTrajectory> trajectories, double scale, double spatialRes, double minTrajLength, double timeRes, boolean tracks, int startT, int endT, int index, boolean preview) {
+    public ImageStack mapTrajectories(ImageStack stack, ArrayList<ParticleTrajectory> trajectories, double spatialRes, double minTrajLength, double timeRes, boolean tracks, int startT, int endT, int index, boolean preview) {
         if (stack == null) {
             return null;
         }
         int radius = xyPartRad;
-        int i, j, width = (int) Math.round(stack.getWidth() * scale), height = (int) Math.round(stack.getHeight() * scale),
+        int i, j, width = stack.getWidth(), height = stack.getHeight(),
                 type, frames = stack.getSize();
         double lastX, lastY;
         ImageStack outputStack = new ImageStack(width, height);
@@ -630,7 +613,6 @@ public class Timelapse_Analysis implements PlugIn {
         ImageProcessor processor;
 //        Rectangle bounds;
 //        ByteProcessor trajImage;
-        double scaledSR = scale / spatialRes;
         int lastTP;
 //        double ptScale = ParticleTrajectory.scale;
 
@@ -680,14 +662,14 @@ public class Timelapse_Analysis implements PlugIn {
                                 processor.setColor(Color.white);
                             }
                             if (j - 1 < lastTP) {
-                                markParticle(processor, (int) Math.round(lastX * scaledSR) - radius,
-                                        (int) Math.round(lastY * scaledSR) - radius, radius, true, "" + index);
+                                markParticle(processor, (int) Math.round(lastX / spatialRes) - radius,
+                                        (int) Math.round(lastY /spatialRes) - radius, radius, true, "" + index);
                             }
                             if (tracks && j <= lastTP + tLength / timeRes) {
-                                int x = (int) (Math.round(current.getX() * scaledSR));
-                                int y = (int) (Math.round(current.getY() * scaledSR));
-                                processor.drawLine(x, y, (int) Math.round(lastX * scaledSR),
-                                        (int) Math.round(lastY * scaledSR));
+                                int x = (int) (Math.round(current.getX() / spatialRes));
+                                int y = (int) (Math.round(current.getY() / spatialRes));
+                                processor.drawLine(x, y, (int) Math.round(lastX / spatialRes),
+                                        (int) Math.round(lastY / spatialRes));
                             }
                         }
 //                        if (tracks) {
@@ -707,8 +689,8 @@ public class Timelapse_Analysis implements PlugIn {
                     } else {
                         processor.setColor(Color.white);
                     }
-                    markParticle(processor, (int) Math.round(lastX * scaledSR) - radius,
-                            (int) Math.round(lastY * scaledSR) - radius, radius, true, "" + index);
+                    markParticle(processor, (int) Math.round(lastX / spatialRes) - radius,
+                            (int) Math.round(lastY / spatialRes) - radius, radius, true, "" + index);
                     index++;
                 }
             }

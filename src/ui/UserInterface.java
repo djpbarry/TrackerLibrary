@@ -460,11 +460,11 @@ public class UserInterface extends javax.swing.JDialog {
     }//GEN-LAST:event_okButtonActionPerformed
 
     private void previewScrollBarAdjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {//GEN-FIRST:event_previewScrollBarAdjustmentValueChanged
+        previewTextField.setText(String.valueOf(previewScrollBar.getValue()));
         if (previewScrollBar.getValueIsAdjusting() || !setVariables()) {
             return;
         }
         viewDetections();
-        previewTextField.setText(String.valueOf(previewScrollBar.getValue()));
     }//GEN-LAST:event_previewScrollBarAdjustmentValueChanged
 
     private void previewToggleButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_previewToggleButtonActionPerformed

@@ -59,11 +59,6 @@ public class Volume_Analysis extends Timelapse_Analysis {
             IJ.register(this.getClass());
             int i, count;
             int width = stack.getWidth(), height = stack.getHeight();
-            if (width > VIS_SIZE || height > VIS_SIZE) {
-                scale = 1.0;
-            } else {
-                scale = VIS_SIZE / Math.max(width, height);
-            }
 
             findParticles(1.0, true, 0, stack.getSize() - 1);
 
@@ -95,7 +90,7 @@ public class Volume_Analysis extends Timelapse_Analysis {
                 }
             }
             n = trajectories.size();
-            mapTrajectories(stack, trajectories, scale, spatialRes, minTrajLength, timeRes, true, 0, trajectories.size() - 1, 1, false);
+            mapTrajectories(stack, trajectories, spatialRes, minTrajLength, timeRes, true, 0, trajectories.size() - 1, 1, false);
             ArrayList distributions = new ArrayList();
             int cropRad = 4 * xyPartRad + 1;
             for (i = 0, count = 1; i < n; i++) {

@@ -17,7 +17,7 @@ public class UserVariables {
     private static double trajMaxStep = 2.5;
     private static double minTrajLength = 30.0;
     private static double chan1MaxThresh = 0.95;
-    private static double chan2MaxThresh = 50.0;
+    private static double chan2MaxThresh = 0.5;
     private static double curveFitTol = 0.8d;
     private static boolean colocal = true, preProcess = true;
     public static final String[] channels = {"Red", "Green", "Blue"};
