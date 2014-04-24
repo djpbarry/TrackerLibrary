@@ -47,7 +47,7 @@ import ui.UserInterface;
  */
 public class Timelapse_Analysis implements PlugIn {
 
-    protected static double hystDiff = 1.25;
+//    protected static double hystDiff = 1.25;
     protected double scale, //Scale factor for visualisation
             xySigEst; //Initial estimate of standard deviation for IsoGaussian fitting
     protected int xyPartRad; //Radius over which to draw particles in visualisation
@@ -74,20 +74,19 @@ public class Timelapse_Analysis implements PlugIn {
     private final String delimiter = GenUtils.getDelimiter();
     String parentDir;
 
-//    public static void main(String args[]) {
-//        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
-//        ImageStack stack = Utils.buildStack(image);
-//        ImagePlus imp = new ImagePlus("Stack", stack);
-//        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
-//        instance.run(null);
-//    }
-    public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep,
-            double chan1MaxThresh, double hystDiff, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
+    public static void main(String args[]) {
+        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
+        ImageStack stack = Utils.buildStack(image);
+        ImagePlus imp = new ImagePlus("Stack", stack);
+        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
+        instance.run(null);
+    }
+    public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep, double chan1MaxThresh, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
         UserVariables.setSpatialRes(spatialRes);
         UserVariables.setTimeRes(timeRes);
         UserVariables.setTrajMaxStep(trajMaxStep);
         UserVariables.setChan1MaxThresh(chan1MaxThresh);
-        Timelapse_Analysis.hystDiff = hystDiff;
+//        Timelapse_Analysis.hystDiff = hystDiff;
         UserVariables.setMinTrajLength(minTrajLength);
         this.monoChrome = monoChrome;
         this.imp = imp;
@@ -288,7 +287,8 @@ public class Timelapse_Analysis implements PlugIn {
             FloatProcessor chan2Proc = !monoChrome
                     ? preProcess(new ByteProcessor(width, height, c2Pix, null)) : null;
             // TODO Maybe express threshold as a percentage? See Ponti et al., 2003
-            ByteProcessor thisC1Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, FOREGROUND, chan1Proc, UserVariables.getChan1MaxThresh(), true);
+            double c1Threshold = Utils.getPercentileThresh(chan1Proc, UserVariables.getChan1MaxThresh());
+            ByteProcessor thisC1Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, FOREGROUND, chan1Proc, c1Threshold, true);
 //            maxima.addSlice(thisC1Max);
             ByteProcessor C2Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, FOREGROUND, chan2Proc, UserVariables.getChan2MaxThresh(), true);
             for (c1X = 0; c1X < width; c1X++) {
@@ -300,9 +300,9 @@ public class Timelapse_Analysis implements PlugIn {
                          * <code>xyPartRad</code> pixels of maxima in red image:
                          */
                         Utils.extractValues(xCoords, yCoords, pixValues, c1X, c1Y, chan1Proc);
-                        MultiGaussFitter fitter = new MultiGaussFitter(1, fitRad, pSize);
+                        MultiGaussFitter fitter = new MultiGaussFitter(2, fitRad, pSize);
                         fitter.fit(pixValues, xySigEst);
-                        ArrayList<IsoGaussian> c1Fits = fitter.getFits(spatialRes, c1X - fitRad, c1Y - fitRad, UserVariables.getChan1MaxThresh(), UserVariables.getCurveFitTol());
+                        ArrayList<IsoGaussian> c1Fits = fitter.getFits(spatialRes, c1X - fitRad, c1Y - fitRad, c1Threshold, UserVariables.getCurveFitTol());
                         c2Points = Utils.searchNeighbourhood(c1X, c1Y, (int) Math.round(xyPartRad * searchScale), FOREGROUND,
                                 C2Max);
                         if (c2Points != null) {
@@ -336,41 +336,34 @@ public class Timelapse_Analysis implements PlugIn {
 //        IJ.saveAs(new ImagePlus("", maxima), "TIF", parentDir + "/all_maxima.tif");
 //        IJ.saveAs(new ImagePlus("", input_output), "TIF", parentDir + "/input_output.tif");
         if (update) {
-            updateTrajectories(particles, UserVariables.getTimeRes(), UserVariables.getTrajMaxStep(),
-                    UserVariables.getChan1MaxThresh(), hystDiff, spatialRes, true);
+            updateTrajectories(particles, UserVariables.getTimeRes(), UserVariables.getTrajMaxStep(), spatialRes, true);
         }
         return particles;
     }
 
-    public void updateTrajectories(ParticleArray objects, double timeRes, double trajMaxStep,
-            double chan1MaxThresh, double hystDiff, double spatialRes, boolean projectVel) {
+    public void updateTrajectories(ParticleArray objects, double timeRes, double trajMaxStep, double spatialRes, boolean projectVel) {
         if (objects == null) {
             return;
         }
-        int i, j, k, m, size;
         int depth = objects.getDepth();
         ParticleTrajectory traj = null;
-        Particle last;
-        IsoGaussian ch1G;
         double x, y, score, minScore;
-        int minScoreIndex;
-        ArrayList<Particle> detections;
         ProgressDialog progress = new ProgressDialog(null, "Building Trajectories...", false, true, title);
         progress.setVisible(true);
-        for (m = 0; m < depth; m++) {
+        for (int m = 0; m < depth; m++) {
             progress.updateProgress(m, depth);
-            for (k = m; (k < depth) && (((k - m)) < trajMaxStep); k++) {
-                size = trajectories.size();
-                detections = objects.getLevel(k);
-                for (j = 0; j < detections.size(); j++) {
+            for (int k = m; (k < depth) && (((k - m)) < trajMaxStep); k++) {
+                int size = trajectories.size();
+                ArrayList<Particle> detections = objects.getLevel(k);
+                for (int j = 0; j < detections.size(); j++) {
                     Particle currentParticle = detections.get(j);
                     if (currentParticle != null) {
-                        ch1G = currentParticle.getC1Gaussian();
+                        IsoGaussian ch1G = currentParticle.getC1Gaussian();
                         /*
                          * If no trajectories have yet been built, start a new
                          * one:
                          */
-                        if (k == m && ch1G.getMagnitude() > chan1MaxThresh * hystDiff && ch1G.getFit() > UserVariables.getCurveFitTol()) {
+                        if (k == m && ch1G.getFit() > UserVariables.getCurveFitTol()) {
                             traj = new ParticleTrajectory(timeRes, spatialRes);
                             /*
                              * Particles need to be cloned as they are set to
@@ -383,9 +376,10 @@ public class Timelapse_Analysis implements PlugIn {
                              * belongs to a pre-existing trajectory:
                              */
                         } else {
+                            int i, minScoreIndex;
                             for (minScoreIndex = -1, minScore = Double.MAX_VALUE, i = 0; i < size; i++) {
                                 traj = (ParticleTrajectory) trajectories.get(i);
-                                last = traj.getEnd();
+                                Particle last = traj.getEnd();
                                 if ((last != null) && (last.getTimePoint() == m) && k != m) {
                                     /*
                                      * Evaluate the probability that the current
@@ -834,9 +828,9 @@ public class Timelapse_Analysis implements PlugIn {
             double r = Math.pow((x - coords.getPixelValue(0, i - 3)), 2.0) + Math.pow((y - coords.getPixelValue(1, i - 3)), 2.0);
             if (r > 0.0) {
                 double R = r * Math.log(r);
-                sum = sum + coeffs.getPixelValue(0,i) * R;
+                sum = sum + coeffs.getPixelValue(0, i) * R;
             }
         }
-        return coeffs.getPixelValue(0, 0) + coeffs.getPixelValue(0,1) * x + coeffs.getPixelValue(0,2) * y + sum;
+        return coeffs.getPixelValue(0, 0) + coeffs.getPixelValue(0, 1) * x + coeffs.getPixelValue(0, 2) * y + sum;
     }
 }
