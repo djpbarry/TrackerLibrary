@@ -293,7 +293,7 @@ public class Timelapse_Analysis implements PlugIn {
                          * <code>xyPartRad</code> pixels of maxima in red image:
                          */
                         Utils.extractValues(xCoords, yCoords, pixValues, c1X, c1Y, chan1Proc);
-                        MultiGaussFitter fitter = new MultiGaussFitter(2, fitRad, pSize);
+                        MultiGaussFitter fitter = new MultiGaussFitter(UserVariables.getnMax(), fitRad, pSize);
                         fitter.fit(pixValues, xySigEst);
                         ArrayList<IsoGaussian> c1Fits = fitter.getFits(spatialRes, c1X - fitRad, c1Y - fitRad, c1Threshold, UserVariables.getCurveFitTol());
                         c2Points = Utils.searchNeighbourhood(c1X, c1Y, (int) Math.round(xyPartRad * searchScale), FOREGROUND,
@@ -767,18 +767,18 @@ public class Timelapse_Analysis implements PlugIn {
         int offset = 1 - (int) Math.round(TRACK_OFFSET * UserVariables.getTimeRes());
         for (int i = 0; i < iterations; i++) {
             Particle current = sigStartP;
-            double displacement = 0.0;
+//            double displacement = 0.0;
             for (int index = 0; index < size; index++) {
                 double xg = goshtasbyeval(xcoeffs, coords, current.getC1Gaussian().getX(), current.getC1Gaussian().getY());
                 double yg = goshtasbyeval(ycoeffs, coords, current.getC1Gaussian().getX(), current.getC1Gaussian().getY());
                 xpoints[index] = (float) (xg / UserVariables.getSpatialRes());
                 ypoints[index] = (float) (yg / UserVariables.getSpatialRes());
                 current = current.getLink();
-                if (current != null) {
-                    displacement += Utils.calcDistance(xg, yg, current.getC1Gaussian().getX(), current.getC1Gaussian().getY());
-                }
+//                if (current != null) {
+//                    displacement += Utils.calcDistance(xg, yg, current.getC1Gaussian().getX(), current.getC1Gaussian().getY());
+//                }
             }
-            System.out.println("Displacement: "+displacement);
+//            System.out.println("Displacement: "+displacement);
 //            if (displacement > size * 0.1) {
                 PolygonRoi proi = new PolygonRoi(xpoints, ypoints, size, Roi.POLYLINE);
                 Straightener straightener = new Straightener();

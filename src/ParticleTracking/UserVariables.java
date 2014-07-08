@@ -19,6 +19,7 @@ public class UserVariables {
     private static double chan1MaxThresh = 0.95;
     private static double chan2MaxThresh = 0.5;
     private static double curveFitTol = 0.8d;
+    private static int nMax = 1;
     private static boolean colocal = true, preProcess = true;
     public static final String[] channels = {"Red", "Green", "Blue"};
     private static int c1Index = RED;
@@ -110,6 +111,14 @@ public class UserVariables {
 
     public static void setCurveFitTol(double curveFitTol) {
         UserVariables.curveFitTol = curveFitTol;
+    }
+
+    public static int getnMax() {
+        return nMax;
+    }
+
+    public static void setnMax(int nMax) {
+        UserVariables.nMax = nMax;
     }
 
 }

@@ -78,6 +78,8 @@ public class UserInterface extends javax.swing.JDialog {
         preprocessToggleButton = new javax.swing.JToggleButton();
         curveFitTolLabel = new javax.swing.JLabel();
         curveFitTolTextField = new javax.swing.JTextField();
+        nMaxTextField = new javax.swing.JTextField();
+        nMaxLabel = new javax.swing.JLabel();
         jPanel2 = new javax.swing.JPanel();
         canvas1 = new ImageCanvas(imp);
         previewScrollBar = new javax.swing.JScrollBar();
@@ -288,7 +290,7 @@ public class UserInterface extends javax.swing.JDialog {
         colocaliseToggleButton.setSelected(UserVariables.isColocal());
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 10;
+        gridBagConstraints.gridy = 11;
         gridBagConstraints.gridwidth = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.weightx = 1.0;
@@ -300,7 +302,7 @@ public class UserInterface extends javax.swing.JDialog {
         preprocessToggleButton.setSelected(UserVariables.isPreProcess());
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 11;
+        gridBagConstraints.gridy = 12;
         gridBagConstraints.gridwidth = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.weightx = 1.0;
@@ -329,6 +331,28 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.weighty = 0.09;
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 10);
         jPanel1.add(curveFitTolTextField, gridBagConstraints);
+
+        nMaxTextField.setText(String.valueOf(UserVariables.getnMax()));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 10;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_END;
+        gridBagConstraints.weightx = 0.5;
+        gridBagConstraints.weighty = 0.09;
+        gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 10);
+        jPanel1.add(nMaxTextField, gridBagConstraints);
+
+        nMaxLabel.setText("Nmax:");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 10;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_START;
+        gridBagConstraints.weightx = 0.5;
+        gridBagConstraints.weighty = 0.09;
+        gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
+        jPanel1.add(nMaxLabel, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
@@ -486,6 +510,7 @@ public class UserInterface extends javax.swing.JDialog {
             UserVariables.setPreProcess(preprocessToggleButton.isSelected());
             UserVariables.setC1Index(c1ComboBox.getSelectedIndex());
             UserVariables.setC2Index(c2ComboBox.getSelectedIndex());
+            UserVariables.setnMax(Integer.parseInt(nMaxTextField.getText()));
         } catch (NumberFormatException e) {
             IJ.error("Number formatting error " + e.toString());
             return false;
@@ -586,6 +611,8 @@ public class UserInterface extends javax.swing.JDialog {
     private javax.swing.JTextField maxTrajStepTextField;
     private javax.swing.JLabel minTrajLengthLabel;
     private javax.swing.JTextField minTrajLengthTextField;
+    private javax.swing.JLabel nMaxLabel;
+    private javax.swing.JTextField nMaxTextField;
     private javax.swing.JButton okButton;
     private javax.swing.JToggleButton preprocessToggleButton;
     private javax.swing.JScrollBar previewScrollBar;
