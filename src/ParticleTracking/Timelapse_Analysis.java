@@ -153,7 +153,7 @@ public class Timelapse_Analysis implements PlugIn {
                     + UserVariables.channels[UserVariables.getC1Index()]
                     + ")\tChannel 2 (" + UserVariables.channels[UserVariables.getC2Index()]
                     + ")\tChannel 2 " + '\u03C3' + "x\tChannel 2 " + '\u03C3' + "y\t" + '\u03B8',
-                    null, 1000, 500);
+                    new String(), 1000, 500);
             results.append(imp.getTitle() + "\n\n");
             TextWindow resultSummary = new TextWindow(title + " Results Summary",
                     "Particle\tType\t% Colocalisation\tDuration (s)\tDisplacement (" + IJ.micronSymbol
@@ -163,7 +163,7 @@ public class Timelapse_Analysis implements PlugIn {
                     + UserVariables.channels[UserVariables.getC2Index()] + "/"
                     + UserVariables.channels[UserVariables.getC1Index()]
                     + ")\tAngle Spread\tStep Spread\tDC\tCurvature\tC2 Fluor Area\tC2 Fluor Skew",
-                    null, 1200, 500);
+                    new String(), 1200, 500);
             resultSummary.append(imp.getTitle() + "\n\n");
 
             int n = trajectories.size();
@@ -663,7 +663,7 @@ public class Timelapse_Analysis implements PlugIn {
                             }
                             if (j - 1 < lastTP) {
                                 markParticle(processor, (int) Math.round(lastX / spatialRes) - radius,
-                                        (int) Math.round(lastY /spatialRes) - radius, radius, true, "" + index);
+                                        (int) Math.round(lastY / spatialRes) - radius, radius, true, "" + index);
                             }
                             if (tracks && j <= lastTP + tLength / timeRes) {
                                 int x = (int) (Math.round(current.getX() / spatialRes));
@@ -767,24 +767,31 @@ public class Timelapse_Analysis implements PlugIn {
         int offset = 1 - (int) Math.round(TRACK_OFFSET * UserVariables.getTimeRes());
         for (int i = 0; i < iterations; i++) {
             Particle current = sigStartP;
+            double displacement = 0.0;
             for (int index = 0; index < size; index++) {
                 double xg = goshtasbyeval(xcoeffs, coords, current.getC1Gaussian().getX(), current.getC1Gaussian().getY());
                 double yg = goshtasbyeval(ycoeffs, coords, current.getC1Gaussian().getX(), current.getC1Gaussian().getY());
                 xpoints[index] = (float) (xg / UserVariables.getSpatialRes());
                 ypoints[index] = (float) (yg / UserVariables.getSpatialRes());
                 current = current.getLink();
+                if (current != null) {
+                    displacement += Utils.calcDistance(xg, yg, current.getC1Gaussian().getX(), current.getC1Gaussian().getY());
+                }
             }
-            PolygonRoi proi = new PolygonRoi(xpoints, ypoints, size, Roi.POLYLINE);
-            Straightener straightener = new Straightener();
-            ByteProcessor slice = new ByteProcessor(stack.getWidth(), stack.getHeight(),
-                    Utils.getPixels((ColorProcessor) stack.getProcessor(sigStartP.getTimePoint() + offset),
-                            UserVariables.getC2Index()));
-            ImagePlus sigImp = new ImagePlus("", slice);
-            sigImp.setRoi(proi);
-            temps[i] = straightener.straighten(sigImp, proi, width);
-            if (temps[i] != null && temps[i].getWidth() > maxlength) {
-                maxlength = temps[i].getWidth();
-            }
+            System.out.println("Displacement: "+displacement);
+//            if (displacement > size * 0.1) {
+                PolygonRoi proi = new PolygonRoi(xpoints, ypoints, size, Roi.POLYLINE);
+                Straightener straightener = new Straightener();
+                ByteProcessor slice = new ByteProcessor(stack.getWidth(), stack.getHeight(),
+                        Utils.getPixels((ColorProcessor) stack.getProcessor(sigStartP.getTimePoint() + offset),
+                                UserVariables.getC2Index()));
+                ImagePlus sigImp = new ImagePlus("", slice);
+                sigImp.setRoi(proi);
+                temps[i] = straightener.straighten(sigImp, proi, width);
+                if (temps[i] != null && temps[i].getWidth() > maxlength) {
+                    maxlength = temps[i].getWidth();
+                }
+//            }
             sigStartP = sigStartP.getLink();
         }
         ImageStack output = new ImageStack(maxlength, width);

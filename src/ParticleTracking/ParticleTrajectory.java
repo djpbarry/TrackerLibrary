@@ -200,7 +200,7 @@ public class ParticleTrajectory {
         if (output == null) {
             output = new TextWindow(title + " Results",
                     "X\tY\tFrame\tChannel 1\tChannel 2\tChannel 2 " + '\u03C3'
-                    + "x\tChannel 2 " + '\u03C3' + "y\t" + '\u03B8', null, 1000, 500);
+                    + "x\tChannel 2 " + '\u03C3' + "y\t" + '\u03B8',new String(), 1000, 500);
             output.setVisible(true);
         }
         if (formatter == null) {

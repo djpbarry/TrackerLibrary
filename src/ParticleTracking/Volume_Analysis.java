@@ -66,7 +66,7 @@ public class Volume_Analysis extends Timelapse_Analysis {
                     + UserVariables.channels[UserVariables.getC1Index()]
                     + ")\tChannel 2 (" + UserVariables.channels[UserVariables.getC2Index()]
                     + ")\tChannel 2 " + '\u03C3' + "x\tChannel 2 " + '\u03C3' + "y\t" + '\u03B8',
-                    null, 1000, 500);
+                    new String(), 1000, 500);
             results.append(imp.getTitle() + "\n\n");
             TextWindow resultSummary = new TextWindow(title + " Results Summary",
                     "Particle\tType\t% Colocalisation\tDuration (s)\tDisplacement (" + IJ.micronSymbol
@@ -76,7 +76,7 @@ public class Volume_Analysis extends Timelapse_Analysis {
                     + UserVariables.channels[UserVariables.getC2Index()] + "/"
                     + UserVariables.channels[UserVariables.getC1Index()]
                     + ")\tAngle Spread\tStep Spread\tDC\tCurvature\tC2 Fluor Area\tC2 Fluor Skew",
-                    null, 1200, 500);
+                    new String(), 1200, 500);
             resultSummary.append(imp.getTitle() + "\n\n");
 
             int n = trajectories.size();

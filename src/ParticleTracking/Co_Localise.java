@@ -221,7 +221,7 @@ public class Co_Localise implements PlugIn {
                 }
             }
             if (results == null) {
-                results = new TextWindow(title + " Results", headings, null, 1000, 500);
+                results = new TextWindow(title + " Results", headings, new String(), 1000, 500);
             }
             results.append(imp.getTitle() + " (Slice " + i + ")\t" + count + "\t" + colocalisation
                     + "\t" + numFormat.format(100.0 * colocalisation / count)

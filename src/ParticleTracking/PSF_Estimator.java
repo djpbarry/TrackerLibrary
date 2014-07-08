@@ -48,7 +48,7 @@ public class PSF_Estimator extends Timelapse_Analysis {
         if (stack != null) {
             IJ.register(this.getClass());
             results = new TextWindow(psfTitle + " Results", "frame\tx\ty\tA\tsigma_x\tsigma_y\tR^2",
-                    null, 1000, 500);
+                    new String(), 1000, 500);
             results.append(imp.getTitle() + "\n\n");
             findParticles(1.0, true, 0, stack.getSize() - 1);
             results.setVisible(true);
