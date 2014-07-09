@@ -65,20 +65,20 @@ public class Timelapse_Analysis implements PlugIn {
     String title = "Particle Tracker";
     protected static boolean msdPlot = false, intensPlot = false, trajPlot = false, prevRes = true;
     protected boolean monoChrome;
-    private final double TRACK_LENGTH = 2.0;
-    private final double TRACK_WIDTH = 2.0;
-    private final double TRACK_OFFSET = 2.0;
+    private final double TRACK_LENGTH = 4.0;
+    private final double TRACK_WIDTH = 4.0;
+//    private final double TRACK_OFFSET = 2.0;
     private static File directory = new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences\\TestSequence40");
     private final String delimiter = GenUtils.getDelimiter();
     String parentDir;
 
-    public static void main(String args[]) {
-        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
-        ImageStack stack = Utils.buildStack(image);
-        ImagePlus imp = new ImagePlus("Stack", stack);
-        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
-        instance.run(null);
-    }
+//    public static void main(String args[]) {
+//        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
+//        ImageStack stack = Utils.buildStack(image);
+//        ImagePlus imp = new ImagePlus("Stack", stack);
+//        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
+//        instance.run(null);
+//    }
 
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep, double chan1MaxThresh, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
         UserVariables.setSpatialRes(spatialRes);
@@ -204,7 +204,9 @@ public class Timelapse_Analysis implements PlugIn {
                             ImageStack signals = extractSignalValues(traj,
                                     (int) Math.round(TRACK_LENGTH / UserVariables.getSpatialRes()),
                                     (int) Math.round(TRACK_WIDTH / UserVariables.getSpatialRes()));
-                            IJ.saveAs((new ImagePlus("", signals)), "TIF", parentDir + "/" + String.valueOf(count));
+                            if (signals.getSize() > 0) {
+                                IJ.saveAs((new ImagePlus("", signals)), "TIF", parentDir + "/" + String.valueOf(count));
+                            }
                         }
                         count++;
                     }
@@ -752,6 +754,21 @@ public class Timelapse_Analysis implements PlugIn {
         return monoChrome;
     }
 
+    /**
+     * Procedure for obtaining Goshtasby coefficients - see Goshtasby (1988),
+     * IEEE Transactions on Geoscience and Remote Sensing, 26:60-64
+     *
+     * 1. "Track" beads in two channels to provide list of coordinates 2. Input
+     * list of coordinates for each channel to MATLAB 3. Run goshtasby.m to
+     * obtain translation coefficients for both x and y, mapping 'green'
+     * coordinates onto 'red'. 4. Export x-coeffs, y-coeffs and original green
+     * channel coords (assuming virus is in red).
+     *
+     * @param ptraj
+     * @param length
+     * @param width
+     * @return
+     */
     ImageStack extractSignalValues(ParticleTrajectory ptraj, int length, int width) {
         TextReader reader = new TextReader();
         ImageProcessor xcoeffs = reader.open("c:/users/barry05/xcoeffs.txt");
@@ -759,18 +776,19 @@ public class Timelapse_Analysis implements PlugIn {
         ImageProcessor coords = reader.open("c:/users/barry05/coords.txt");
         Particle sigStartP = ptraj.getEnd();
         int size = Math.min(length, ptraj.getSize());
+//        int size = length;
         int iterations = 1 + ptraj.getSize() - size;
         float xpoints[] = new float[size];
         float ypoints[] = new float[size];
         ImageProcessor[] temps = new ImageProcessor[iterations];
-        int maxlength = -1;
-        int offset = 1 - (int) Math.round(TRACK_OFFSET * UserVariables.getTimeRes());
+//        int maxlength = -1;
+//        int offset = 1 - (int) Math.round(TRACK_OFFSET * UserVariables.getTimeRes());
         for (int i = 0; i < iterations; i++) {
             Particle current = sigStartP;
 //            double displacement = 0.0;
             for (int index = 0; index < size; index++) {
-                double xg = goshtasbyeval(xcoeffs, coords, current.getC1Gaussian().getX(), current.getC1Gaussian().getY());
-                double yg = goshtasbyeval(ycoeffs, coords, current.getC1Gaussian().getX(), current.getC1Gaussian().getY());
+                double xg = goshtasbyEval(xcoeffs, coords, current.getC1Gaussian().getX(), current.getC1Gaussian().getY());
+                double yg = goshtasbyEval(ycoeffs, coords, current.getC1Gaussian().getX(), current.getC1Gaussian().getY());
                 xpoints[index] = (float) (xg / UserVariables.getSpatialRes());
                 ypoints[index] = (float) (yg / UserVariables.getSpatialRes());
                 current = current.getLink();
@@ -780,24 +798,29 @@ public class Timelapse_Analysis implements PlugIn {
             }
 //            System.out.println("Displacement: "+displacement);
 //            if (displacement > size * 0.1) {
-                PolygonRoi proi = new PolygonRoi(xpoints, ypoints, size, Roi.POLYLINE);
-                Straightener straightener = new Straightener();
-                ByteProcessor slice = new ByteProcessor(stack.getWidth(), stack.getHeight(),
-                        Utils.getPixels((ColorProcessor) stack.getProcessor(sigStartP.getTimePoint() + offset),
-                                UserVariables.getC2Index()));
-                ImagePlus sigImp = new ImagePlus("", slice);
-                sigImp.setRoi(proi);
-                temps[i] = straightener.straighten(sigImp, proi, width);
-                if (temps[i] != null && temps[i].getWidth() > maxlength) {
-                    maxlength = temps[i].getWidth();
-                }
+            PolygonRoi proi = new PolygonRoi(xpoints, ypoints, size, Roi.POLYLINE);
+            Straightener straightener = new Straightener();
+            ByteProcessor slice = new ByteProcessor(stack.getWidth(), stack.getHeight(),
+                    //                        Utils.getPixels((ColorProcessor) stack.getProcessor(sigStartP.getTimePoint() + offset),
+                    Utils.getPixels((ColorProcessor) stack.getProcessor(sigStartP.getTimePoint()),
+                            UserVariables.getC2Index()));
+            ImagePlus sigImp = new ImagePlus("", slice);
+            sigImp.setRoi(proi);
+            temps[i] = straightener.straighten(sigImp, proi, width);
+//                if (temps[i] != null && temps[i].getWidth() > maxlength) {
+//                    maxlength = temps[i].getWidth();
+//                }
 //            }
+//            double min = temps[i].getStatistics().min;
+//            temps[i].subtract(min);
+//            double max = temps[i].getStatistics().max;
+//            temps[i].multiply(1.0 / max);
             sigStartP = sigStartP.getLink();
         }
-        ImageStack output = new ImageStack(maxlength, width);
+        ImageStack output = new ImageStack(length, length);
         for (int j = 0; j < iterations; j++) {
-            if (temps[j] != null) {
-                FloatProcessor slice = new FloatProcessor(maxlength, width);
+            if (temps[j] != null && temps[j].getWidth() >= length) {
+                FloatProcessor slice = new FloatProcessor(length, length);
                 FloatBlitter blitter = new FloatBlitter(slice);
                 blitter.copyBits(temps[j], 0, 0, Blitter.COPY);
                 output.addSlice(slice);
@@ -810,7 +833,7 @@ public class Timelapse_Analysis implements PlugIn {
         return xyPartRad;
     }
 
-    double goshtasbyeval(ImageProcessor coeffs, ImageProcessor coords, double x, double y) {
+    double goshtasbyEval(ImageProcessor coeffs, ImageProcessor coords, double x, double y) {
         int l = coeffs.getHeight();
         double sum = 0.0;
         for (int i = 3; i < l; i++) {
