@@ -702,7 +702,7 @@ public class Timelapse_Analysis implements PlugIn {
     }
 
     void markParticle(ImageProcessor processor, int x, int y, int radius, boolean string, String label) {
-        processor.drawRect(x, y, 2 * radius + 1, 2 * radius + 1);
+            processor.drawRect(x, y, 2 * radius + 1, 2 * radius + 1);
 //        processor.drawOval(x, y, 2 * radius, 2 * radius);
         if (string) {
             processor.drawString(label, x, y);

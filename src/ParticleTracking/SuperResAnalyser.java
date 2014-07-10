@@ -48,8 +48,8 @@ public class SuperResAnalyser extends Co_Localise {
             return;
         }
         if (showDialog()) {
-            headings = "Image\tChannel 1 (" + UserVariables.channels[channel1]
-                    + ") Detections\tColocalised Channel 2 (" + UserVariables.channels[channel2]
+            resultsHeadings = "Image\tChannel 1 (" + UserVariables.channels[UserVariables.getC1Index()]
+                    + ") Detections\tColocalised Channel 2 (" + UserVariables.channels[UserVariables.getC2Index()]
                     + ") Detections\t% Colocalisation";
             UserVariables.setPreProcess(true);
             Timelapse_Analysis analyser = new Timelapse_Analysis(stack);

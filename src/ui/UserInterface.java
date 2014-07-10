@@ -542,7 +542,8 @@ public class UserInterface extends javax.swing.JDialog {
         for (Particle particle : particles) {
             c1 = particle.getC1Gaussian();
             c2 = particle.getC2Gaussian();
-            drawDetections(output, (int) (Math.round(sr * c1.getX())), (int) (Math.round(sr * c1.getY())), radius, false, c1Color);
+            drawDetections(output, (int) (Math.round(sr * c1.getX())), (int) (Math.round(sr * c1.getY())),
+                    radius, c1.getFit() > UserVariables.getCurveFitTol(), c1Color);
             if (c2 != null) {
                 drawDetections(output, (int) (Math.round(sr * c2.getX())),
                         (int) (Math.round(sr * c2.getY())), radius,

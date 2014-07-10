@@ -20,13 +20,13 @@ public class Co_Localise implements PlugIn {
     protected ImageStack stack;
     protected final String title = "Colocaliser v1.06";
 //    public static final String[] channels = {"Red", "Green", "Blue"};
-    protected String headings;
+    protected String resultsHeadings, coordHeadings;
     protected static double coFactor = 2.5;
-    protected static int channel1 = 0, channel2 = 1;
+//    protected static int channel1 = 0, channel2 = 1;
     public static final int RED = 0, GREEN = 1, BLUE = 2;
     protected DecimalFormat numFormat = new DecimalFormat("0.0");
     protected static boolean partialDetect = false;
-    protected TextWindow results = null;
+    protected TextWindow results = null, particleCoords = null;
     protected boolean findTails = false;
 
 //    public static void main(String args[]) {
@@ -61,13 +61,15 @@ public class Co_Localise implements PlugIn {
             return;
         }
         if (showDialog()) {
-            headings = "Image\tChannel 1 (" + UserVariables.channels[channel1]
-                    + ") Detections\tColocalised Channel 2 (" + UserVariables.channels[channel2]
+            resultsHeadings = "Image\tChannel 1 (" + UserVariables.channels[UserVariables.getC1Index()]
+                    + ") Detections\tColocalised Channel 2 (" + UserVariables.channels[UserVariables.getC2Index()]
                     + ") Detections\t% Colocalisation\t"
                     + "\u0394 (nm)";
+            coordHeadings = "C0_X\tC0_Y\tC1_X\tC1_Y";
             UserVariables.setPreProcess(true);
             Timelapse_Analysis analyser = new Timelapse_Analysis(stack);
             analyser.calcParticleRadius(UserVariables.getSpatialRes());
+            UserVariables.setnMax(1);
             //Timelapse_Analysis.setGaussianRadius(0.139 / Timelapse_Analysis.getSpatialRes());
             (buildOutput(analyser)).show();
         }
@@ -86,17 +88,17 @@ public class Co_Localise implements PlugIn {
             dialog.addMessage("Channel 2 will be co-localised with Channel 1.");
             dialog.addChoice("Channel 1:", UserVariables.channels, UserVariables.channels[RED]);
             dialog.addChoice("Channel 2:", UserVariables.channels, UserVariables.channels[GREEN]);
-            dialog.addNumericField("Spatial Resolution:", UserVariables.getSpatialRes() * 1000.0, 1, 5, "nm/pixel");
-            dialog.addNumericField("Minimum Peak Size (Ch 1):", UserVariables.getChan1MaxThresh(), 1, 5, "");
-            dialog.addNumericField("Minimum Peak Size (Ch 2):", UserVariables.getChan2MaxThresh(), 1, 5, "");
-            dialog.addNumericField("Curve Fit Tolerance (Ch 1):", UserVariables.getCurveFitTol(), 1, 5, "");
-            dialog.addNumericField("Curve Fit Tolerance (Ch 2):", UserVariables.getCurveFitTol(), 1, 5, "");
-            dialog.addNumericField("Colocalisation Factor:", coFactor, 1, 5, "");
+            dialog.addNumericField("Spatial Resolution:", UserVariables.getSpatialRes() * 1000.0, 3, 5, "nm/pixel");
+            dialog.addNumericField("Minimum Peak Size (Ch 1):", UserVariables.getChan1MaxThresh(), 3, 5, "");
+            dialog.addNumericField("Minimum Peak Size (Ch 2):", UserVariables.getChan2MaxThresh(), 3, 5, "");
+            dialog.addNumericField("Curve Fit Tolerance (Ch 1):", UserVariables.getCurveFitTol(), 3, 5, "");
+            dialog.addNumericField("Curve Fit Tolerance (Ch 2):", UserVariables.getCurveFitTol(), 3, 5, "");
+            dialog.addNumericField("Colocalisation Factor:", coFactor, 3, 5, "");
             dialog.addCheckbox("Include Partial Detections", partialDetect);
             dialog.showDialog();
             if (!dialog.wasCanceled()) {
-                channel1 = dialog.getNextChoiceIndex();
-                channel2 = dialog.getNextChoiceIndex();
+                UserVariables.setC1Index(dialog.getNextChoiceIndex());
+                UserVariables.setC2Index(dialog.getNextChoiceIndex());
                 UserVariables.setSpatialRes(dialog.getNextNumber() / 1000.0);
                 UserVariables.setChan1MaxThresh(dialog.getNextNumber());
                 UserVariables.setChan2MaxThresh(dialog.getNextNumber());
@@ -148,9 +150,9 @@ public class Co_Localise implements PlugIn {
         ImageProcessor fch2 = (new TypeConverter(ch2, true)).convertToByte();
         if (fch1 == null || fch2 == null) {
             return null;
-        } else if (channel1 == colour) {
+        } else if (UserVariables.getC1Index() == colour) {
             return (byte[]) fch1.getPixels();
-        } else if (channel2 == colour) {
+        } else if (UserVariables.getC2Index() == colour) {
             return (byte[]) fch2.getPixels();
         } else {
             return (byte[]) (new ByteProcessor(fch1.getWidth(), fch1.getHeight())).getPixels();
@@ -171,8 +173,8 @@ public class Co_Localise implements PlugIn {
         double res = UserVariables.getSpatialRes();
         double sepsum;
         for (int i = 0; i < stack.getSize(); i++) {
-            ByteProcessor tailImage = new ByteProcessor(stack.getWidth(), stack.getHeight());
-            tailImage.setPixels(getPixels(channel2, i));
+//            ByteProcessor tailImage = new ByteProcessor(stack.getWidth(), stack.getHeight());
+//            tailImage.setPixels(getPixels(channel2, i));
             colocalisation = 0;
             count = 0;
 //            tails = 0;
@@ -183,6 +185,10 @@ public class Co_Localise implements PlugIn {
             ArrayList detections = curves.getLevel(0);
             for (int j = 0; j < detections.size(); j++) {
                 IsoGaussian c1 = ((Particle) detections.get(j)).getC1Gaussian();
+                String coordString = " ";
+                if (particleCoords == null) {
+                    particleCoords = new TextWindow(title + " Particle Coordinates", coordHeadings, new String(), 1000, 500);
+                }
                 if (Utils.draw2DGaussian(ch1proc, c1, UserVariables.getCurveFitTol(), UserVariables.getSpatialRes(), partialDetect, false)) {
                     if (c1.getMagnitude() > displaymax) {
                         displaymax = c1.getMagnitude();
@@ -216,16 +222,22 @@ public class Co_Localise implements PlugIn {
                         }
                         colocalisation++;
                         sepsum += Utils.calcDistance(c1.getX(), c1.getY(), c2.getX(), c2.getY());
+                        coordString = String.valueOf(c1.getX()) + "\t" + String.valueOf(c1.getY())
+                                + "\t" + String.valueOf(c2.getX()) + "\t" + String.valueOf(c2.getY());
 //                        }
+                    } else {
+                        coordString = String.valueOf(c1.getX()) + "\t" + String.valueOf(c1.getY()) + "\t \t ";
                     }
                 }
+                particleCoords.append(coordString);
             }
             if (results == null) {
-                results = new TextWindow(title + " Results", headings, new String(), 1000, 500);
+                results = new TextWindow(title + " Results", resultsHeadings, new String(), 1000, 500);
             }
             results.append(imp.getTitle() + " (Slice " + i + ")\t" + count + "\t" + colocalisation
                     + "\t" + numFormat.format(100.0 * colocalisation / count)
                     + "\t" + numFormat.format(1000.0 * res * sepsum / count));
+
             ColorProcessor output = new ColorProcessor(width, height);
             output.setRGB(outPix(ch1proc, ch2proc, RED), outPix(ch1proc, ch2proc, GREEN),
                     outPix(ch1proc, ch2proc, BLUE));
@@ -235,27 +247,14 @@ public class Co_Localise implements PlugIn {
             results.append("\n" + toString());
             results.setVisible(true);
         }
+        if (particleCoords != null) {
+            particleCoords.setVisible(true);
+        }
         ImagePlus output = new ImagePlus("Detected Particles", outStack);
         if (displaymax > 255) {
             displaymax = 255;
         }
         output.setDisplayRange(0.0, displaymax);
         return output;
-    }
-
-    public void setChannel1(int channel1) {
-        this.channel1 = channel1;
-    }
-
-    public void setChannel2(int channel2) {
-        this.channel2 = channel2;
-    }
-
-    public int getChannel1() {
-        return channel1;
-    }
-
-    public int getChannel2() {
-        return channel2;
     }
 }
