@@ -154,7 +154,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 10);
         jPanel1.add(c2ComboBox, gridBagConstraints);
 
-        spatResLabel.setText("Spatial resolution (nm/pixel):");
+        spatResLabel.setText("Spatial resolution ("+IJ.micronSymbol+"m/pixel):");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 3;
