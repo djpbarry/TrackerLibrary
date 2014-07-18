@@ -169,7 +169,7 @@ public class MultiGaussFitter {
         return mag * Math.exp(-(((x - x0) * (x - x0) + (y - y0) * (y - y0)) / (_2sig2))) + bg;
     }
 
-    public ArrayList<IsoGaussian> getFits(double spatialRes, int xoffset, int yoffset, double magThresh, double fitThresh) {
+    public ArrayList<IsoGaussian> getFits(double spatialRes, double xoffset, double yoffset, double magThresh, double fitThresh) {
         getBestModel();
         if (best < 0) {
             return null;

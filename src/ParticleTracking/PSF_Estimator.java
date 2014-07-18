@@ -50,13 +50,13 @@ public class PSF_Estimator extends Timelapse_Analysis {
             results = new TextWindow(psfTitle + " Results", "frame\tx\ty\tA\tsigma_x\tsigma_y\tR^2",
                     new String(), 1000, 500);
             results.append(imp.getTitle() + "\n\n");
-            findParticles(1.0, true, 0, stack.getSize() - 1);
+            findParticles(1.0, true, 0, stack.getSize() - 1, UserVariables.getCurveFitTol());
             results.setVisible(true);
         }
         return;
     }
 
-    public ParticleArray findParticles(double searchScale, boolean update, int startSlice, int endSlice) {
+    public ParticleArray findParticles(double searchScale, boolean update, int startSlice, int endSlice, double fitTol) {
         if (stack == null) {
             return null;
         }

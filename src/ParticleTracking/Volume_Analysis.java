@@ -60,7 +60,7 @@ public class Volume_Analysis extends Timelapse_Analysis {
             int i, count;
             int width = stack.getWidth(), height = stack.getHeight();
 
-            findParticles(1.0, true, 0, stack.getSize() - 1);
+            findParticles(1.0, true, 0, stack.getSize() - 1, UserVariables.getCurveFitTol());
 
             TextWindow results = new TextWindow(title + " Results", "X\tY\tFrame\tChannel 1 ("
                     + UserVariables.channels[UserVariables.getC1Index()]
@@ -175,7 +175,7 @@ public class Volume_Analysis extends Timelapse_Analysis {
         return;
     }
 
-    public ParticleArray findParticles(double searchScale, boolean update, int startSlice, int endSlice) {
+    public ParticleArray findParticles(double searchScale, boolean update, int startSlice, int endSlice, double fitTol) {
         if (stack == null) {
             return null;
         }

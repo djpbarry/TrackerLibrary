@@ -91,8 +91,7 @@ public class Co_Localise implements PlugIn {
             dialog.addNumericField("Spatial Resolution:", UserVariables.getSpatialRes() * 1000.0, 3, 5, "nm/pixel");
             dialog.addNumericField("Minimum Peak Size (Ch 1):", UserVariables.getChan1MaxThresh(), 3, 5, "");
             dialog.addNumericField("Minimum Peak Size (Ch 2):", UserVariables.getChan2MaxThresh(), 3, 5, "");
-            dialog.addNumericField("Curve Fit Tolerance (Ch 1):", UserVariables.getCurveFitTol(), 3, 5, "");
-            dialog.addNumericField("Curve Fit Tolerance (Ch 2):", UserVariables.getCurveFitTol(), 3, 5, "");
+            dialog.addNumericField("Curve Fit Tolerance:", UserVariables.getCurveFitTol(), 3, 5, "");
             dialog.addNumericField("Colocalisation Factor:", coFactor, 3, 5, "");
             dialog.addCheckbox("Include Partial Detections", partialDetect);
             dialog.showDialog();
@@ -179,7 +178,7 @@ public class Co_Localise implements PlugIn {
             count = 0;
 //            tails = 0;
             sepsum = 0.0;
-            ParticleArray curves = analyser.findParticles(coFactor, false, i, i);
+            ParticleArray curves = analyser.findParticles(coFactor, false, i, i, UserVariables.getCurveFitTol());
             FloatProcessor ch1proc = new FloatProcessor(width, height);
             FloatProcessor ch2proc = new FloatProcessor(width, height);
             ArrayList detections = curves.getLevel(0);

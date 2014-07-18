@@ -109,7 +109,7 @@ public class SuperResAnalyser extends Co_Localise {
         FloatProcessor ch1proc = new FloatProcessor(width, height);
         for (int i = 0; i < stack.getSize(); i++) {
             dialog.updateProgress(i, stack.getSize());
-            ParticleArray curves = analyser.findParticles(coFactor, false, i, i);
+            ParticleArray curves = analyser.findParticles(coFactor, false, i, i, UserVariables.getCurveFitTol());
             //ImagePlus temp = new ImagePlus("", ch1proc);
             //temp.show();
             //temp.setDisplayRange(0.0, 255.0);

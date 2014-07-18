@@ -147,7 +147,7 @@ public class Timelapse_Analysis implements PlugIn {
             calcParticleRadius(UserVariables.getSpatialRes());
             int i, count;
             int width = stack.getWidth(), height = stack.getHeight();
-            findParticles(1.0, true, 0, stack.getSize() - 1);
+            findParticles(1.0, true, 0, stack.getSize() - 1, UserVariables.getCurveFitTol());
 
             TextWindow results = new TextWindow(title + " Results", "X\tY\tFrame\tChannel 1 ("
                     + UserVariables.channels[UserVariables.getC1Index()]
@@ -245,7 +245,7 @@ public class Timelapse_Analysis implements PlugIn {
         return fp;
     }
 
-    public ParticleArray findParticles(double searchScale, boolean update, int startSlice, int endSlice) {
+    public ParticleArray findParticles(double searchScale, boolean update, int startSlice, int endSlice, double fitTol) {
         if (stack == null) {
             return null;
         }
@@ -284,31 +284,35 @@ public class Timelapse_Analysis implements PlugIn {
             double c1Threshold = Utils.getPercentileThresh(chan1Proc, UserVariables.getChan1MaxThresh());
             ByteProcessor thisC1Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, FOREGROUND, chan1Proc, c1Threshold, true);
 //            maxima.addSlice(thisC1Max);
-            double c2Threshold = Utils.getPercentileThresh(chan2Proc, UserVariables.getChan1MaxThresh());
-            ByteProcessor C2Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, FOREGROUND, chan2Proc, c2Threshold, true);
+            double c2Threshold = Utils.getPercentileThresh(chan2Proc, UserVariables.getChan2MaxThresh());
             for (c1X = 0; c1X < width; c1X++) {
                 for (c1Y = 0; c1Y < height; c1Y++) {
                     if (thisC1Max.getPixel(c1X, c1Y) == FOREGROUND) {
                         IsoGaussian c2Gaussian = null;
+                        c2Points = Utils.searchNeighbourhood(c1X, c1Y,
+                                (int) Math.round(fitRad * searchScale),
+                                (int) Math.round(c2Threshold),
+                                (ImageProcessor) chan2Proc);
                         /*
                          * Search for local maxima in green image within
                          * <code>xyPartRad</code> pixels of maxima in red image:
                          */
                         Utils.extractValues(xCoords, yCoords, pixValues, c1X, c1Y, chan1Proc);
-                        MultiGaussFitter fitter = new MultiGaussFitter(UserVariables.getnMax(), fitRad, pSize);
-                        fitter.fit(pixValues, xySigEst);
-                        ArrayList<IsoGaussian> c1Fits = fitter.getFits(spatialRes, c1X - fitRad, c1Y - fitRad, c1Threshold, UserVariables.getCurveFitTol());
-                        c2Points = Utils.searchNeighbourhood(c1X, c1Y, (int) Math.round(xyPartRad * searchScale), FOREGROUND,
-                                C2Max);
+                        MultiGaussFitter c1Fitter = new MultiGaussFitter(UserVariables.getnMax(), fitRad, pSize);
+                        c1Fitter.fit(pixValues, xySigEst);
+                        ArrayList<IsoGaussian> c1Fits = c1Fitter.getFits(spatialRes, c1X - fitRad, c1Y - fitRad, c1Threshold, fitTol);
+
                         if (c2Points != null) {
                             Utils.extractValues(xCoords, yCoords, pixValues,
                                     c2Points[0][0], c2Points[0][1], chan2Proc);
-                            IsoGaussianFitter c2GF = new IsoGaussianFitter(xCoords, yCoords, pixValues);
-                            c2GF.doFit(xySigEst);
-                            c2Gaussian = new IsoGaussian((c2GF.getX0() + c2Points[0][0] - xyPartRad) * spatialRes,
-                                    (c2GF.getY0() + c2Points[0][1] - xyPartRad) * spatialRes, c2GF.getMag(),
-                                    c2GF.getXsig(), c2GF.getYsig(), c2GF.getRSquared());
+                            MultiGaussFitter c2Fitter = new MultiGaussFitter(1, fitRad, pSize);
+                            c2Fitter.fit(pixValues, xySigEst);
+                            ArrayList<IsoGaussian> c2Fits = c2Fitter.getFits(spatialRes, c2Points[0][0] - fitRad * searchScale, c2Points[0][1] - fitRad * searchScale, c2Threshold, UserVariables.getCurveFitTol());
+                            if (c2Fits != null && c2Fits.size() > 0) {
+                                c2Gaussian = c2Fits.get(0);
+                            }
                         }
+
                         /*
                          * A particle has been isolated - trajectories need to
                          * be updated:
@@ -323,6 +327,7 @@ public class Timelapse_Analysis implements PlugIn {
                     }
                 }
             }
+
 //            detect_output.addSlice(oslice);
 //            input_output.addSlice(chan1Proc.duplicate());
         }
@@ -702,7 +707,7 @@ public class Timelapse_Analysis implements PlugIn {
     }
 
     void markParticle(ImageProcessor processor, int x, int y, int radius, boolean string, String label) {
-            processor.drawRect(x, y, 2 * radius + 1, 2 * radius + 1);
+        processor.drawRect(x, y, 2 * radius + 1, 2 * radius + 1);
 //        processor.drawOval(x, y, 2 * radius, 2 * radius);
         if (string) {
             processor.drawString(label, x, y);

@@ -520,7 +520,7 @@ public class UserInterface extends javax.swing.JDialog {
 
     public void viewDetections() {
         analyser.calcParticleRadius(UserVariables.getSpatialRes());
-        ParticleArray detections = analyser.findParticles(1.0, false, previewScrollBar.getValue()-1, previewScrollBar.getValue()-1);
+        ParticleArray detections = analyser.findParticles(1.0, false, previewScrollBar.getValue()-1, previewScrollBar.getValue()-1, 0.0);
         ImageProcessor output;
         int slice = previewScrollBar.getValue();
         ImageStack stack = analyser.getStack();
