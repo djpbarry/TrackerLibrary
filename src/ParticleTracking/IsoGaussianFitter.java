@@ -1,8 +1,7 @@
 package ParticleTracking;
 
 /**
- * 2D Gaussian Curve Fitter based on ImageJ's
- * <code>CurveFitter</code>.
+ * 2D Gaussian Curve Fitter based on ImageJ's <code>CurveFitter</code>.
  *
  * TODO Compare with Schleich et al. background level for all fits
  *
@@ -80,7 +79,6 @@ public class IsoGaussianFitter {
 //        }
 //        System.out.println("Analysis Time: " + (System.currentTimeMillis() - startTime) + " ms");
 //    }
-
     public IsoGaussianFitter() {
     }
 
@@ -122,7 +120,9 @@ public class IsoGaussianFitter {
         boolean done = false;
         double[] center = new double[numParams];  // mean of simplex vertices
         while (!done) {
-            //System.out.println("min: " + simp[best][0] + " max: " + simp[best][1]                    + " x: " + simp[best][2] + " y: " + simp[best][3] + " sigma: "                    + simp[best][4]);
+//            System.out.println("x1= " + simp[best][0] + "; s1= " + simp[best][1]
+//                    + "; x2= " + simp[best][2] + "; s2= " + simp[best][3] + "; y1= "
+//                    + simp[best][4] + "; s3= " + simp[best][5] + "; A= " + simp[best][6] + ";");
             numIter++;
             for (int i = 0; i < numParams; i++) {
                 center[i] = 0.0;
@@ -214,24 +214,18 @@ public class IsoGaussianFitter {
 
         double firstx = xData[0];
         double firsty = yData[0];
-        double firstz =
-                zData[0];
+        double firstz = zData[0];
         double lastx = xData[xData.length - 1];
-        double lasty =
-                yData[yData.length - 1];
+        double lasty = yData[yData.length - 1];
         double xmean = (firstx + lastx) / 2.0;
         double ymean = (firsty + lasty) / 2.0;
-        double minz = firstz, maxz =
-                firstz;
+        double minz = firstz, maxz = firstz;
         for (int x = 1; x < xData.length; x++) {
-            for (int y = 1; y
-                    < yData.length; y++) {
+            for (int y = 1; y < yData.length; y++) {
                 if (zData[x + xData.length * y] > maxz) {
-                    maxz =
-                            zData[x + xData.length * y];
+                    maxz = zData[x + xData.length * y];
                 }
-                if (zData[x + xData.length * y]
-                        < minz) {
+                if (zData[x + xData.length * y] < minz) {
                     minz = zData[x + xData.length * y];
                 }
             }
