@@ -45,33 +45,7 @@ public class TailFitter extends IsoGaussianFitter {
         }
         TailFitter tf = new TailFitter(xVals, yVals, zVals);
         tf.doFit(1.06);
-        double params[] = tf.getParams();
-
-        double x1 = params[0];
-        double x12=x1*x1;
-        double s1 = params[1];
-        double s12 = s1 * s1;
-        double x2 = params[2];
-        double x22=x2*x2;
-        double s2 = params[3];
-        double s22 = s2 * s2;
-        double yCentre = params[4];
-
-        double c = 2.0 * s12 * s22 * (Math.log(s2) - Math.log(s1));
-        double d = c + 2.0 * (s12 * x22 - s22 * x12);
-        double b = 2.0 * (s22 * x1 - s12 * x2);
-        double a = s12 - s22;
-
-        double root1 = (-b + Math.sqrt(b * b - 4.0 * a * d)) / (2.0 * a);
-        double root2 = (-b - Math.sqrt(b * b - 4.0 * a * d)) / (2.0 * a);
-        double xCentre;
-        if (root1 < 0.0) {
-            xCentre = root2;
-        } else {
-            xCentre = root1;
-        }
-
-        System.out.println("x0: " + xCentre + " y0: " + yCentre);
+        tf.findPeak();
 
         System.exit(0);
     }
@@ -130,5 +104,35 @@ public class TailFitter extends IsoGaussianFitter {
         double sqrt2 = Math.pow(2.0, 0.5);
 
         return p[6] + (Erf.erf(z / sqrt2) - Erf.erf(w / sqrt2)) * Math.exp(-0.5 * v);
+    }
+
+    public void findPeak() {
+        double params[] = getParams();
+
+        double x1 = params[0];
+        double x12 = x1 * x1;
+        double s1 = params[1];
+        double s12 = s1 * s1;
+        double x2 = params[2];
+        double x22 = x2 * x2;
+        double s2 = params[3];
+        double s22 = s2 * s2;
+        double yCentre = params[4];
+
+        double c = 2.0 * s12 * s22 * (Math.log(s2) - Math.log(s1));
+        double d = c + s12 * x22 - s22 * x12;
+        double b = 2.0 * (s22 * x1 - s12 * x2);
+        double a = s12 - s22;
+
+        double root1 = (-b + Math.sqrt(b * b - 4.0 * a * d)) / (2.0 * a);
+        double root2 = (-b - Math.sqrt(b * b - 4.0 * a * d)) / (2.0 * a);
+        double xCentre;
+        if (root1 < 0.0) {
+            xCentre = root2;
+        } else {
+            xCentre = root1;
+        }
+
+        System.out.println("x0: " + xCentre + " y0: " + yCentre);
     }
 }
