@@ -28,6 +28,9 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Toolkit;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Random;
@@ -221,6 +224,7 @@ public class Timelapse_Analysis implements PlugIn {
                 IJ.saveAs((new ImagePlus("", maps)), "TIF", parentDir + "/trajectories.tif");
             }
         }
+        printParams(parentDir);
     }
 
     /**
@@ -849,5 +853,34 @@ public class Timelapse_Analysis implements PlugIn {
             }
         }
         return coeffs.getPixelValue(0, 0) + coeffs.getPixelValue(0, 1) * x + coeffs.getPixelValue(0, 2) * y + sum;
+    }
+
+    void printParams(String dir) {
+        File paramFile;
+        PrintWriter paramStream;
+        try {
+            paramFile = new File(dir + delimiter + "params.csv");
+            paramStream = new PrintWriter(new FileOutputStream(paramFile));
+        } catch (FileNotFoundException e) {
+            System.out.println("Error: Failed to create parameter file.\n");
+            System.out.println(e.toString());
+            return;
+        }
+        paramStream.println(title);
+        paramStream.println(Utilities.getDate("dd/MM/yyyy HH:mm:ss"));
+        paramStream.println();
+        paramStream.println(UserInterface.getChannel1LabelText() + "," + UserVariables.getC1Index());
+        paramStream.println(UserInterface.getChannel2LabelText() + "," + UserVariables.getC2Index());
+        paramStream.println(UserInterface.getSpatResLabelText() + "," + UserVariables.getSpatialRes());
+        paramStream.println(UserInterface.getFpsLabelText() + "," + UserVariables.getTimeRes());
+        paramStream.println(UserInterface.getMinTrajLengthLabelText() + "," + UserVariables.getMinTrajLength());
+        paramStream.println(UserInterface.getMaxLinkDistLabelText() + "," + UserVariables.getMinTrajLength());
+        paramStream.println(UserInterface.getChan1MaxThreshLabelText() + "," + UserVariables.getChan1MaxThresh());
+        paramStream.println(UserInterface.getChan2MaxThreshLabelText() + "," + UserVariables.getChan2MaxThresh());
+        paramStream.println(UserInterface.getCurveFitTolLabelText() + "," + UserVariables.getCurveFitTol());
+        paramStream.println(UserInterface.getnMaxLabelText() + "," + UserVariables.getnMax());
+        paramStream.println(UserInterface.getColocalToggleText() + "," + UserVariables.isColocal());
+        paramStream.println(UserInterface.getPreprocessToggleText() + "," + UserVariables.isPreProcess());
+        paramStream.close();
     }
 }

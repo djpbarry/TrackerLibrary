@@ -29,26 +29,26 @@ public class TailFitter extends IsoGaussianFitter {
 
     private static double spatialRes = 0.133333;
 
-    public static void main(String args[]) {
-        ImageProcessor ip = (new TextReader()).open();
-        int width = ip.getWidth();
-        int height = ip.getHeight();
-        double xVals[] = new double[width];
-        double yVals[] = new double[height];
-        double zVals[][] = new double[width][height];
-        for (int y = 0; y < height; y++) {
-            yVals[y] = y * spatialRes;
-            for (int x = 0; x < width; x++) {
-                xVals[x] = x * spatialRes;
-                zVals[x][y] = ip.getPixelValue(x, y);
-            }
-        }
-        TailFitter tf = new TailFitter(xVals, yVals, zVals);
-        tf.doFit(1.06);
-        tf.findPeak();
-
-        System.exit(0);
-    }
+//    public static void main(String args[]) {
+//        ImageProcessor ip = (new TextReader()).open();
+//        int width = ip.getWidth();
+//        int height = ip.getHeight();
+//        double xVals[] = new double[width];
+//        double yVals[] = new double[height];
+//        double zVals[][] = new double[width][height];
+//        for (int y = 0; y < height; y++) {
+//            yVals[y] = y * spatialRes;
+//            for (int x = 0; x < width; x++) {
+//                xVals[x] = x * spatialRes;
+//                zVals[x][y] = ip.getPixelValue(x, y);
+//            }
+//        }
+//        TailFitter tf = new TailFitter(xVals, yVals, zVals);
+//        tf.doFit(1.06);
+//        tf.findPeak();
+//
+//        System.exit(0);
+//    }
 
     public TailFitter(double[] xVals, double[] yVals, double[][] zVals) {
         super();

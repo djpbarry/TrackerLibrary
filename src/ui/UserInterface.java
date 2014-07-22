@@ -22,6 +22,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
 import javax.swing.DefaultBoundedRangeModel;
+import javax.swing.JLabel;
 
 /**
  *
@@ -33,7 +34,19 @@ public class UserInterface extends javax.swing.JDialog {
     private final ImagePlus imp;
     private final String title;
     private boolean wasOKed = false;
-
+    private static final String channel1LabelText = "Channel 1:";
+    private static final String channel2LabelText = "Channel 2:";
+    private static final String spatResLabelText = "Spatial resolution ("+IJ.micronSymbol+"m/pixel):";
+    private static final String fpsLabelText = "Frames per second:";
+    private static final String minTrajLengthLabelText = "Minimum trajectory length (s):";
+    private static final String maxLinkDistLabelText = "Maximum linking distance:";
+    private static final String chan1MaxThreshLabelText = "Minimum peak size (C1):";
+    private static final String chan2MaxThreshLabelText = "Minimum peak size (C2):";
+    private static final String curveFitTolLabelText = "Curve fit tolerance:";
+    private static final String nMaxLabelText = "Nmax:";
+    private static final String colocalToggleText = "Co-Localised Only";
+    private static final String preprocessToggleText = "Pre-Process Images";
+    
     /**
      * Creates new form UserInterface
      */
@@ -108,7 +121,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.insets = new java.awt.Insets(10, 10, 0, 10);
         jPanel1.add(jLabel1, gridBagConstraints);
 
-        c1Label.setText("Channel 1:");
+        c1Label.setText(channel1LabelText);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 1;
@@ -119,7 +132,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
         jPanel1.add(c1Label, gridBagConstraints);
 
-        c2Label.setText("Channel 2:");
+        c2Label.setText(channel2LabelText);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 2;
@@ -154,7 +167,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 10);
         jPanel1.add(c2ComboBox, gridBagConstraints);
 
-        spatResLabel.setText("Spatial resolution ("+IJ.micronSymbol+"m/pixel):");
+        spatResLabel.setText(spatResLabelText);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 3;
@@ -165,7 +178,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
         jPanel1.add(spatResLabel, gridBagConstraints);
 
-        timeResLabel.setText("Frames per second:");
+        timeResLabel.setText(fpsLabelText);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 4;
@@ -176,7 +189,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
         jPanel1.add(timeResLabel, gridBagConstraints);
 
-        minTrajLengthLabel.setText("Minimum trajectory length (s):");
+        minTrajLengthLabel.setText(minTrajLengthLabelText);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 5;
@@ -187,7 +200,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
         jPanel1.add(minTrajLengthLabel, gridBagConstraints);
 
-        maxTrajStepLabel.setText("Maximum linking distance:");
+        maxTrajStepLabel.setText(maxLinkDistLabelText);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 6;
@@ -198,7 +211,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
         jPanel1.add(maxTrajStepLabel, gridBagConstraints);
 
-        chan1MaxThreshLabel.setText("Minimum peak size (C1):");
+        chan1MaxThreshLabel.setText(chan1MaxThreshLabelText);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 7;
@@ -209,7 +222,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
         jPanel1.add(chan1MaxThreshLabel, gridBagConstraints);
 
-        chan2MaxThreshLabel.setText("Minimum peak size (C2):");
+        chan2MaxThreshLabel.setText(chan2MaxThreshLabelText);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 8;
@@ -286,7 +299,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 10);
         jPanel1.add(chan2MaxThreshTextField, gridBagConstraints);
 
-        colocaliseToggleButton.setText("Co-Localised Only");
+        colocaliseToggleButton.setText(colocalToggleText);
         colocaliseToggleButton.setSelected(UserVariables.isColocal());
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
@@ -298,7 +311,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 10);
         jPanel1.add(colocaliseToggleButton, gridBagConstraints);
 
-        preprocessToggleButton.setText("Pre-Process Images");
+        preprocessToggleButton.setText(preprocessToggleText);
         preprocessToggleButton.setSelected(UserVariables.isPreProcess());
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
@@ -310,7 +323,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.insets = new java.awt.Insets(0, 10, 10, 10);
         jPanel1.add(preprocessToggleButton, gridBagConstraints);
 
-        curveFitTolLabel.setText("Curve fit tolerance:");
+        curveFitTolLabel.setText(curveFitTolLabelText);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 9;
@@ -343,7 +356,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 10);
         jPanel1.add(nMaxTextField, gridBagConstraints);
 
-        nMaxLabel.setText("Nmax:");
+        nMaxLabel.setText(nMaxLabelText);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 10;
@@ -588,6 +601,54 @@ public class UserInterface extends javax.swing.JDialog {
 
     public boolean isWasOKed() {
         return wasOKed;
+    }
+
+    public static String getChannel1LabelText() {
+        return channel1LabelText;
+    }
+
+    public static String getChannel2LabelText() {
+        return channel2LabelText;
+    }
+
+    public static String getSpatResLabelText() {
+        return spatResLabelText;
+    }
+
+    public static String getFpsLabelText() {
+        return fpsLabelText;
+    }
+
+    public static String getMinTrajLengthLabelText() {
+        return minTrajLengthLabelText;
+    }
+
+    public static String getMaxLinkDistLabelText() {
+        return maxLinkDistLabelText;
+    }
+
+    public static String getChan1MaxThreshLabelText() {
+        return chan1MaxThreshLabelText;
+    }
+
+    public static String getChan2MaxThreshLabelText() {
+        return chan2MaxThreshLabelText;
+    }
+
+    public static String getCurveFitTolLabelText() {
+        return curveFitTolLabelText;
+    }
+
+    public static String getnMaxLabelText() {
+        return nMaxLabelText;
+    }
+
+    public static String getColocalToggleText() {
+        return colocalToggleText;
+    }
+
+    public static String getPreprocessToggleText() {
+        return preprocessToggleText;
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

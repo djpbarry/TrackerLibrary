@@ -54,7 +54,9 @@
         </Component>
         <Component class="javax.swing.JLabel" name="c1Label">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Channel 1:"/>
+            <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+              <Connection code="channel1LabelText" type="code"/>
+            </Property>
           </Properties>
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
@@ -64,7 +66,9 @@
         </Component>
         <Component class="javax.swing.JLabel" name="c2Label">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Channel 2:"/>
+            <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+              <Connection code="channel2LabelText" type="code"/>
+            </Property>
           </Properties>
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
@@ -105,7 +109,7 @@
         <Component class="javax.swing.JLabel" name="spatResLabel">
           <Properties>
             <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
-              <Connection code="&quot;Spatial resolution (&quot;+IJ.micronSymbol+&quot;m/pixel):&quot;" type="code"/>
+              <Connection code="spatResLabelText" type="code"/>
             </Property>
           </Properties>
           <Constraints>
@@ -116,7 +120,9 @@
         </Component>
         <Component class="javax.swing.JLabel" name="timeResLabel">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Frames per second:"/>
+            <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+              <Connection code="fpsLabelText" type="code"/>
+            </Property>
           </Properties>
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
@@ -126,7 +132,9 @@
         </Component>
         <Component class="javax.swing.JLabel" name="minTrajLengthLabel">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Minimum trajectory length (s):"/>
+            <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+              <Connection code="minTrajLengthLabelText" type="code"/>
+            </Property>
           </Properties>
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
@@ -136,7 +144,9 @@
         </Component>
         <Component class="javax.swing.JLabel" name="maxTrajStepLabel">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Maximum linking distance:"/>
+            <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+              <Connection code="maxLinkDistLabelText" type="code"/>
+            </Property>
           </Properties>
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
@@ -146,7 +156,9 @@
         </Component>
         <Component class="javax.swing.JLabel" name="chan1MaxThreshLabel">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Minimum peak size (C1):"/>
+            <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+              <Connection code="chan1MaxThreshLabelText" type="code"/>
+            </Property>
           </Properties>
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
@@ -156,7 +168,9 @@
         </Component>
         <Component class="javax.swing.JLabel" name="chan2MaxThreshLabel">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Minimum peak size (C2):"/>
+            <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+              <Connection code="chan2MaxThreshLabelText" type="code"/>
+            </Property>
           </Properties>
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
@@ -238,7 +252,9 @@
         </Component>
         <Component class="javax.swing.JToggleButton" name="colocaliseToggleButton">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Co-Localised Only"/>
+            <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+              <Connection code="colocalToggleText" type="code"/>
+            </Property>
           </Properties>
           <AuxValues>
             <AuxValue name="JavaCodeGenerator_InitCodePost" type="java.lang.String" value="colocaliseToggleButton.setSelected(UserVariables.isColocal());"/>
@@ -251,7 +267,9 @@
         </Component>
         <Component class="javax.swing.JToggleButton" name="preprocessToggleButton">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Pre-Process Images"/>
+            <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+              <Connection code="preprocessToggleText" type="code"/>
+            </Property>
           </Properties>
           <AuxValues>
             <AuxValue name="JavaCodeGenerator_InitCodePost" type="java.lang.String" value="preprocessToggleButton.setSelected(UserVariables.isPreProcess());"/>
@@ -264,7 +282,9 @@
         </Component>
         <Component class="javax.swing.JLabel" name="curveFitTolLabel">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Curve fit tolerance:"/>
+            <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+              <Connection code="curveFitTolLabelText" type="code"/>
+            </Property>
           </Properties>
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
@@ -298,7 +318,9 @@
         </Component>
         <Component class="javax.swing.JLabel" name="nMaxLabel">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Nmax:"/>
+            <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+              <Connection code="nMaxLabelText" type="code"/>
+            </Property>
           </Properties>
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
