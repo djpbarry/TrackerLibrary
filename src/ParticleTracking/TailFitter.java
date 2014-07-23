@@ -17,8 +17,15 @@
  */
 package ParticleTracking;
 
-import ij.plugin.TextReader;
+import UtilClasses.Utilities;
+import ij.IJ;
+import ij.ImagePlus;
+import ij.ImageStack;
+import ij.plugin.ZProjector;
 import ij.process.ImageProcessor;
+import ij.process.ImageStatistics;
+import java.io.File;
+import java.util.Random;
 import org.apache.commons.math3.special.Erf;
 
 /**
@@ -29,26 +36,49 @@ public class TailFitter extends IsoGaussianFitter {
 
     private static double spatialRes = 0.133333;
 
-//    public static void main(String args[]) {
-//        ImageProcessor ip = (new TextReader()).open();
-//        int width = ip.getWidth();
-//        int height = ip.getHeight();
-//        double xVals[] = new double[width];
-//        double yVals[] = new double[height];
-//        double zVals[][] = new double[width][height];
-//        for (int y = 0; y < height; y++) {
-//            yVals[y] = y * spatialRes;
-//            for (int x = 0; x < width; x++) {
-//                xVals[x] = x * spatialRes;
-//                zVals[x][y] = ip.getPixelValue(x, y);
-//            }
-//        }
-//        TailFitter tf = new TailFitter(xVals, yVals, zVals);
-//        tf.doFit(1.06);
-//        tf.findPeak();
-//
-//        System.exit(0);
-//    }
+    public static void main(String args[]) {
+        Random r = new Random();
+        File directory = Utilities.getFolder(null, "Select input folder");
+        File files[] = directory.listFiles();
+        int dirSize = files.length;
+        ImagePlus temp = IJ.openImage(files[0].getAbsolutePath());
+        ImageProcessor tempIP = temp.getProcessor();
+        int stackwidth = tempIP.getWidth();
+        int stackheight = tempIP.getHeight();
+        temp.close();
+        for (int i = 0; i < 100; i++) {
+            ImageStack stack = new ImageStack(stackwidth, stackheight);
+            for (int j = 0; j < dirSize; j++) {
+                int fileindex = r.nextInt(dirSize);
+                ImagePlus imp = IJ.openImage(files[fileindex].getAbsolutePath());
+                stack.addSlice(imp.getProcessor().duplicate());
+                imp.close();
+            }
+            ZProjector zproj = new ZProjector(new ImagePlus("", stack));
+            zproj.setMethod(ZProjector.AVG_METHOD);
+            zproj.doProjection();
+            ImageProcessor stackAverage = zproj.getProjection().getProcessor();
+            ImageStatistics stats = stackAverage.getStatistics();
+            double max = stats.max;
+            stackAverage.multiply(1.0 / max);
+            int width = stackAverage.getWidth();
+            int height = stackAverage.getHeight();
+            double xVals[] = new double[width];
+            double yVals[] = new double[height];
+            double zVals[][] = new double[width][height];
+            for (int y = 0; y < height; y++) {
+                yVals[y] = y * spatialRes;
+                for (int x = 0; x < width; x++) {
+                    xVals[x] = x * spatialRes;
+                    zVals[x][y] = stackAverage.getPixelValue(x, y);
+                }
+            }
+            TailFitter tf = new TailFitter(xVals, yVals, zVals);
+            tf.doFit(1.06);
+            tf.findPeak();
+        }
+        System.exit(0);
+    }
 
     public TailFitter(double[] xVals, double[] yVals, double[][] zVals) {
         super();
@@ -65,7 +95,9 @@ public class TailFitter extends IsoGaussianFitter {
             numPoints = xVals.length * yVals.length;
             for (int i = xVals.length - 1; i >= 0; i--) {
                 xData[i] -= xData[0];
-                yData[i] -= yData[0];
+            }
+            for (int j = yVals.length - 1; j >= 0; j--) {
+                yData[j] -= yData[0];
             }
         } else {
             numPoints = 0;
@@ -133,6 +165,6 @@ public class TailFitter extends IsoGaussianFitter {
             xCentre = root1;
         }
 
-        System.out.println("x0: " + xCentre + " y0: " + yCentre);
+        System.out.println("x0: " + xCentre + " y0: " + yCentre + " R^2: " + params[numParams]);
     }
 }
