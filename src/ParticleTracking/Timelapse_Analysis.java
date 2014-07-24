@@ -68,10 +68,10 @@ public class Timelapse_Analysis implements PlugIn {
     String title = "Particle Tracker";
     protected static boolean msdPlot = false, intensPlot = false, trajPlot = false, prevRes = true;
     protected boolean monoChrome;
-    private final double TRACK_LENGTH = 4.0;
+    private final double TRACK_LENGTH = 5.0;
     private final double TRACK_WIDTH = 4.0;
     private final float TRACK_OFFSET = 1.0f;
-    private static File directory = new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences\\TestSequence40");
+    private static File directory = new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences\\TestSequence40"), calDir;
     private final String delimiter = GenUtils.getDelimiter();
     String parentDir;
 
@@ -82,7 +82,6 @@ public class Timelapse_Analysis implements PlugIn {
 //        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
 //        instance.run(null);
 //    }
-
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep, double chan1MaxThresh, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
         UserVariables.setSpatialRes(spatialRes);
         UserVariables.setTimeRes(timeRes);
@@ -140,6 +139,7 @@ public class Timelapse_Analysis implements PlugIn {
     public void analyse() {
         directory = Utilities.getFolder(directory, "Specify directory for output files...");
         parentDir = GenUtils.openResultsDirectory(directory + delimiter + title, delimiter);
+        calDir = Utilities.getFolder(directory, "Specify directory containing calibrations...");
         if (monoChrome) {
             UserVariables.setColocal(false);
         }
@@ -784,9 +784,9 @@ public class Timelapse_Analysis implements PlugIn {
      */
     ImageStack extractSignalValues(ParticleTrajectory ptraj, int signalLength, int signalWidth, float offset) {
         TextReader reader = new TextReader();
-        ImageProcessor xcoeffs = reader.open("c:/users/barry05/xcoeffs.txt");
-        ImageProcessor ycoeffs = reader.open("c:/users/barry05/ycoeffs.txt");
-        ImageProcessor coords = reader.open("c:/users/barry05/coords.txt");
+        ImageProcessor xcoeffs = reader.open(calDir + delimiter + "xcoeffs.txt");
+        ImageProcessor ycoeffs = reader.open(calDir + delimiter + "ycoeffs.txt");
+        ImageProcessor coords = reader.open(calDir + delimiter + "coords.txt");
         Particle sigStartP = ptraj.getEnd();
         int size = Math.min(signalLength, ptraj.getSize());
 //        int size = length;
@@ -809,7 +809,8 @@ public class Timelapse_Analysis implements PlugIn {
 //                    displacement += Utils.calcDistance(xg, yg, current.getC1Gaussian().getX(), current.getC1Gaussian().getY());
 //                }
             }
-            extendSignalArea(xpoints, ypoints, offset, size + 1);
+//            extendSignalArea(xpoints, ypoints, offset, size + 1, (int) Math.round(size * .1));
+            extendSignalArea(xpoints, ypoints, offset, size + 1, 1);
 //            System.out.println("Displacement: "+displacement);
 //            if (displacement > size * 0.1) {
             PolygonRoi proi = new PolygonRoi(xpoints, ypoints, size + 1, Roi.POLYLINE);
@@ -834,10 +835,11 @@ public class Timelapse_Analysis implements PlugIn {
 //            temps[i].multiply(1.0 / max);
             sigStartP = sigStartP.getLink();
         }
-        ImageStack output = new ImageStack(signalLength, signalWidth);
+        int outputWidth = (int) Math.round(signalLength + offset);
+        ImageStack output = new ImageStack(outputWidth, signalWidth);
         for (int j = 0; j < iterations; j++) {
-            if (temps[j] != null && temps[j].getWidth() >= signalLength) {
-                FloatProcessor slice = new FloatProcessor(signalLength, signalWidth);
+            if (temps[j] != null && temps[j].getWidth() >= outputWidth) {
+                FloatProcessor slice = new FloatProcessor(outputWidth, signalWidth);
                 FloatBlitter blitter = new FloatBlitter(slice);
                 blitter.copyBits(temps[j], 0, 0, Blitter.COPY);
                 output.addSlice(slice);
@@ -846,10 +848,13 @@ public class Timelapse_Analysis implements PlugIn {
         return output;
     }
 
-    void extendSignalArea(float[] xpoints, float[] ypoints, float dist, int n) {
-        float xdiff = xpoints[1] - xpoints[2];
-        float ydiff = ypoints[1] - ypoints[2];
-        float ratio = ydiff / xdiff;
+    void extendSignalArea(float[] xpoints, float[] ypoints, float dist, int n, int window) {
+        float xdiff = 0.0f, ydiff = 0.0f;
+        for (int i = 1; i <= window; i++) {
+            xdiff += xpoints[i] - xpoints[i + 1];
+            ydiff += ypoints[i] - ypoints[i + 1];
+        }
+        float ratio = Math.abs(ydiff / xdiff);
         float newX = dist / (float) Math.sqrt(1.0f + (float) Math.pow(ratio, 2.0f));
         float newY = newX * ratio;
         if (xdiff < 0.0) {

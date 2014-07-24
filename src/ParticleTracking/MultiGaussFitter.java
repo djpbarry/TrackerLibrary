@@ -18,7 +18,7 @@ public class MultiGaussFitter {
     int N_MAX = 1, FIT_RADIUS = 3, FIT_SIZE = 7;
     int STEP_TOL = 2000, ITERATIONS = 100;
     double XY_STEP_SIZE = 0.1, MAG_STEP_SIZE = 10.0, BG_STEP_SIZE = 1.0f;
-    private int best;
+    protected int best;
     double xe[][];
     double ye[][];
     double mag[][];
@@ -32,7 +32,7 @@ public class MultiGaussFitter {
         this.FIT_SIZE = FIT_SIZE;
     }
 
-    void fit(double[][] A, double sigEst) {
+    public void fit(double[][] A, double sigEst) {
         this.sigEst = sigEst;
         _2sig2 = 2.0f * sigEst * sigEst;
         xyStepSize = XY_STEP_SIZE / STEP_TOL;

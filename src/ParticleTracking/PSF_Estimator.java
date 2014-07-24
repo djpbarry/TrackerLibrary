@@ -4,13 +4,19 @@
  */
 package ParticleTracking;
 
+import IAClasses.IsoGaussian;
+import IAClasses.ProgressDialog;
 import IAClasses.Utils;
+import static ParticleTracking.Timelapse_Analysis.FOREGROUND;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
-import ij.process.*;
+import ij.process.ByteProcessor;
+import ij.process.FloatProcessor;
+import ij.process.TypeConverter;
 import ij.text.TextWindow;
 import java.awt.Toolkit;
+import java.util.ArrayList;
 
 /**
  *
@@ -18,7 +24,6 @@ import java.awt.Toolkit;
  */
 public class PSF_Estimator extends Timelapse_Analysis {
 
-    private double lambda = 488.0d;
     private TextWindow results;
     private String psfTitle = "PSF Estimator v1.0";
 
@@ -30,7 +35,6 @@ public class PSF_Estimator extends Timelapse_Analysis {
 //        if (instance.showDialog()) {
 //            instance.analyse();
 //        }
-//        return;
 //    }
 
     public PSF_Estimator() {
@@ -46,65 +50,24 @@ public class PSF_Estimator extends Timelapse_Analysis {
     public void analyse() {
         stack = imp.getImageStack();
         if (stack != null) {
+            calcParticleRadius(UserVariables.getSpatialRes());
             IJ.register(this.getClass());
-            results = new TextWindow(psfTitle + " Results", "frame\tx\ty\tA\tsigma_x\tsigma_y\tR^2",
+            results = new TextWindow(psfTitle + " Results", "frame\tx (" + IJ.micronSymbol + "m)\ty (" + IJ.micronSymbol + "m)\tA\tsigma (nm)\tR^2",
                     new String(), 1000, 500);
             results.append(imp.getTitle() + "\n\n");
-            findParticles(1.0, true, 0, stack.getSize() - 1, UserVariables.getCurveFitTol());
-            results.setVisible(true);
-        }
-        return;
-    }
-
-    public ParticleArray findParticles(double searchScale, boolean update, int startSlice, int endSlice, double fitTol) {
-        if (stack == null) {
-            return null;
-        }
-        xySigEst = (0.21 * lambda / 1.4) / (UserVariables.getSpatialRes() * 1000.0);
-        xyPartRad = (int) Math.round(2.0 * xySigEst / 0.95);
-        int i, noOfImages = stack.getSize(), width = stack.getWidth(), height = stack.getHeight();
-        byte pix[];
-        int x, y, pSize = 2 * xyPartRad + 1;
-        double[] xCoords = new double[pSize];
-        double[] yCoords = new double[pSize];
-        double[][] pixValues = new double[pSize][pSize];
-        for (i = startSlice; i < noOfImages && i <= endSlice; i++) {
-            IJ.freeMemory();
-            IJ.showStatus("Analysing Frame " + i);
-            IJ.showProgress(i, noOfImages);
-            pix = (byte[]) (new TypeConverter(stack.getProcessor(i + 1).duplicate(), true).convertToByte().getPixels());
-            FloatProcessor floatProc = preProcess(new ByteProcessor(width, height, pix, null));
-            ByteProcessor maxima = Utils.findLocalMaxima(xyPartRad, xyPartRad, FOREGROUND, floatProc, UserVariables.getChan1MaxThresh(), true);
-            for (x = 0; x < width; x++) {
-                for (y = 0; y < height; y++) {
-                    if (maxima.getPixel(x, y) == FOREGROUND) {
-                        /*
-                         * Search for local maxima in green image within
-                         * <code>xyPartRad</code> pixels of maxima in red image:
-                         */
-                        Utils.extractValues(xCoords, yCoords, pixValues, x, y, floatProc);
-                        /*
-                         * Remove adjacent Gaussians
-                         */
-                        NonIsoGaussianFitter fitter = new NonIsoGaussianFitter(xCoords, yCoords, pixValues);
-                        fitter.doFit(xySigEst);
-                        //if (c1GF.getXsig() < (c1SigmaTol * xySigEst)) {
-                        NonIsoGaussian gaussian = new NonIsoGaussian(fitter, UserVariables.getCurveFitTol());
-                        results.append(i + "\t" + x + "\t" + y + "\t"
-                                + numFormat.format(gaussian.getMagnitude())
-                                + "\t" + numFormat.format(gaussian.getxSigma() * UserVariables.getSpatialRes() * 1000.0)
-                                + "\t" + numFormat.format(gaussian.getySigma() * UserVariables.getSpatialRes() * 1000.0)
-                                + "\t" + numFormat.format(fitter.getRSquared()));
-                        /*
-                         * A particle has been isolated - trajectories need to
-                         * be updated:
-                         */
-                        //}
-                    }
+            UserVariables.setnMax(1);
+            ParticleArray particles = findParticles(1.0, true, 0, stack.getSize() - 1, UserVariables.getCurveFitTol());
+            for (int i = 0; i < particles.getDepth(); i++) {
+                ArrayList detections = particles.getLevel(i);
+                for (int j = 0; j < detections.size(); j++) {
+                    IsoGaussian c1 = ((Particle) detections.get(j)).getC1Gaussian();
+                    results.append(String.valueOf(i) + "\t" + String.valueOf(c1.getX() * UserVariables.getSpatialRes())
+                            + "\t" + String.valueOf(c1.getY() * UserVariables.getSpatialRes()) + "\t" + String.valueOf(c1.getMagnitude())
+                            + "\t" + String.valueOf(c1.getXSigma() * UserVariables.getSpatialRes() * 1000.0) + "\t" + String.valueOf(c1.getFit()));
                 }
             }
+            results.setVisible(true);
         }
-        return null;
     }
 
     public boolean showDialog() {
@@ -116,12 +79,61 @@ public class PSF_Estimator extends Timelapse_Analysis {
         GenericDialog gd = new GenericDialog(psfTitle);
         gd.addNumericField("Spatial Resolution", UserVariables.getSpatialRes() * 1000.0, 5, 5, "nm");
         gd.addNumericField("Peak Threshold", UserVariables.getChan1MaxThresh(), 5);
+        gd.addNumericField("Fit Tolerance", UserVariables.getCurveFitTol(), 5);
         gd.showDialog();
         if (gd.wasCanceled()) {
             return false;
         }
         UserVariables.setSpatialRes(gd.getNextNumber() / 1000.0);
         UserVariables.setChan1MaxThresh(gd.getNextNumber());
+        UserVariables.setCurveFitTol(gd.getNextNumber());
         return true;
+    }
+
+    public ParticleArray findParticles(double searchScale, boolean update, int startSlice, int endSlice, double fitTol) {
+        if (stack == null) {
+            return null;
+        }
+        int i, noOfImages = stack.getSize(), width = stack.getWidth(), height = stack.getHeight(),
+                arraySize = endSlice - startSlice + 1;
+        byte c1Pix[];
+        int fitRad = (int) Math.ceil(xyPartRad * 4.0 / 3.0);
+        int c1X, c1Y, pSize = 2 * fitRad + 1;
+        double[] xCoords = new double[pSize];
+        double[] yCoords = new double[pSize];
+        double[][] pixValues = new double[pSize][pSize];
+        double spatialRes = UserVariables.getSpatialRes();
+        ParticleArray particles = new ParticleArray(arraySize);
+        ProgressDialog progress = new ProgressDialog(null, "Finding Particles...", false, true, title);
+        progress.setVisible(true);
+        for (i = startSlice; i < noOfImages && i <= endSlice; i++) {
+            IJ.freeMemory();
+            progress.updateProgress(i - startSlice, arraySize);
+            c1Pix = (byte[]) (new TypeConverter(stack.getProcessor(i + 1).duplicate(), true).convertToByte().getPixels());
+            FloatProcessor chan1Proc = preProcess(new ByteProcessor(width, height, c1Pix, null));
+            double c1Threshold = Utils.getPercentileThresh(chan1Proc, UserVariables.getChan1MaxThresh());
+            ByteProcessor thisC1Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, FOREGROUND, chan1Proc, c1Threshold, true);
+            for (c1X = 0; c1X < width; c1X++) {
+                for (c1Y = 0; c1Y < height; c1Y++) {
+                    if (thisC1Max.getPixel(c1X, c1Y) == FOREGROUND) {
+                        /*
+                         * Search for local maxima in green image within
+                         * <code>xyPartRad</code> pixels of maxima in red image:
+                         */
+                        Utils.extractValues(xCoords, yCoords, pixValues, c1X, c1Y, chan1Proc);
+                        FloatingMultiGaussFitter c1Fitter = new FloatingMultiGaussFitter(UserVariables.getnMax(), fitRad, pSize);
+                        c1Fitter.fit(pixValues, xySigEst);
+                        ArrayList<IsoGaussian> c1Fits = c1Fitter.getFits(spatialRes, c1X - fitRad, c1Y - fitRad, c1Threshold, fitTol);
+                        if (c1Fits != null) {
+                            for (IsoGaussian c1Fit : c1Fits) {
+                                particles.addDetection(i - startSlice, new Particle(i - startSlice, c1Fit, null, null, -1));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        progress.dispose();
+        return particles;
     }
 }
