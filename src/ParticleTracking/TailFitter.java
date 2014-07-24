@@ -36,49 +36,49 @@ public class TailFitter extends IsoGaussianFitter {
 
     private static double spatialRes = 0.133333;
 
-    public static void main(String args[]) {
-        Random r = new Random();
-        File directory = Utilities.getFolder(null, "Select input folder");
-        File files[] = directory.listFiles();
-        int dirSize = files.length;
-        ImagePlus temp = IJ.openImage(files[0].getAbsolutePath());
-        ImageProcessor tempIP = temp.getProcessor();
-        int stackwidth = tempIP.getWidth();
-        int stackheight = tempIP.getHeight();
-        temp.close();
-        for (int i = 0; i < 100; i++) {
-            ImageStack stack = new ImageStack(stackwidth, stackheight);
-            for (int j = 0; j < dirSize; j++) {
-                int fileindex = r.nextInt(dirSize);
-                ImagePlus imp = IJ.openImage(files[fileindex].getAbsolutePath());
-                stack.addSlice(imp.getProcessor().duplicate());
-                imp.close();
-            }
-            ZProjector zproj = new ZProjector(new ImagePlus("", stack));
-            zproj.setMethod(ZProjector.AVG_METHOD);
-            zproj.doProjection();
-            ImageProcessor stackAverage = zproj.getProjection().getProcessor();
-            ImageStatistics stats = stackAverage.getStatistics();
-            double max = stats.max;
-            stackAverage.multiply(1.0 / max);
-            int width = stackAverage.getWidth();
-            int height = stackAverage.getHeight();
-            double xVals[] = new double[width];
-            double yVals[] = new double[height];
-            double zVals[][] = new double[width][height];
-            for (int y = 0; y < height; y++) {
-                yVals[y] = y * spatialRes;
-                for (int x = 0; x < width; x++) {
-                    xVals[x] = x * spatialRes;
-                    zVals[x][y] = stackAverage.getPixelValue(x, y);
-                }
-            }
-            TailFitter tf = new TailFitter(xVals, yVals, zVals);
-            tf.doFit(1.06);
-            tf.findPeak();
-        }
-        System.exit(0);
-    }
+//    public static void main(String args[]) {
+//        Random r = new Random();
+//        File directory = Utilities.getFolder(null, "Select input folder");
+//        File files[] = directory.listFiles();
+//        int dirSize = files.length;
+//        ImagePlus temp = IJ.openImage(files[0].getAbsolutePath());
+//        ImageProcessor tempIP = temp.getProcessor();
+//        int stackwidth = tempIP.getWidth();
+//        int stackheight = tempIP.getHeight();
+//        temp.close();
+//        for (int i = 0; i < 100; i++) {
+//            ImageStack stack = new ImageStack(stackwidth, stackheight);
+//            for (int j = 0; j < dirSize; j++) {
+//                int fileindex = r.nextInt(dirSize);
+//                ImagePlus imp = IJ.openImage(files[fileindex].getAbsolutePath());
+//                stack.addSlice(imp.getProcessor().duplicate());
+//                imp.close();
+//            }
+//            ZProjector zproj = new ZProjector(new ImagePlus("", stack));
+//            zproj.setMethod(ZProjector.AVG_METHOD);
+//            zproj.doProjection();
+//            ImageProcessor stackAverage = zproj.getProjection().getProcessor();
+//            ImageStatistics stats = stackAverage.getStatistics();
+//            double max = stats.max;
+//            stackAverage.multiply(1.0 / max);
+//            int width = stackAverage.getWidth();
+//            int height = stackAverage.getHeight();
+//            double xVals[] = new double[width];
+//            double yVals[] = new double[height];
+//            double zVals[][] = new double[width][height];
+//            for (int y = 0; y < height; y++) {
+//                yVals[y] = y * spatialRes;
+//                for (int x = 0; x < width; x++) {
+//                    xVals[x] = x * spatialRes;
+//                    zVals[x][y] = stackAverage.getPixelValue(x, y);
+//                }
+//            }
+//            TailFitter tf = new TailFitter(xVals, yVals, zVals);
+//            tf.doFit(1.06);
+//            tf.findPeak();
+//        }
+//        System.exit(0);
+//    }
 
     public TailFitter(double[] xVals, double[] yVals, double[][] zVals) {
         super();

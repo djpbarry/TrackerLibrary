@@ -70,7 +70,7 @@ public class Timelapse_Analysis implements PlugIn {
     protected boolean monoChrome;
     private final double TRACK_LENGTH = 4.0;
     private final double TRACK_WIDTH = 4.0;
-//    private final double TRACK_OFFSET = 2.0;
+    private final float TRACK_OFFSET = 1.0f;
     private static File directory = new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences\\TestSequence40");
     private final String delimiter = GenUtils.getDelimiter();
     String parentDir;
@@ -206,9 +206,13 @@ public class Timelapse_Analysis implements PlugIn {
                         if (type == ParticleTrajectory.COLOCAL) {
                             ImageStack signals = extractSignalValues(traj,
                                     (int) Math.round(TRACK_LENGTH / UserVariables.getSpatialRes()),
-                                    (int) Math.round(TRACK_WIDTH / UserVariables.getSpatialRes()));
+                                    (int) Math.round(TRACK_WIDTH / UserVariables.getSpatialRes()), TRACK_OFFSET / ((float) UserVariables.getSpatialRes()));
                             if (signals.getSize() > 0) {
-                                IJ.saveAs((new ImagePlus("", signals)), "TIF", parentDir + "/" + String.valueOf(count));
+                                for (int j = 1; j <= signals.getSize(); j++) {
+                                    IJ.saveAs((new ImagePlus("", signals.getProcessor(j))),
+                                            "TIF", parentDir + "/" + String.valueOf(count)
+                                            + "-" + String.valueOf(j));
+                                }
                             }
                         }
                         count++;
@@ -774,28 +778,28 @@ public class Timelapse_Analysis implements PlugIn {
      * channel coords (assuming virus is in red).
      *
      * @param ptraj
-     * @param length
-     * @param width
+     * @param signalLength
+     * @param signalWidth
      * @return
      */
-    ImageStack extractSignalValues(ParticleTrajectory ptraj, int length, int width) {
+    ImageStack extractSignalValues(ParticleTrajectory ptraj, int signalLength, int signalWidth, float offset) {
         TextReader reader = new TextReader();
         ImageProcessor xcoeffs = reader.open("c:/users/barry05/xcoeffs.txt");
         ImageProcessor ycoeffs = reader.open("c:/users/barry05/ycoeffs.txt");
         ImageProcessor coords = reader.open("c:/users/barry05/coords.txt");
         Particle sigStartP = ptraj.getEnd();
-        int size = Math.min(length, ptraj.getSize());
+        int size = Math.min(signalLength, ptraj.getSize());
 //        int size = length;
         int iterations = 1 + ptraj.getSize() - size;
-        float xpoints[] = new float[size];
-        float ypoints[] = new float[size];
+        float xpoints[] = new float[size + 1];
+        float ypoints[] = new float[size + 1];
         ImageProcessor[] temps = new ImageProcessor[iterations];
 //        int maxlength = -1;
 //        int offset = 1 - (int) Math.round(TRACK_OFFSET * UserVariables.getTimeRes());
         for (int i = 0; i < iterations; i++) {
             Particle current = sigStartP;
 //            double displacement = 0.0;
-            for (int index = 0; index < size; index++) {
+            for (int index = 1; index <= size; index++) {
                 double xg = goshtasbyEval(xcoeffs, coords, current.getC1Gaussian().getX(), current.getC1Gaussian().getY());
                 double yg = goshtasbyEval(ycoeffs, coords, current.getC1Gaussian().getX(), current.getC1Gaussian().getY());
                 xpoints[index] = (float) (xg / UserVariables.getSpatialRes());
@@ -805,9 +809,10 @@ public class Timelapse_Analysis implements PlugIn {
 //                    displacement += Utils.calcDistance(xg, yg, current.getC1Gaussian().getX(), current.getC1Gaussian().getY());
 //                }
             }
+            extendSignalArea(xpoints, ypoints, offset, size + 1);
 //            System.out.println("Displacement: "+displacement);
 //            if (displacement > size * 0.1) {
-            PolygonRoi proi = new PolygonRoi(xpoints, ypoints, size, Roi.POLYLINE);
+            PolygonRoi proi = new PolygonRoi(xpoints, ypoints, size + 1, Roi.POLYLINE);
             Straightener straightener = new Straightener();
             ByteProcessor slice = new ByteProcessor(stack.getWidth(), stack.getHeight(),
                     //                        Utils.getPixels((ColorProcessor) stack.getProcessor(sigStartP.getTimePoint() + offset),
@@ -815,7 +820,10 @@ public class Timelapse_Analysis implements PlugIn {
                             UserVariables.getC2Index()));
             ImagePlus sigImp = new ImagePlus("", slice);
             sigImp.setRoi(proi);
-            temps[i] = straightener.straighten(sigImp, proi, width);
+            if (signalWidth % 2 == 0) {
+                signalWidth++;
+            }
+            temps[i] = straightener.straighten(sigImp, proi, signalWidth);
 //                if (temps[i] != null && temps[i].getWidth() > maxlength) {
 //                    maxlength = temps[i].getWidth();
 //                }
@@ -826,16 +834,34 @@ public class Timelapse_Analysis implements PlugIn {
 //            temps[i].multiply(1.0 / max);
             sigStartP = sigStartP.getLink();
         }
-        ImageStack output = new ImageStack(length, length);
+        ImageStack output = new ImageStack(signalLength, signalWidth);
         for (int j = 0; j < iterations; j++) {
-            if (temps[j] != null && temps[j].getWidth() >= length) {
-                FloatProcessor slice = new FloatProcessor(length, length);
+            if (temps[j] != null && temps[j].getWidth() >= signalLength) {
+                FloatProcessor slice = new FloatProcessor(signalLength, signalWidth);
                 FloatBlitter blitter = new FloatBlitter(slice);
                 blitter.copyBits(temps[j], 0, 0, Blitter.COPY);
                 output.addSlice(slice);
             }
         }
         return output;
+    }
+
+    void extendSignalArea(float[] xpoints, float[] ypoints, float dist, int n) {
+        float xdiff = xpoints[1] - xpoints[2];
+        float ydiff = ypoints[1] - ypoints[2];
+        float ratio = ydiff / xdiff;
+        float newX = dist / (float) Math.sqrt(1.0f + (float) Math.pow(ratio, 2.0f));
+        float newY = newX * ratio;
+        if (xdiff < 0.0) {
+            xpoints[0] = xpoints[1] - newX;
+        } else {
+            xpoints[0] = xpoints[1] + newX;
+        }
+        if (ydiff < 0.0) {
+            ypoints[0] = ypoints[1] - newY;
+        } else {
+            ypoints[0] = ypoints[1] + newY;
+        }
     }
 
     public int getXyPartRad() {
