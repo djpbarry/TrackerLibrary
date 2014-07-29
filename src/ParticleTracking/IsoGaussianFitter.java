@@ -122,7 +122,8 @@ public class IsoGaussianFitter {
         while (!done) {
 //            System.out.println("x1= " + simp[best][0] + "; s1= " + simp[best][1]
 //                    + "; x2= " + simp[best][2] + "; s2= " + simp[best][3] + "; y1= "
-//                    + simp[best][4] + "; s3= " + simp[best][5] + "; A= " + simp[best][6] + ";");
+//                    + simp[best][4] + "; s3= " + simp[best][5] + "; A= " + simp[best][6]
+//                    + "; a= " + simp[best][7] + ";");
             numIter++;
             for (int i = 0; i < numParams; i++) {
                 center[i] = 0.0;

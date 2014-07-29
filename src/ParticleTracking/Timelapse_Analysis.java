@@ -70,7 +70,7 @@ public class Timelapse_Analysis implements PlugIn {
     protected boolean monoChrome;
     private final double TRACK_LENGTH = 5.0;
     private final double TRACK_WIDTH = 4.0;
-    private final float TRACK_OFFSET = 1.0f;
+    protected static final float TRACK_OFFSET = 1.0f;
     private static File directory = new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences\\TestSequence40"), calDir;
     private final String delimiter = GenUtils.getDelimiter();
     String parentDir;

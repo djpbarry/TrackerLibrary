@@ -35,6 +35,8 @@ import org.apache.commons.math3.special.Erf;
 public class TailFitter extends IsoGaussianFitter {
 
     private static double spatialRes = 0.133333;
+    private static double sigmaEst = 1.06;
+    double sqrt2 = Math.pow(2.0, 0.5);
 
 //    public static void main(String args[]) {
 //        Random r = new Random();
@@ -74,15 +76,16 @@ public class TailFitter extends IsoGaussianFitter {
 //                }
 //            }
 //            TailFitter tf = new TailFitter(xVals, yVals, zVals);
-//            tf.doFit(1.06);
-//            tf.findPeak();
+//            tf.doFit(TailFitter.sigmaEst);
+//            tf.findPeak(Timelapse_Analysis.TRACK_OFFSET, 0.0);
+//            IJ.saveAs((new ImagePlus("", stackAverage)), "TIFF", "C:\\Users\\barry05\\Desktop\\SuperRes Actin Tails\\Averages\\" + i);
 //        }
 //        System.exit(0);
 //    }
 
     public TailFitter(double[] xVals, double[] yVals, double[][] zVals) {
         super();
-        numParams = 7;
+        numParams = 8;
         this.xData = xVals;
         this.yData = yVals;
         this.zData = new double[xData.length * yData.length];
@@ -116,12 +119,13 @@ public class TailFitter extends IsoGaussianFitter {
         restarts = defaultRestarts;
         nRestarts = 0;
         simp[0][0] = 0.25 * xData.length * spatialRes;
-        simp[0][1] = sigmaEst;
-        simp[0][2] = 0.75 * xData.length * spatialRes;
-        simp[0][3] = 2.0 * sigmaEst;
+        simp[0][1] = 0.25;
+        simp[0][2] = 0.6 * xData.length * spatialRes;
+        simp[0][3] = 1.0;
         simp[0][4] = yData.length * spatialRes / 2.0;
-        simp[0][5] = sigmaEst;
-        simp[0][6] = 0.0;
+        simp[0][5] = 0.25;
+        simp[0][6] = 0.2;
+        simp[0][7] = 0.5;
 
         return true;
     }
@@ -130,15 +134,14 @@ public class TailFitter extends IsoGaussianFitter {
         if (p == null) {
             return Double.NaN;
         }
-        double z = (x - p[0]) / p[1];
-        double w = (x - p[2]) / p[3];
-        double v = Math.pow((y - p[4]) / p[5], 2.0);
-        double sqrt2 = Math.pow(2.0, 0.5);
+        double z = (x - p[0]) / (p[1] * sqrt2);
+        double w = (x - p[2]) / (p[3] * sqrt2);
+        double v = Math.pow((y - p[4]) / (p[5] * sqrt2), 2.0);
 
-        return p[6] + (Erf.erf(z / sqrt2) - Erf.erf(w / sqrt2)) * Math.exp(-0.5 * v);
+        return p[6] + p[7] * (Erf.erf(z) - Erf.erf(w)) * Math.exp(-0.5 * v);
     }
 
-    public void findPeak() {
+    public void findPeak(double xOffset, double yOffset) {
         double params[] = getParams();
 
         double x1 = params[0];
@@ -159,10 +162,10 @@ public class TailFitter extends IsoGaussianFitter {
         double root1 = (-b + Math.sqrt(b * b - 4.0 * a * d)) / (2.0 * a);
         double root2 = (-b - Math.sqrt(b * b - 4.0 * a * d)) / (2.0 * a);
         double xCentre;
-        if (root1 < 0.0) {
-            xCentre = root2;
+        if (root1 < xOffset) {
+            xCentre = root2 - xOffset;
         } else {
-            xCentre = root1;
+            xCentre = root1 - xOffset;
         }
 
         System.out.println("x0: " + xCentre + " y0: " + yCentre + " R^2: " + params[numParams]);
