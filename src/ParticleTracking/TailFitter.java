@@ -152,7 +152,7 @@ public class TailFitter extends IsoGaussianFitter {
         double x22 = x2 * x2;
         double s2 = params[3];
         double s22 = s2 * s2;
-        double yCentre = params[4];
+        double yCentre = params[4]-yOffset;
 
         double c = 2.0 * s12 * s22 * (Math.log(s2) - Math.log(s1));
         double d = c + s12 * x22 - s22 * x12;
