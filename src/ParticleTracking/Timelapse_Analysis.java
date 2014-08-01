@@ -53,10 +53,9 @@ public class Timelapse_Analysis implements PlugIn {
 //    protected static double hystDiff = 1.25;
     protected double xySigEst; //Initial estimate of standard deviation for IsoGaussian fitting
     protected int xyPartRad; //Radius over which to draw particles in visualisation
-    public final static int FOREGROUND = 255, //Integer value of foreground pixels
-            SHOW_RESULTS = -1,
+    public final int SHOW_RESULTS = -1,
             VERSION = 4;
-    protected final static double LAMBDA = 650.0, //Wavelength of light
+    protected final double LAMBDA = 650.0, //Wavelength of light
             NUM_AP = 1.4; //Numerical aperture of system
     protected static double colocalThresh = 0.1;
     protected ArrayList<ParticleTrajectory> trajectories = new ArrayList(); //Trajectories of the detected particles
@@ -70,10 +69,17 @@ public class Timelapse_Analysis implements PlugIn {
     protected boolean monoChrome;
     private final double TRACK_LENGTH = 5.0;
     private final double TRACK_WIDTH = 4.0;
-    protected static final float TRACK_OFFSET = 1.0f;
+    protected final float TRACK_OFFSET = 1.0f;
     private static File directory = new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences\\TestSequence40"), calDir;
     private final String delimiter = GenUtils.getDelimiter();
     String parentDir;
+
+    static {
+        System.loadLibrary("cuda_gauss_tracker"); // Load native library at runtime cudaGaussFitter.dll
+    }
+
+    private native boolean cudaGaussFitter(String folder, float spatialRes, float sigmaEst, float maxthresh);
+//    private native void cudaGaussFitter();
 
 //    public static void main(String args[]) {
 //        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
@@ -81,7 +87,9 @@ public class Timelapse_Analysis implements PlugIn {
 //        ImagePlus imp = new ImagePlus("Stack", stack);
 //        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
 //        instance.run(null);
+//        System.exit(0);
 //    }
+
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep, double chan1MaxThresh, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
         UserVariables.setSpatialRes(spatialRes);
         UserVariables.setTimeRes(timeRes);
@@ -110,6 +118,9 @@ public class Timelapse_Analysis implements PlugIn {
      * Implements run method from {@link PlugIn}.
      */
     public void run(String arg) {
+        if (!cudaGaussFitter(null, Float.NaN, Float.NaN, Float.NaN)) {
+            return;
+        }
         Utilities.setLookAndFeel(UserInterface.class);
         title = title + "_v" + VERSION + "." + intFormat.format(Revision.Revision.revisionNumber);
         if (IJ.getInstance() != null) {
@@ -290,12 +301,12 @@ public class Timelapse_Analysis implements PlugIn {
                     ? preProcess(new ByteProcessor(width, height, c2Pix, null)) : null;
             // TODO Maybe express threshold as a percentage? See Ponti et al., 2003
             double c1Threshold = Utils.getPercentileThresh(chan1Proc, UserVariables.getChan1MaxThresh());
-            ByteProcessor thisC1Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, FOREGROUND, chan1Proc, c1Threshold, true);
+            ByteProcessor thisC1Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, UserVariables.FOREGROUND, chan1Proc, c1Threshold, true);
 //            maxima.addSlice(thisC1Max);
             double c2Threshold = Utils.getPercentileThresh(chan2Proc, UserVariables.getChan2MaxThresh());
             for (c1X = 0; c1X < width; c1X++) {
                 for (c1Y = 0; c1Y < height; c1Y++) {
-                    if (thisC1Max.getPixel(c1X, c1Y) == FOREGROUND) {
+                    if (thisC1Max.getPixel(c1X, c1Y) == UserVariables.FOREGROUND) {
                         IsoGaussian c2Gaussian = null;
                         c2Points = Utils.searchNeighbourhood(c1X, c1Y,
                                 (int) Math.round(fitRad * searchScale),

@@ -7,7 +7,6 @@ package ParticleTracking;
 import IAClasses.IsoGaussian;
 import IAClasses.ProgressDialog;
 import IAClasses.Utils;
-import static ParticleTracking.Timelapse_Analysis.FOREGROUND;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
@@ -112,10 +111,10 @@ public class PSF_Estimator extends Timelapse_Analysis {
             c1Pix = (byte[]) (new TypeConverter(stack.getProcessor(i + 1).duplicate(), true).convertToByte().getPixels());
             FloatProcessor chan1Proc = preProcess(new ByteProcessor(width, height, c1Pix, null));
             double c1Threshold = Utils.getPercentileThresh(chan1Proc, UserVariables.getChan1MaxThresh());
-            ByteProcessor thisC1Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, FOREGROUND, chan1Proc, c1Threshold, true);
+            ByteProcessor thisC1Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, UserVariables.FOREGROUND, chan1Proc, c1Threshold, true);
             for (c1X = 0; c1X < width; c1X++) {
                 for (c1Y = 0; c1Y < height; c1Y++) {
-                    if (thisC1Max.getPixel(c1X, c1Y) == FOREGROUND) {
+                    if (thisC1Max.getPixel(c1X, c1Y) == UserVariables.FOREGROUND) {
                         /*
                          * Search for local maxima in green image within
                          * <code>xyPartRad</code> pixels of maxima in red image:

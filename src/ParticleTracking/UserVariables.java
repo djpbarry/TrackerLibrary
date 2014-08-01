@@ -24,6 +24,7 @@ public class UserVariables {
     public static final String[] channels = {"Red", "Green", "Blue"};
     private static int c1Index = RED;
     private static int c2Index = GREEN;
+    public static final int FOREGROUND = 255; //Integer value of foreground pixels
 
     public static double getSpatialRes() {
         return spatialRes;
