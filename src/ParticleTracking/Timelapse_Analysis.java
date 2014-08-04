@@ -70,15 +70,16 @@ public class Timelapse_Analysis implements PlugIn {
     private final double TRACK_LENGTH = 5.0;
     private final double TRACK_WIDTH = 4.0;
     protected final float TRACK_OFFSET = 1.0f;
-    private static File directory = new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences\\TestSequence40"), calDir;
+    private static File directory = new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences\\TestSequence40"),
+            calDir = new File("C:\\Users\\barry05\\Desktop\\SuperRes Actin Tails\\2014.07.29_DualView\\Calibration");
     private final String delimiter = GenUtils.getDelimiter();
     String parentDir;
 
-    static {
-        System.loadLibrary("cuda_gauss_tracker"); // Load native library at runtime cudaGaussFitter.dll
-    }
+//    static {
+//        System.loadLibrary("cuda_gauss_tracker"); // Load native library at runtime cudaGaussFitter.dll
+//    }
 
-    private native boolean cudaGaussFitter(String folder, float spatialRes, float sigmaEst, float maxthresh);
+//    private native boolean cudaGaussFitter(String folder, float spatialRes, float sigmaEst, float maxthresh);
 //    private native void cudaGaussFitter();
 
 //    public static void main(String args[]) {
@@ -87,7 +88,6 @@ public class Timelapse_Analysis implements PlugIn {
 //        ImagePlus imp = new ImagePlus("Stack", stack);
 //        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
 //        instance.run(null);
-//        System.exit(0);
 //    }
 
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep, double chan1MaxThresh, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
@@ -118,9 +118,9 @@ public class Timelapse_Analysis implements PlugIn {
      * Implements run method from {@link PlugIn}.
      */
     public void run(String arg) {
-        if (!cudaGaussFitter(null, Float.NaN, Float.NaN, Float.NaN)) {
-            return;
-        }
+//        if (!cudaGaussFitter(null, Float.NaN, Float.NaN, Float.NaN)) {
+//            return;
+//        }
         Utilities.setLookAndFeel(UserInterface.class);
         title = title + "_v" + VERSION + "." + intFormat.format(Revision.Revision.revisionNumber);
         if (IJ.getInstance() != null) {
@@ -799,7 +799,7 @@ public class Timelapse_Analysis implements PlugIn {
         ImageProcessor ycoeffs = reader.open(calDir + delimiter + "ycoeffs.txt");
         ImageProcessor coords = reader.open(calDir + delimiter + "coords.txt");
         Particle sigStartP = ptraj.getEnd();
-        int size = Math.min(signalLength, ptraj.getSize());
+        int size = (int) Math.round(Math.min(signalLength * 1.2, ptraj.getSize()));
 //        int size = length;
         int iterations = 1 + ptraj.getSize() - size;
         float xpoints[] = new float[size + 1];
