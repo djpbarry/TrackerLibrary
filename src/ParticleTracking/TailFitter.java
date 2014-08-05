@@ -77,7 +77,7 @@ public class TailFitter extends IsoGaussianFitter {
 //            }
 //            TailFitter tf = new TailFitter(xVals, yVals, zVals);
 //            tf.doFit(TailFitter.sigmaEst);
-//            tf.findPeak(Timelapse_Analysis.TRACK_OFFSET, 0.0);
+//            tf.findPeak(Timelapse_Analysis.TRACK_OFFSET, 2.0);
 //            IJ.saveAs((new ImagePlus("", stackAverage)), "TIFF", "C:\\Users\\barry05\\Desktop\\SuperRes Actin Tails\\Averages\\" + i);
 //        }
 //        System.exit(0);
@@ -118,14 +118,14 @@ public class TailFitter extends IsoGaussianFitter {
         maxIter = IterFactor * numParams * numParams;  // Where does this estimate come from?
         restarts = defaultRestarts;
         nRestarts = 0;
-        simp[0][0] = 0.25 * xData.length * spatialRes;
-        simp[0][1] = 0.25;
-        simp[0][2] = 0.6 * xData.length * spatialRes;
-        simp[0][3] = 1.0;
+        simp[0][0] = 0.2 * xData.length * spatialRes;
+        simp[0][1] = 0.2;
+        simp[0][2] = 0.25 * xData.length * spatialRes;
+        simp[0][3] = 0.4;
         simp[0][4] = yData.length * spatialRes / 2.0;
-        simp[0][5] = 0.25;
-        simp[0][6] = 0.2;
-        simp[0][7] = 0.5;
+        simp[0][5] = 0.15;
+        simp[0][6] = 0.3;
+        simp[0][7] = 0.7;
 
         return true;
     }

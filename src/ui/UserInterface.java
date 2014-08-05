@@ -11,6 +11,7 @@ import ParticleTracking.ParticleArray;
 import ParticleTracking.Timelapse_Analysis;
 import ParticleTracking.UserVariables;
 import UIClasses.UIMethods;
+import UtilClasses.Utilities;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -19,6 +20,10 @@ import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 import ij.process.TypeConverter;
 import java.awt.Color;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import javax.swing.DefaultBoundedRangeModel;
@@ -36,7 +41,7 @@ public class UserInterface extends javax.swing.JDialog {
     private boolean wasOKed = false;
     private static final String channel1LabelText = "Channel 1:";
     private static final String channel2LabelText = "Channel 2:";
-    private static final String spatResLabelText = "Spatial resolution ("+IJ.micronSymbol+"m/pixel):";
+    private static final String spatResLabelText = "Spatial resolution (" + IJ.micronSymbol + "m/pixel):";
     private static final String fpsLabelText = "Frames per second:";
     private static final String minTrajLengthLabelText = "Minimum trajectory length (s):";
     private static final String maxLinkDistLabelText = "Maximum linking distance:";
@@ -46,7 +51,7 @@ public class UserInterface extends javax.swing.JDialog {
     private static final String nMaxLabelText = "Nmax:";
     private static final String colocalToggleText = "Co-Localised Only";
     private static final String preprocessToggleText = "Pre-Process Images";
-    
+
     /**
      * Creates new form UserInterface
      */
@@ -524,6 +529,7 @@ public class UserInterface extends javax.swing.JDialog {
             UserVariables.setC1Index(c1ComboBox.getSelectedIndex());
             UserVariables.setC2Index(c2ComboBox.getSelectedIndex());
             UserVariables.setnMax(Integer.parseInt(nMaxTextField.getText()));
+            printParams();
         } catch (NumberFormatException e) {
             IJ.error("Number formatting error " + e.toString());
             return false;
@@ -531,9 +537,31 @@ public class UserInterface extends javax.swing.JDialog {
         return true;
     }
 
+    void printParams() {
+        File paramFile = new File("C:\\Users\\barry05\\gausstrackerparams.txt");
+        PrintWriter paramStream;
+        try {
+            paramStream = new PrintWriter(new FileOutputStream(paramFile));
+        } catch (FileNotFoundException e) {
+            System.out.println("Error: Failed to create CUDA parameter file.\n");
+            System.out.println(e.toString());
+            return;
+        }
+        paramStream.println("input_folder_c1 = " + Timelapse_Analysis.getDirectory());
+        paramStream.println("input_folder_c1 = empty");
+        paramStream.println("extension = .tif");
+        paramStream.println("spatialRes = " + UserVariables.getSpatialRes() * 1000.0);
+        paramStream.println("numAp = 1.4");
+        paramStream.println("lambda = 602.0");
+        paramStream.println("sigmaFact = 0.305");
+        paramStream.println("scalefactor = 1.0");
+        paramStream.println("maxthresh = 10.0");
+        paramStream.close();
+    }
+
     public void viewDetections() {
         analyser.calcParticleRadius(UserVariables.getSpatialRes());
-        ParticleArray detections = analyser.findParticles(1.0, true, previewScrollBar.getValue()-1, previewScrollBar.getValue()-1, 0.0);
+        ParticleArray detections = analyser.findParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0);
         ImageProcessor output;
         int slice = previewScrollBar.getValue();
         ImageStack stack = analyser.getStack();

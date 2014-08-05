@@ -69,17 +69,17 @@ public class Timelapse_Analysis implements PlugIn {
     protected boolean monoChrome;
     private final double TRACK_LENGTH = 5.0;
     private final double TRACK_WIDTH = 4.0;
-    protected final float TRACK_OFFSET = 1.0f;
+    public static final float TRACK_OFFSET = 1.0f;
     private static File directory = new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences\\TestSequence40"),
             calDir = new File("C:\\Users\\barry05\\Desktop\\SuperRes Actin Tails\\2014.07.29_DualView\\Calibration");
     private final String delimiter = GenUtils.getDelimiter();
     String parentDir;
 
-//    static {
-//        System.loadLibrary("cuda_gauss_tracker"); // Load native library at runtime cudaGaussFitter.dll
-//    }
+    static {
+        System.loadLibrary("cuda_gauss_tracker"); // Load native library at runtime cudaGaussFitter.dll
+    }
 
-//    private native boolean cudaGaussFitter(String folder, float spatialRes, float sigmaEst, float maxthresh);
+    private native boolean cudaGaussFitter(String folder, float spatialRes, float sigmaEst, float maxthresh);
 //    private native void cudaGaussFitter();
 
 //    public static void main(String args[]) {
@@ -88,8 +88,8 @@ public class Timelapse_Analysis implements PlugIn {
 //        ImagePlus imp = new ImagePlus("Stack", stack);
 //        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
 //        instance.run(null);
+//        System.exit(0);
 //    }
-
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep, double chan1MaxThresh, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
         UserVariables.setSpatialRes(spatialRes);
         UserVariables.setTimeRes(timeRes);
@@ -118,9 +118,6 @@ public class Timelapse_Analysis implements PlugIn {
      * Implements run method from {@link PlugIn}.
      */
     public void run(String arg) {
-//        if (!cudaGaussFitter(null, Float.NaN, Float.NaN, Float.NaN)) {
-//            return;
-//        }
         Utilities.setLookAndFeel(UserInterface.class);
         title = title + "_v" + VERSION + "." + intFormat.format(Revision.Revision.revisionNumber);
         if (IJ.getInstance() != null) {
@@ -265,6 +262,9 @@ public class Timelapse_Analysis implements PlugIn {
     }
 
     public ParticleArray findParticles(double searchScale, boolean update, int startSlice, int endSlice, double fitTol) {
+        if (!cudaGaussFitter(null, Float.NaN, Float.NaN, Float.NaN)) {
+            return null;
+        }
         if (stack == null) {
             return null;
         }
@@ -916,7 +916,7 @@ public class Timelapse_Analysis implements PlugIn {
         paramStream.println(UserInterface.getSpatResLabelText() + "," + UserVariables.getSpatialRes());
         paramStream.println(UserInterface.getFpsLabelText() + "," + UserVariables.getTimeRes());
         paramStream.println(UserInterface.getMinTrajLengthLabelText() + "," + UserVariables.getMinTrajLength());
-        paramStream.println(UserInterface.getMaxLinkDistLabelText() + "," + UserVariables.getMinTrajLength());
+        paramStream.println(UserInterface.getMaxLinkDistLabelText() + "," + UserVariables.getTrajMaxStep());
         paramStream.println(UserInterface.getChan1MaxThreshLabelText() + "," + UserVariables.getChan1MaxThresh());
         paramStream.println(UserInterface.getChan2MaxThreshLabelText() + "," + UserVariables.getChan2MaxThresh());
         paramStream.println(UserInterface.getCurveFitTolLabelText() + "," + UserVariables.getCurveFitTol());
@@ -925,4 +925,9 @@ public class Timelapse_Analysis implements PlugIn {
         paramStream.println(UserInterface.getPreprocessToggleText() + "," + UserVariables.isPreProcess());
         paramStream.close();
     }
+
+    public static File getDirectory() {
+        return directory;
+    }
+
 }
