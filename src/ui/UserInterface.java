@@ -547,7 +547,7 @@ public class UserInterface extends javax.swing.JDialog {
             System.out.println(e.toString());
             return;
         }
-        paramStream.println("input_folder_c1 = " + Timelapse_Analysis.getDirectory());
+        paramStream.println("input_folder_c1 = C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences\\TestSequence43\\Input\\C0");
         paramStream.println("input_folder_c1 = empty");
         paramStream.println("extension = .tif");
         paramStream.println("spatialRes = " + UserVariables.getSpatialRes() * 1000.0);
@@ -561,10 +561,10 @@ public class UserInterface extends javax.swing.JDialog {
 
     public void viewDetections() {
         analyser.calcParticleRadius(UserVariables.getSpatialRes());
-        ParticleArray detections = analyser.findParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0);
+        ImageStack stack = analyser.getStack();
+        ParticleArray detections = analyser.findParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stack, false);
         ImageProcessor output;
         int slice = previewScrollBar.getValue();
-        ImageStack stack = analyser.getStack();
         boolean monoChrome = analyser.isMonoChrome();
         if (analyser.isMonoChrome()) {
             output = (new TypeConverter((stack.getProcessor(slice)).duplicate(), true)).convertToByte();

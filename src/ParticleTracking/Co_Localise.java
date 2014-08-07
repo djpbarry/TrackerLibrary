@@ -178,7 +178,7 @@ public class Co_Localise implements PlugIn {
             count = 0;
 //            tails = 0;
             sepsum = 0.0;
-            ParticleArray curves = analyser.findParticles(coFactor, false, i, i, UserVariables.getCurveFitTol());
+            ParticleArray curves = analyser.findParticles(coFactor, false, i, i, UserVariables.getCurveFitTol(), stack, false);
             FloatProcessor ch1proc = new FloatProcessor(width, height);
             FloatProcessor ch2proc = new FloatProcessor(width, height);
             ArrayList detections = curves.getLevel(0);

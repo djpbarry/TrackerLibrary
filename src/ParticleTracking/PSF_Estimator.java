@@ -9,6 +9,7 @@ import IAClasses.ProgressDialog;
 import IAClasses.Utils;
 import ij.IJ;
 import ij.ImagePlus;
+import ij.ImageStack;
 import ij.gui.GenericDialog;
 import ij.process.ByteProcessor;
 import ij.process.FloatProcessor;
@@ -55,7 +56,7 @@ public class PSF_Estimator extends Timelapse_Analysis {
                     new String(), 1000, 500);
             results.append(imp.getTitle() + "\n\n");
             UserVariables.setnMax(1);
-            ParticleArray particles = findParticles(1.0, true, 0, stack.getSize() - 1, UserVariables.getCurveFitTol());
+            ParticleArray particles = findParticles(1.0, true, 0, stack.getSize() - 1, UserVariables.getCurveFitTol(), stack, monoChrome);
             for (int i = 0; i < particles.getDepth(); i++) {
                 ArrayList detections = particles.getLevel(i);
                 for (int j = 0; j < detections.size(); j++) {
@@ -89,7 +90,7 @@ public class PSF_Estimator extends Timelapse_Analysis {
         return true;
     }
 
-    public ParticleArray findParticles(double searchScale, boolean update, int startSlice, int endSlice, double fitTol) {
+    public ParticleArray findParticles(double searchScale, boolean update, int startSlice, int endSlice, double fitTol, ImageStack stack, boolean monoChrome) {
         if (stack == null) {
             return null;
         }

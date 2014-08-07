@@ -12,14 +12,14 @@ package ParticleTracking;
 public class UserVariables {
 
     public static final int RED = 0, GREEN = 1, BLUE = 2;
-    private static double spatialRes = 0.083;
+    private static double spatialRes = 0.133333;
     private static double timeRes = 1.0;
     private static double trajMaxStep = 2.5;
-    private static double minTrajLength = 30.0;
+    private static double minTrajLength = 10.0;
     private static double chan1MaxThresh = 0.99;
-    private static double chan2MaxThresh = 0.5;
-    private static double curveFitTol = 0.8d;
-    private static int nMax = 2;
+    private static double chan2MaxThresh = 0.99;
+    private static double curveFitTol = 0.95d;
+    private static int nMax = 1;
     private static boolean colocal = true, preProcess = true;
     public static final String[] channels = {"Red", "Green", "Blue"};
     private static int c1Index = RED;
