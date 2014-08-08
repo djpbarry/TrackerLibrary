@@ -12,10 +12,10 @@ extern "C" {
 /*
  * Class:     ParticleTracking_Timelapse_Analysis
  * Method:    cudaGaussFitter
- * Signature: (Ljava/lang/String;FFF)Z
+ * Signature: (Ljava/lang/String;Ljava/lang/String;FFFF)Z
  */
 JNIEXPORT jboolean JNICALL Java_ParticleTracking_Timelapse_1Analysis_cudaGaussFitter
-  (JNIEnv *, jobject, jstring, jfloat, jfloat, jfloat);
+  (JNIEnv *, jobject, jstring, jstring, jfloat, jfloat, jfloat, jfloat);
 
 #ifdef __cplusplus
 }

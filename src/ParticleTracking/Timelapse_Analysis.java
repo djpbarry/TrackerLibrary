@@ -64,30 +64,32 @@ public class Timelapse_Analysis implements PlugIn {
     private long startTime;
     protected DecimalFormat numFormat = new DecimalFormat("0.000");
     protected DecimalFormat intFormat = new DecimalFormat("000");
-    String title = "Particle Tracker";
+    String title = "Particle Tracker", ext;
     protected static boolean msdPlot = false, intensPlot = false, trajPlot = false, prevRes = true;
     protected boolean monoChrome;
     private final double TRACK_LENGTH = 5.0;
     private final double TRACK_WIDTH = 4.0;
     public static final float TRACK_OFFSET = 1.0f;
-    private static File directory = new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences\\TestSequence40"),
+    private static File directory = new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences\\TestSequence43\\Input\\C0"),
             calDir = new File("C:\\Users\\barry05\\Desktop\\SuperRes Actin Tails\\2014.07.29_DualView\\Calibration");
     private final String delimiter = GenUtils.getDelimiter();
     String parentDir;
 
-//    static {
-//        System.loadLibrary("cuda_gauss_tracker"); // Load native library at runtime cudaGaussFitter.dll
-//    }
-//    private native boolean cudaGaussFitter(String folder, float spatialRes, float sigmaEst, float maxthresh);
-//    private native void cudaGaussFitter();
-//    public static void main(String args[]) {
-//        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
-//        ImageStack stack = Utils.buildStack(image);
-//        ImagePlus imp = new ImagePlus("Stack", stack);
-//        Timelapse_Analysis instance = new Timelapse_Analysis(imp);
-//        instance.run(null);
-//        System.exit(0);
-//    }
+    static {
+        System.loadLibrary("cuda_gauss_tracker"); // Load native library at runtime cudaGaussFitter.dll
+    }
+
+    private native boolean cudaGaussFitter(String folder, String ext, float spatialRes, float sigmaEst, float maxthresh, float fitTol);
+
+    public static void main(String args[]) {
+        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
+        ImagePlus imp = Utils.buildStack(image);
+        if (imp != null) {
+            Timelapse_Analysis instance = new Timelapse_Analysis(imp, imp.getTitle());
+            instance.run(null);
+        }
+        System.exit(0);
+    }
 
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep, double chan1MaxThresh, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
         UserVariables.setSpatialRes(spatialRes);
@@ -108,9 +110,10 @@ public class Timelapse_Analysis implements PlugIn {
         this.stack = stack;
     }
 
-    public Timelapse_Analysis(ImagePlus imp) {
+    public Timelapse_Analysis(ImagePlus imp, String ext) {
         this.imp = imp;
         this.stack = imp.getImageStack();
+        this.ext = ext;
     }
 
     /**
@@ -264,9 +267,6 @@ public class Timelapse_Analysis implements PlugIn {
     }
 
     public ParticleArray findParticles(double searchScale, boolean update, int startSlice, int endSlice, double fitTol, ImageStack stack, boolean monoChrome) {
-//        if (!cudaGaussFitter(null, Float.NaN, Float.NaN, Float.NaN)) {
-//            return null;
-//        }
         if (stack == null) {
             return null;
         }
@@ -356,6 +356,66 @@ public class Timelapse_Analysis implements PlugIn {
 //        IJ.saveAs(new ImagePlus("", detect_output), "TIF", parentDir + "/all_detections.tif");
 //        IJ.saveAs(new ImagePlus("", maxima), "TIF", parentDir + "/all_maxima.tif");
 //        IJ.saveAs(new ImagePlus("", input_output), "TIF", parentDir + "/input_output.tif");
+        if (update) {
+            updateTrajectories(particles, UserVariables.getTimeRes(), UserVariables.getTrajMaxStep(), spatialRes, true);
+        }
+        return particles;
+    }
+
+    public ParticleArray cudaFindParticles(double searchScale, boolean update, int startSlice, int endSlice, double fitTol, ImageStack stack, boolean monoChrome) {
+        if (!cudaGaussFitter(directory.getAbsolutePath(), ext, (float) UserVariables.getSpatialRes() * 1000.0f, (float) xySigEst, (float) UserVariables.getChan1MaxThresh(), (float) UserVariables.getCurveFitTol())) {
+            return null;
+        }
+        File cudadata = new File(directory.getAbsolutePath() + delimiter + "cudadata.txt");
+        File fileList[] = {cudadata};
+        double[][][] cudaData = GenUtils.readData(1, 4, fileList, delimiter);
+        int i, noOfImages = stack.getSize(), width = stack.getWidth(), height = stack.getHeight(),
+                arraySize = endSlice - startSlice + 1;
+        byte c2Pix[];
+        int fitRad = (int) Math.ceil(xyPartRad * 4.0 / 3.0);
+        int pSize = 2 * fitRad + 1;
+        int c2Points[][];
+        double[] xCoords = new double[pSize];
+        double[] yCoords = new double[pSize];
+        double[][] pixValues = new double[pSize][pSize];
+        double spatialRes = UserVariables.getSpatialRes();
+        ParticleArray particles = new ParticleArray(arraySize);
+        for (i = startSlice; i < noOfImages && i <= endSlice; i++) {
+            IJ.freeMemory();
+            if (!monoChrome) {
+                ColorProcessor slice = (ColorProcessor) stack.getProcessor(i + 1);
+                c2Pix = Utils.getPixels(slice, UserVariables.getC2Index());
+            } else {
+                c2Pix = null;
+            }
+            FloatProcessor chan2Proc = !monoChrome
+                    ? preProcess(new ByteProcessor(width, height, c2Pix, null)) : null;
+            double c2Threshold = Utils.getPercentileThresh(chan2Proc, UserVariables.getChan2MaxThresh());
+            for (int f = 0; f < fileList.length; f++) {
+                for (int row = 0; row < stack.getSize(); row++) {
+                    IsoGaussian c1Gaussian = new IsoGaussian(cudaData[f][row][1], cudaData[f][row][2], cudaData[f][row][3], xySigEst, xySigEst, 1.0 - UserVariables.getCurveFitTol());
+                    int t = (int) Math.round(cudaData[f][row][0]);
+                    int c1X = (int) Math.round(cudaData[f][row][1]);
+                    int c1Y = (int) Math.round(cudaData[f][row][2]);
+                    IsoGaussian c2Gaussian = null;
+                    c2Points = Utils.searchNeighbourhood(c1X, c1Y,
+                            (int) Math.round(fitRad * searchScale),
+                            (int) Math.round(c2Threshold),
+                            (ImageProcessor) chan2Proc);
+                    if (c2Points != null) {
+                        Utils.extractValues(xCoords, yCoords, pixValues,
+                                c2Points[0][0], c2Points[0][1], chan2Proc);
+                        MultiGaussFitter c2Fitter = new MultiGaussFitter(1, fitRad, pSize);
+                        c2Fitter.fit(pixValues, xySigEst);
+                        ArrayList<IsoGaussian> c2Fits = c2Fitter.getFits(spatialRes, c2Points[0][0] - fitRad * searchScale, c2Points[0][1] - fitRad * searchScale, c2Threshold, UserVariables.getCurveFitTol());
+                        if (c2Fits != null && c2Fits.size() > 0) {
+                            c2Gaussian = c2Fits.get(0);
+                        }
+                    }
+                    particles.addDetection(t, new Particle(t, c1Gaussian, c2Gaussian, null, -1));
+                }
+            }
+        }
         if (update) {
             updateTrajectories(particles, UserVariables.getTimeRes(), UserVariables.getTrajMaxStep(), spatialRes, true);
         }

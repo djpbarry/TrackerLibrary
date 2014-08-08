@@ -42,7 +42,7 @@ public class PSF_Estimator extends Timelapse_Analysis {
     }
 
     public PSF_Estimator(ImagePlus imp) {
-        super(imp);
+        super(imp,null);
         this.imp = imp;
         this.stack = imp.getImageStack();
     }

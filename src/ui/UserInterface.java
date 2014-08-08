@@ -529,7 +529,7 @@ public class UserInterface extends javax.swing.JDialog {
             UserVariables.setC1Index(c1ComboBox.getSelectedIndex());
             UserVariables.setC2Index(c2ComboBox.getSelectedIndex());
             UserVariables.setnMax(Integer.parseInt(nMaxTextField.getText()));
-            printParams();
+//            printParams();
         } catch (NumberFormatException e) {
             IJ.error("Number formatting error " + e.toString());
             return false;
@@ -537,27 +537,27 @@ public class UserInterface extends javax.swing.JDialog {
         return true;
     }
 
-    void printParams() {
-        File paramFile = new File("C:\\Users\\barry05\\gausstrackerparams.txt");
-        PrintWriter paramStream;
-        try {
-            paramStream = new PrintWriter(new FileOutputStream(paramFile));
-        } catch (FileNotFoundException e) {
-            System.out.println("Error: Failed to create CUDA parameter file.\n");
-            System.out.println(e.toString());
-            return;
-        }
-        paramStream.println("input_folder_c1 = C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences\\TestSequence43\\Input\\C0");
-        paramStream.println("input_folder_c1 = empty");
-        paramStream.println("extension = .tif");
-        paramStream.println("spatialRes = " + UserVariables.getSpatialRes() * 1000.0);
-        paramStream.println("numAp = 1.4");
-        paramStream.println("lambda = 602.0");
-        paramStream.println("sigmaFact = 0.305");
-        paramStream.println("scalefactor = 1.0");
-        paramStream.println("maxthresh = 10.0");
-        paramStream.close();
-    }
+//    void printParams() {
+//        File paramFile = new File("C:\\Users\\barry05\\gausstrackerparams.txt");
+//        PrintWriter paramStream;
+//        try {
+//            paramStream = new PrintWriter(new FileOutputStream(paramFile));
+//        } catch (FileNotFoundException e) {
+//            System.out.println("Error: Failed to create CUDA parameter file.\n");
+//            System.out.println(e.toString());
+//            return;
+//        }
+//        paramStream.println("input_folder_c1 = C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences\\TestSequence43\\Input\\C0");
+//        paramStream.println("input_folder_c1 = empty");
+//        paramStream.println("extension = .tif");
+//        paramStream.println("spatialRes = " + UserVariables.getSpatialRes() * 1000.0);
+//        paramStream.println("numAp = 1.4");
+//        paramStream.println("lambda = 602.0");
+//        paramStream.println("sigmaFact = 0.305");
+//        paramStream.println("scalefactor = 1.0");
+//        paramStream.println("maxthresh = 0.9999");
+//        paramStream.close();
+//    }
 
     public void viewDetections() {
         analyser.calcParticleRadius(UserVariables.getSpatialRes());

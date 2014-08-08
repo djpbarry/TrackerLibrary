@@ -49,7 +49,7 @@ public class Volume_Analysis extends Timelapse_Analysis {
     }
 
     public Volume_Analysis(ImagePlus imp) {
-        super(imp);
+        super(imp,null);
         this.imp = imp;
         this.stack = imp.getImageStack();
     }
