@@ -11,23 +11,15 @@ import ParticleTracking.ParticleArray;
 import ParticleTracking.Timelapse_Analysis;
 import ParticleTracking.UserVariables;
 import UIClasses.UIMethods;
-import UtilClasses.Utilities;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.gui.ImageCanvas;
-import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 import ij.process.TypeConverter;
 import java.awt.Color;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import javax.swing.DefaultBoundedRangeModel;
-import javax.swing.JLabel;
 
 /**
  *
@@ -38,7 +30,7 @@ public class UserInterface extends javax.swing.JDialog {
     private final Timelapse_Analysis analyser;
     private final ImagePlus imp;
     private final String title;
-    private boolean wasOKed = false;
+    private boolean wasOKed = false, monoChrome;
     private static final String channel1LabelText = "Channel 1:";
     private static final String channel2LabelText = "Channel 2:";
     private static final String spatResLabelText = "Spatial resolution (" + IJ.micronSymbol + "m/pixel):";
@@ -51,6 +43,7 @@ public class UserInterface extends javax.swing.JDialog {
     private static final String nMaxLabelText = "Nmax:";
     private static final String colocalToggleText = "Co-Localised Only";
     private static final String preprocessToggleText = "Pre-Process Images";
+    private static final String gpuToggleText = "Use GPU";
 
     /**
      * Creates new form UserInterface
@@ -60,6 +53,10 @@ public class UserInterface extends javax.swing.JDialog {
         this.title = title;
         this.analyser = analyser;
         imp = new ImagePlus("", analyser.getStack().getProcessor(1));
+        monoChrome = !(imp.getProcessor().getNChannels() > 1);
+        if (monoChrome) {
+            UserVariables.setColocal(!monoChrome);
+        }
         initComponents();
         UIMethods.centreDialog(this);
     }
@@ -98,6 +95,7 @@ public class UserInterface extends javax.swing.JDialog {
         curveFitTolTextField = new javax.swing.JTextField();
         nMaxTextField = new javax.swing.JTextField();
         nMaxLabel = new javax.swing.JLabel();
+        gpuToggleButton = new javax.swing.JToggleButton();
         jPanel2 = new javax.swing.JPanel();
         canvas1 = new ImageCanvas(imp);
         previewScrollBar = new javax.swing.JScrollBar();
@@ -162,6 +160,7 @@ public class UserInterface extends javax.swing.JDialog {
 
         c2ComboBox.setModel(new javax.swing.DefaultComboBoxModel(UserVariables.channels));
         c2ComboBox.setSelectedIndex(UserVariables.getC2Index());
+        c2ComboBox.setEnabled(!monoChrome);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 2;
@@ -306,6 +305,7 @@ public class UserInterface extends javax.swing.JDialog {
 
         colocaliseToggleButton.setText(colocalToggleText);
         colocaliseToggleButton.setSelected(UserVariables.isColocal());
+        colocaliseToggleButton.setEnabled(!monoChrome);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 11;
@@ -325,7 +325,7 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.weighty = 0.09;
-        gridBagConstraints.insets = new java.awt.Insets(0, 10, 10, 10);
+        gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 10);
         jPanel1.add(preprocessToggleButton, gridBagConstraints);
 
         curveFitTolLabel.setText(curveFitTolLabelText);
@@ -371,6 +371,17 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.weighty = 0.09;
         gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
         jPanel1.add(nMaxLabel, gridBagConstraints);
+
+        gpuToggleButton.setText(gpuToggleText);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 13;
+        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 0.09;
+        gridBagConstraints.insets = new java.awt.Insets(0, 10, 10, 10);
+        jPanel1.add(gpuToggleButton, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
@@ -529,6 +540,7 @@ public class UserInterface extends javax.swing.JDialog {
             UserVariables.setC1Index(c1ComboBox.getSelectedIndex());
             UserVariables.setC2Index(c2ComboBox.getSelectedIndex());
             UserVariables.setnMax(Integer.parseInt(nMaxTextField.getText()));
+            UserVariables.setGpu(gpuToggleButton.isSelected());
 //            printParams();
         } catch (NumberFormatException e) {
             IJ.error("Number formatting error " + e.toString());
@@ -558,15 +570,18 @@ public class UserInterface extends javax.swing.JDialog {
 //        paramStream.println("maxthresh = 0.9999");
 //        paramStream.close();
 //    }
-
     public void viewDetections() {
         analyser.calcParticleRadius(UserVariables.getSpatialRes());
         ImageStack stack = analyser.getStack();
-        ParticleArray detections = analyser.findParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stack, false);
+        ParticleArray detections;
+        if (UserVariables.isGpu()) {
+            detections = analyser.cudaFindParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stack, monoChrome);
+        } else {
+            detections = analyser.findParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stack, monoChrome);
+        }
         ImageProcessor output;
         int slice = previewScrollBar.getValue();
-        boolean monoChrome = analyser.isMonoChrome();
-        if (analyser.isMonoChrome()) {
+        if (monoChrome) {
             output = (new TypeConverter((stack.getProcessor(slice)).duplicate(), true)).convertToByte();
         } else {
             output = (new TypeConverter((stack.getProcessor(slice)).duplicate(), true)).convertToRGB();
@@ -607,26 +622,25 @@ public class UserInterface extends javax.swing.JDialog {
         }
     }
 
-    public byte[] getPixels(int channel, int frame) {
-        ColorProcessor processor = (ColorProcessor) analyser.getStack().getProcessor(frame + 1);
-        int width = processor.getWidth(), height = processor.getHeight();
-        int size = width * height;
-        byte redPix[] = new byte[size], greenPix[] = new byte[size],
-                bluePix[] = new byte[size], emptyPix[] = new byte[size];
-        Arrays.fill(emptyPix, (byte) 0);
-        processor.getRGB(redPix, greenPix, bluePix);
-        switch (channel) {
-            case UserVariables.RED:
-                return redPix;
-            case UserVariables.GREEN:
-                return greenPix;
-            case UserVariables.BLUE:
-                return bluePix;
-            default:
-                return emptyPix;
-        }
-    }
-
+//    public byte[] getPixels(int channel, int frame) {
+//        ColorProcessor processor = (ColorProcessor) analyser.getStacks().getProcessor(frame + 1);
+//        int width = processor.getWidth(), height = processor.getHeight();
+//        int size = width * height;
+//        byte redPix[] = new byte[size], greenPix[] = new byte[size],
+//                bluePix[] = new byte[size], emptyPix[] = new byte[size];
+//        Arrays.fill(emptyPix, (byte) 0);
+//        processor.getRGB(redPix, greenPix, bluePix);
+//        switch (channel) {
+//            case UserVariables.RED:
+//                return redPix;
+//            case UserVariables.GREEN:
+//                return greenPix;
+//            case UserVariables.BLUE:
+//                return bluePix;
+//            default:
+//                return emptyPix;
+//        }
+//    }
     public boolean isWasOKed() {
         return wasOKed;
     }
@@ -679,6 +693,10 @@ public class UserInterface extends javax.swing.JDialog {
         return preprocessToggleText;
     }
 
+    public static String getGpuToggleText() {
+        return gpuToggleText;
+    }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox c1ComboBox;
     private javax.swing.JLabel c1Label;
@@ -693,6 +711,7 @@ public class UserInterface extends javax.swing.JDialog {
     private javax.swing.JToggleButton colocaliseToggleButton;
     private javax.swing.JLabel curveFitTolLabel;
     private javax.swing.JTextField curveFitTolTextField;
+    private javax.swing.JToggleButton gpuToggleButton;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;

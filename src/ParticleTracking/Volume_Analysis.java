@@ -131,12 +131,12 @@ public class Volume_Analysis extends Timelapse_Analysis {
                         }
                         distributions.add(dist);
                         count++;
-                        if (intensPlot) {
-                            plotIntensity(i, count);
-                        }
-                        if (trajPlot) {
-                            plotTrajectory(width, height, i, count);
-                        }
+//                        if (intensPlot) {
+//                            plotIntensity(i, count);
+//                        }
+//                        if (trajPlot) {
+//                            plotTrajectory(width, height, i, count);
+//                        }
                         printData(i, resultSummary, count);
                         traj.printTrajectory(count, results, numFormat, title);
                     }

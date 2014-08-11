@@ -5,6 +5,7 @@
  */
 package ui;
 
+import IAClasses.Utils;
 import ParticleTracking.ParticleTrajectory;
 import ParticleTracking.Timelapse_Analysis;
 import ParticleTracking.UserVariables;
@@ -13,8 +14,6 @@ import ij.ImagePlus;
 import ij.ImageStack;
 import ij.gui.ImageCanvas;
 import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Toolkit;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.Scanner;

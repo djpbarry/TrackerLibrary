@@ -20,7 +20,7 @@ public class UserVariables {
     private static double chan2MaxThresh = 0.99;
     private static double curveFitTol = 0.95d;
     private static int nMax = 1;
-    private static boolean colocal = true, preProcess = true;
+    private static boolean colocal = true, preProcess = true, gpu = false;
     public static final String[] channels = {"Red", "Green", "Blue"};
     private static int c1Index = RED;
     private static int c2Index = GREEN;
@@ -120,6 +120,14 @@ public class UserVariables {
 
     public static void setnMax(int nMax) {
         UserVariables.nMax = nMax;
+    }
+
+    public static boolean isGpu() {
+        return gpu;
+    }
+
+    public static void setGpu(boolean gpu) {
+        UserVariables.gpu = gpu;
     }
 
 }
