@@ -6,6 +6,7 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.gui.GenericDialog;
+import ij.plugin.ChannelSplitter;
 import ij.plugin.PlugIn;
 import ij.process.*;
 import ij.text.TextWindow;
@@ -17,7 +18,7 @@ import java.util.Arrays;
 public class Co_Localise implements PlugIn {
 
     protected ImagePlus imp;
-    protected ImageStack stack;
+    protected ImageStack[] stacks;
     protected final String title = "Colocaliser v1.06";
 //    public static final String[] channels = {"Red", "Green", "Blue"};
     protected String resultsHeadings, coordHeadings;
@@ -35,20 +36,22 @@ public class Co_Localise implements PlugIn {
     public Co_Localise() {
     }
 
-    public Co_Localise(ImagePlus imp) {
-        this.imp = imp;
-        if (imp != null) {
-            this.stack = imp.getStack();
-        } else {
-            stack = null;
-        }
-    }
-
+//    public Co_Localise(ImagePlus imp) {
+//        this.imp = imp;
+//        if (imp != null) {
+//            this.stacks = imp.getStack();
+//        } else {
+//            stacks = null;
+//        }
+//    }
     @Override
     public void run(String arg) {
         if (IJ.getInstance() != null) {
             imp = IJ.getImage();
-            stack = imp.getImageStack();
+            ImagePlus tempImps[] = new ImagePlus[3];
+            tempImps = ChannelSplitter.split(imp);
+            stacks[0] = tempImps[0].getImageStack();
+            stacks[1] = tempImps[1].getImageStack();
         }
         if (imp == null) {
             Toolkit.getDefaultToolkit().beep();
@@ -67,7 +70,7 @@ public class Co_Localise implements PlugIn {
                     + "\u0394 (nm)";
             coordHeadings = "C0_X\tC0_Y\tC1_X\tC1_Y";
             UserVariables.setPreProcess(true);
-            Timelapse_Analysis analyser = new Timelapse_Analysis(stack);
+            Timelapse_Analysis analyser = new Timelapse_Analysis(stacks);
             analyser.calcParticleRadius(UserVariables.getSpatialRes());
             UserVariables.setnMax(1);
             //Timelapse_Analysis.setGaussianRadius(0.139 / Timelapse_Analysis.getSpatialRes());
@@ -121,29 +124,28 @@ public class Co_Localise implements PlugIn {
         return true;
     }
 
-    public byte[] getPixels(int channel, int frame) {
-        if (imp == null) {
-            return null;
-        }
-        int width = imp.getWidth(), height = imp.getHeight();
-        int size = width * height;
-        ColorProcessor processor = (ColorProcessor) stack.getProcessor(frame + 1);
-        byte redPix[] = new byte[size], greenPix[] = new byte[size],
-                bluePix[] = new byte[size], emptyPix[] = new byte[size];
-        Arrays.fill(emptyPix, (byte) 0);
-        processor.getRGB(redPix, greenPix, bluePix);
-        switch (channel) {
-            case RED:
-                return redPix;
-            case GREEN:
-                return greenPix;
-            case BLUE:
-                return bluePix;
-            default:
-                return emptyPix;
-        }
-    }
-
+//    public byte[] getPixels(int channel, int frame) {
+//        if (imp == null) {
+//            return null;
+//        }
+//        int width = imp.getWidth(), height = imp.getHeight();
+//        int size = width * height;
+//        ColorProcessor processor = (ColorProcessor) stacks.getProcessor(frame + 1);
+//        byte redPix[] = new byte[size], greenPix[] = new byte[size],
+//                bluePix[] = new byte[size], emptyPix[] = new byte[size];
+//        Arrays.fill(emptyPix, (byte) 0);
+//        processor.getRGB(redPix, greenPix, bluePix);
+//        switch (channel) {
+//            case RED:
+//                return redPix;
+//            case GREEN:
+//                return greenPix;
+//            case BLUE:
+//                return bluePix;
+//            default:
+//                return emptyPix;
+//        }
+//    }
     byte[] outPix(ImageProcessor ch1, ImageProcessor ch2, int colour) {
         ImageProcessor fch1 = (new TypeConverter(ch1, true)).convertToByte();
         ImageProcessor fch2 = (new TypeConverter(ch2, true)).convertToByte();
@@ -159,11 +161,11 @@ public class Co_Localise implements PlugIn {
     }
 
     ImagePlus buildOutput(Timelapse_Analysis analyser) {
-        if (stack == null) {
+        if (stacks == null) {
             return null;
         }
         if (analyser == null) {
-            analyser = new Timelapse_Analysis(stack);
+            analyser = new Timelapse_Analysis(stacks);
         }
         double displaymax = 0.0;
         int colocalisation, count;
@@ -171,14 +173,14 @@ public class Co_Localise implements PlugIn {
         ImageStack outStack = new ImageStack(width, height);
         double res = UserVariables.getSpatialRes();
         double sepsum;
-        for (int i = 0; i < stack.getSize(); i++) {
+        for (int i = 0; i < stacks[0].getSize(); i++) {
 //            ByteProcessor tailImage = new ByteProcessor(stack.getWidth(), stack.getHeight());
 //            tailImage.setPixels(getPixels(channel2, i));
             colocalisation = 0;
             count = 0;
 //            tails = 0;
             sepsum = 0.0;
-            ParticleArray curves = analyser.findParticles(coFactor, false, i, i, UserVariables.getCurveFitTol(), stack, false);
+            ParticleArray curves = analyser.findParticles(coFactor, false, i, i, UserVariables.getCurveFitTol(), stacks[0], stacks[1], false);
             FloatProcessor ch1proc = new FloatProcessor(width, height);
             FloatProcessor ch2proc = new FloatProcessor(width, height);
             ArrayList detections = curves.getLevel(0);

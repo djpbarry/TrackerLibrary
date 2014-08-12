@@ -133,7 +133,7 @@
         <EventHandler event="adjustmentValueChanged" listener="java.awt.event.AdjustmentListener" parameters="java.awt.event.AdjustmentEvent" handler="imageScrollBarAdjustmentValueChanged"/>
       </Events>
       <AuxValues>
-        <AuxValue name="JavaCodeGenerator_InitCodePost" type="java.lang.String" value="imageScrollBar.setModel(new DefaultBoundedRangeModel(1, 0, 1, stack.getSize()));"/>
+        <AuxValue name="JavaCodeGenerator_InitCodePost" type="java.lang.String" value="imageScrollBar.setModel(new DefaultBoundedRangeModel(1, 0, 1, analyser.getStacks()[0].getSize()));"/>
       </AuxValues>
       <Constraints>
         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">

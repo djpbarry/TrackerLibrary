@@ -47,15 +47,15 @@ public class PSF_Estimator extends Timelapse_Analysis {
     }
 
     public void analyse() {
-        stack = imp.getImageStack();
-        if (stack != null) {
+        stacks[0] = imp.getImageStack();
+        if (stacks[0] != null) {
             calcParticleRadius(UserVariables.getSpatialRes());
             IJ.register(this.getClass());
             results = new TextWindow(psfTitle + " Results", "frame\tx (" + IJ.micronSymbol + "m)\ty (" + IJ.micronSymbol + "m)\tA\tsigma (nm)\tR^2",
                     new String(), 1000, 500);
             results.append(imp.getTitle() + "\n\n");
             UserVariables.setnMax(1);
-            ParticleArray particles = findParticles(1.0, true, 0, stack.getSize() - 1, UserVariables.getCurveFitTol(), stack, monoChrome);
+            ParticleArray particles = findParticles(1.0, true, 0, stacks[0].getSize() - 1, UserVariables.getCurveFitTol(), stacks[0], monoChrome);
             for (int i = 0; i < particles.getDepth(); i++) {
                 ArrayList detections = particles.getLevel(i);
                 for (int j = 0; j < detections.size(); j++) {

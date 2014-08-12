@@ -26,21 +26,21 @@ public class SuperResAnalyser extends Co_Localise {
 //    public static void main(String args[]) {
 //        (new SuperResAnalyser(new ImagePlus("C:\\Users\\barry05\\Desktop\\SuperResTest.tif"))).run(null);
 //    }
-    public SuperResAnalyser(ImagePlus imp) {
-        super(imp);
-        imp.show();
-        this.imp = imp;
-        if (imp != null) {
-            this.stack = imp.getStack();
-        } else {
-            stack = null;
-        }
-    }
+//    public SuperResAnalyser(ImagePlus imp) {
+//        super(imp);
+//        imp.show();
+//        this.imp = imp;
+//        if (imp != null) {
+//            this.stacks = imp.getStack();
+//        } else {
+//            stacks = null;
+//        }
+//    }
 
     public void run(String arg) {
         if (IJ.getInstance() != null) {
             imp = IJ.getImage();
-            stack = imp.getImageStack();
+//            stacks = imp.getImageStack();
         }
         if (imp == null) {
             Toolkit.getDefaultToolkit().beep();
@@ -52,7 +52,7 @@ public class SuperResAnalyser extends Co_Localise {
                     + ") Detections\tColocalised Channel 2 (" + UserVariables.channels[UserVariables.getC2Index()]
                     + ") Detections\t% Colocalisation";
             UserVariables.setPreProcess(true);
-            Timelapse_Analysis analyser = new Timelapse_Analysis(stack);
+            Timelapse_Analysis analyser = new Timelapse_Analysis(stacks);
             analyser.calcParticleRadius(UserVariables.getSpatialRes());
             //Timelapse_Analysis.setGaussianRadius(0.139 / Timelapse_Analysis.getSpatialRes());
             //IJ.saveAs(buildOutput(analyser), "TIF", "C:\\Users\\barry05\\Desktop\\SuperResTestOutputII.tif");
@@ -95,11 +95,11 @@ public class SuperResAnalyser extends Co_Localise {
     }
 
     ImagePlus buildOutput(Timelapse_Analysis analyser) {
-        if (stack == null) {
+        if (stacks == null) {
             return null;
         }
         if (analyser == null) {
-            analyser = new Timelapse_Analysis(stack);
+            analyser = new Timelapse_Analysis(stacks);
         }
         DecimalFormat format = new DecimalFormat("000");
         int width = imp.getWidth() * scaleFactor, height = imp.getHeight() * scaleFactor;
@@ -107,9 +107,9 @@ public class SuperResAnalyser extends Co_Localise {
         ProgressDialog dialog = new ProgressDialog(null, "Processing...", false, false, TITLE);
         dialog.setVisible(true);
         FloatProcessor ch1proc = new FloatProcessor(width, height);
-        for (int i = 0; i < stack.getSize(); i++) {
-            dialog.updateProgress(i, stack.getSize());
-            ParticleArray curves = analyser.findParticles(coFactor, false, i, i, UserVariables.getCurveFitTol(), stack, false);
+        for (int i = 0; i < stacks[0].getSize(); i++) {
+            dialog.updateProgress(i, stacks[0].getSize());
+            ParticleArray curves = analyser.findParticles(coFactor, false, i, i, UserVariables.getCurveFitTol(), stacks[0], stacks[1],false);
             //ImagePlus temp = new ImagePlus("", ch1proc);
             //temp.show();
             //temp.setDisplayRange(0.0, 255.0);

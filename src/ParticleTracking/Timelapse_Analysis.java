@@ -8,24 +8,22 @@ import UtilClasses.Utilities;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
-import ij.WindowManager;
 import ij.gui.Plot;
 import ij.gui.PolygonRoi;
 import ij.gui.Roi;
 import ij.plugin.PlugIn;
+import ij.plugin.RGBStackMerge;
 import ij.plugin.Straightener;
 import ij.plugin.TextReader;
 import ij.plugin.filter.GaussianBlur;
 import ij.process.Blitter;
 import ij.process.ByteProcessor;
-import ij.process.ColorProcessor;
 import ij.process.FloatBlitter;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import ij.process.TypeConverter;
 import ij.text.TextWindow;
 import java.awt.Color;
-import java.awt.Toolkit;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -59,7 +57,7 @@ public class Timelapse_Analysis implements PlugIn {
     protected static double colocalThresh = 0.1;
     protected ArrayList<ParticleTrajectory> trajectories = new ArrayList(); //Trajectories of the detected particles
     protected ImagePlus imp; //The active image stack
-    protected ImageStack stack;
+    protected ImageStack stacks[];
     private long startTime;
     protected DecimalFormat numFormat = new DecimalFormat("0.000");
     protected DecimalFormat intFormat = new DecimalFormat("000");
@@ -71,7 +69,7 @@ public class Timelapse_Analysis implements PlugIn {
     private final double TRACK_WIDTH = 4.0;
     public static final float TRACK_OFFSET = 1.0f;
     private static File inputDir = new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences\\TestSequence43\\Input\\C0"),
-            outputDir = new File(inputDir.getAbsolutePath()),
+            c0Dir, c1Dir, outputDir = new File(inputDir.getAbsolutePath()),
             calDir = new File(inputDir.getAbsolutePath());
     private final String delimiter = GenUtils.getDelimiter();
     String parentDir;
@@ -83,13 +81,11 @@ public class Timelapse_Analysis implements PlugIn {
     private native boolean cudaGaussFitter(String folder, String ext, float spatialRes, float sigmaEst, float maxthresh, float fitTol, int startSlice, int endSlice);
 
     public static void main(String args[]) {
-        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences"), null);
-        ImagePlus imp = Utils.buildStack(image);
-        if (imp != null) {
-            Timelapse_Analysis instance = new Timelapse_Analysis(imp, imp.getTitle());
-            instance.run(null);
-        }
-        System.exit(0);
+//        if (imp != null) {
+        Timelapse_Analysis instance = new Timelapse_Analysis();
+        instance.run(null);
+//        }
+//        System.exit(0);
     }
 
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep, double chan1MaxThresh, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
@@ -100,20 +96,20 @@ public class Timelapse_Analysis implements PlugIn {
 //        Timelapse_Analysis.hystDiff = hystDiff;
         UserVariables.setMinTrajLength(minTrajLength);
         this.monoChrome = monoChrome;
-        this.imp = imp;
-        this.stack = imp.getStack();
+//        this.imp = imp;
+//        this.stacks = imp.getStack();
     }
 
     public Timelapse_Analysis() {
     }
 
-    public Timelapse_Analysis(ImageStack stack) {
-        this.stack = stack;
+    public Timelapse_Analysis(ImageStack[] stacks) {
+        this.stacks = stacks;
     }
 
     public Timelapse_Analysis(ImagePlus imp, String ext) {
-        this.imp = imp;
-        this.stack = imp.getImageStack();
+//        this.imp = imp;
+//        this.stacks = imp.getImageStack();
         this.ext = ext;
     }
 
@@ -123,22 +119,32 @@ public class Timelapse_Analysis implements PlugIn {
     public void run(String arg) {
         Utilities.setLookAndFeel(UserInterface.class);
         title = title + "_v" + VERSION + "." + intFormat.format(Revision.Revision.revisionNumber);
-        if (IJ.getInstance() != null) {
-            imp = WindowManager.getCurrentImage();
+        inputDir = Utilities.getFolder(inputDir, null);
+        c0Dir = new File(inputDir.getAbsolutePath() + delimiter + "C0");
+        ImagePlus imp = Utils.buildStack(c0Dir);
+        stacks = new ImageStack[2];
+        stacks[0] = imp.getImageStack();
+        this.ext = imp.getTitle();
+        c1Dir = new File(inputDir.getAbsolutePath() + delimiter + "C1");
+        if (c1Dir.exists()) {
+            stacks[1] = (Utils.buildStack(c1Dir)).getImageStack();
         }
+//        if (IJ.getInstance() != null) {
+//            imp = WindowManager.getCurrentImage();
+//        }
         if (showDialog()) {
             analyse();
         }
     }
 
     public boolean showDialog() {
-        if (imp == null) {
-            Toolkit.getDefaultToolkit().beep();
-            IJ.error("No image stack open.");
-            return false;
-        }
-        stack = imp.getImageStack();
-        monoChrome = !(stack.getProcessor(1).getNChannels() > 1);
+//        if (imp == null) {
+//            Toolkit.getDefaultToolkit().beep();
+//            IJ.error("No image stack open.");
+//            return false;
+//        }
+//        stack = imp.getImageStack();
+        monoChrome = (stacks[1] == null);
         UserInterface ui = new UserInterface(null, true, title, this);
         ui.setVisible(true);
         return ui.isWasOKed();
@@ -153,7 +159,7 @@ public class Timelapse_Analysis implements PlugIn {
         if (!monoChrome) {
             calDir = Utilities.getFolder(calDir, "Specify directory containing calibrations...");
         }
-        if (stack != null) {
+        if (stacks != null) {
             IJ.register(this.getClass());
             startTime = System.currentTimeMillis();
             //gaussianRadius = 0.139d / spatialRes; // IsoGaussian filter radius set to 139 nm
@@ -161,9 +167,9 @@ public class Timelapse_Analysis implements PlugIn {
             int i, count;
 //            int width = stacks[0].getWidth(), height = stacks[0].getHeight();
             if (UserVariables.isGpu()) {
-                cudaFindParticles(SEARCH_SCALE, true, 0, stack.getSize() - 1, UserVariables.getCurveFitTol(), stack, monoChrome);
+                cudaFindParticles(SEARCH_SCALE, true, 0, stacks[0].getSize() - 1, UserVariables.getCurveFitTol(), stacks[0], stacks[1], monoChrome);
             } else {
-                findParticles(SEARCH_SCALE, true, 0, stack.getSize() - 1, UserVariables.getCurveFitTol(), stack, monoChrome);
+                findParticles(SEARCH_SCALE, true, 0, stacks[0].getSize() - 1, UserVariables.getCurveFitTol(), stacks[0], stacks[1], monoChrome);
             }
 
             TextWindow results = new TextWindow(title + " Results", "X\tY\tFrame\tChannel 1 ("
@@ -202,7 +208,7 @@ public class Timelapse_Analysis implements PlugIn {
                 }
             }
             n = trajectories.size();
-            ImageStack maps = mapTrajectories(stack,
+            ImageStack maps = mapTrajectories(RGBStackMerge.mergeStacks(stacks[0], stacks[1], null, true),
                     trajectories, UserVariables.getSpatialRes(), UserVariables.getMinTrajLength(),
                     UserVariables.getTimeRes(), true, 0, trajectories.size() - 1, 1, false);
             for (i = 0, count = 1; i < n; i++) {
@@ -256,7 +262,7 @@ public class Timelapse_Analysis implements PlugIn {
      *
      * @param processor the image to be pre-processed.
      */
-    public FloatProcessor preProcess(ByteProcessor processor) {
+    public FloatProcessor preProcess(ImageProcessor processor) {
         if (processor == null) {
             return null;
         }
@@ -272,13 +278,12 @@ public class Timelapse_Analysis implements PlugIn {
         return fp;
     }
 
-    public ParticleArray findParticles(double searchScale, boolean update, int startSlice, int endSlice, double fitTol, ImageStack stack, boolean monoChrome) {
-        if (stack == null) {
+    public ParticleArray findParticles(double searchScale, boolean update, int startSlice, int endSlice, double fitTol, ImageStack channel1, ImageStack channel2, boolean monoChrome) {
+        if (channel1 == null) {
             return null;
         }
-        int i, noOfImages = stack.getSize(), width = stack.getWidth(), height = stack.getHeight(),
+        int i, noOfImages = channel1.getSize(), width = channel1.getWidth(), height = channel1.getHeight(),
                 arraySize = endSlice - startSlice + 1;
-        byte c1Pix[], c2Pix[];
         int fitRad = (int) Math.ceil(xyPartRad * 4.0 / 3.0);
         int c1X, c1Y, pSize = 2 * fitRad + 1;
         int c2Points[][];
@@ -296,17 +301,8 @@ public class Timelapse_Analysis implements PlugIn {
 //            ByteProcessor oslice = new ByteProcessor(detect_output.getWidth(), detect_output.getHeight());
             IJ.freeMemory();
             progress.updateProgress(i - startSlice, arraySize);
-            if (!monoChrome) {
-                ColorProcessor slice = (ColorProcessor) stack.getProcessor(i + 1);
-                c1Pix = Utils.getPixels(slice, UserVariables.getC1Index());
-                c2Pix = Utils.getPixels(slice, UserVariables.getC2Index());
-            } else {
-                c1Pix = (byte[]) (new TypeConverter(stack.getProcessor(i + 1).duplicate(), true).convertToByte().getPixels());
-                c2Pix = null;
-            }
-            FloatProcessor chan1Proc = preProcess(new ByteProcessor(width, height, c1Pix, null));
-            FloatProcessor chan2Proc = !monoChrome
-                    ? preProcess(new ByteProcessor(width, height, c2Pix, null)) : null;
+            FloatProcessor chan1Proc = preProcess(channel1.getProcessor(i + 1));
+            FloatProcessor chan2Proc = !monoChrome ? preProcess(channel2.getProcessor(i + 1)) : null;
             // TODO Maybe express threshold as a percentage? See Ponti et al., 2003
             double c1Threshold = Utils.getPercentileThresh(chan1Proc, UserVariables.getChan1MaxThresh());
             ByteProcessor thisC1Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, UserVariables.FOREGROUND, chan1Proc, c1Threshold, true);
@@ -368,16 +364,14 @@ public class Timelapse_Analysis implements PlugIn {
         return particles;
     }
 
-    public ParticleArray cudaFindParticles(double searchScale, boolean update, int startSlice, int endSlice, double fitTol, ImageStack stack, boolean monoChrome) {
-        if (!cudaGaussFitter(inputDir.getAbsolutePath(), ext, (float) UserVariables.getSpatialRes() * 1000.0f, (float) xySigEst, (float) UserVariables.getChan1MaxThresh(), (float) UserVariables.getCurveFitTol(), startSlice, endSlice)) {
+    public ParticleArray cudaFindParticles(double searchScale, boolean update, int startSlice, int endSlice, double fitTol, ImageStack channel1, ImageStack channel2, boolean monoChrome) {
+        if (!cudaGaussFitter(c0Dir.getAbsolutePath(), ext, (float) UserVariables.getSpatialRes() * 1000.0f, (float) xySigEst, (float) UserVariables.getChan1MaxThresh(), (float) UserVariables.getCurveFitTol(), startSlice, endSlice)) {
             return null;
         }
-        File cudaFile = new File(inputDir.getAbsolutePath() + delimiter + "cudadata.txt");
+        File cudaFile = new File(c0Dir + delimiter + "cudadata.txt");
         File fileList[] = {cudaFile};
         ArrayList<double[]>[] cudaData = GenUtils.readData(4, fileList, delimiter);
-        int width = stack.getWidth(), height = stack.getHeight(),
-                arraySize = endSlice - startSlice + 1;
-        byte c2Pix[];
+        int arraySize = endSlice - startSlice + 1;
         int fitRad = (int) Math.ceil(xyPartRad * 4.0 / 3.0);
         int pSize = 2 * fitRad + 1;
         int c2Points[][];
@@ -390,22 +384,15 @@ public class Timelapse_Analysis implements PlugIn {
             int size = cudaData[f].size();
             for (int row = 0; row < size; row++) {
                 IJ.freeMemory();
-                if (!monoChrome) {
-                    ColorProcessor slice = (ColorProcessor) stack.getProcessor(row + 1);
-                    c2Pix = Utils.getPixels(slice, UserVariables.getC2Index());
-                } else {
-                    c2Pix = null;
-                }
-                FloatProcessor chan2Proc = !monoChrome
-                        ? preProcess(new ByteProcessor(width, height, c2Pix, null)) : null;
-                double c2Threshold = Utils.getPercentileThresh(chan2Proc, UserVariables.getChan2MaxThresh());
+                int t = (int) Math.round(cudaData[f].get(row)[0]);
                 double x = cudaData[f].get(row)[1];
                 double y = cudaData[f].get(row)[2];
                 double mag = cudaData[f].get(row)[3];
+                FloatProcessor chan2Proc = !monoChrome ? preProcess(channel2.getProcessor(t + 1)) : null;
+                double c2Threshold = Utils.getPercentileThresh(chan2Proc, UserVariables.getChan2MaxThresh());
                 IsoGaussian c1Gaussian = new IsoGaussian(x, y, mag, xySigEst, xySigEst, 1.0 - UserVariables.getCurveFitTol());
-                int t = (int) Math.round(cudaData[f].get(row)[0]);
-                int c1X = (int) Math.round(x);
-                int c1Y = (int) Math.round(y);
+                int c1X = (int) Math.round(x / UserVariables.getSpatialRes());
+                int c1Y = (int) Math.round(y / UserVariables.getSpatialRes());
                 IsoGaussian c2Gaussian = null;
                 c2Points = Utils.searchNeighbourhood(c1X, c1Y,
                         (int) Math.round(fitRad * searchScale),
@@ -839,8 +826,8 @@ public class Timelapse_Analysis implements PlugIn {
         return trajectories;
     }
 
-    public ImageStack getStack() {
-        return stack;
+    public ImageStack[] getStacks() {
+        return stacks;
     }
 
     public boolean isMonoChrome() {
@@ -895,14 +882,8 @@ public class Timelapse_Analysis implements PlugIn {
             PolygonRoi sigProi = new PolygonRoi(xSigPoints, ySigPoints, size + 1, Roi.POLYLINE);
             PolygonRoi virProi = new PolygonRoi(xVirPoints, yVirPoints, size + 1, Roi.POLYLINE);
             Straightener straightener = new Straightener();
-            ByteProcessor virSlice = new ByteProcessor(stack.getWidth(), stack.getHeight(),
-                    Utils.getPixels((ColorProcessor) stack.getProcessor(sigStartP.getTimePoint()),
-                            UserVariables.getC1Index()));
-            ByteProcessor sigSlice = new ByteProcessor(stack.getWidth(), stack.getHeight(),
-                    Utils.getPixels((ColorProcessor) stack.getProcessor(sigStartP.getTimePoint()),
-                            UserVariables.getC2Index()));
-            ImagePlus sigImp = new ImagePlus("", sigSlice);
-            ImagePlus virImp = new ImagePlus("", virSlice);
+            ImagePlus sigImp = new ImagePlus("", stacks[1].getProcessor(sigStartP.getTimePoint()));
+            ImagePlus virImp = new ImagePlus("", stacks[0].getProcessor(sigStartP.getTimePoint()));
             sigImp.setRoi(sigProi);
             virImp.setRoi(virProi);
             sigTemps[i] = straightener.straighten(sigImp, sigProi, signalWidth);
@@ -920,7 +901,7 @@ public class Timelapse_Analysis implements PlugIn {
             if (sigTemps[j] != null && sigTemps[j].getWidth() >= outputWidth) {
                 ImageStack virStack = new ImageStack(virTemps[j].getWidth(), virTemps[j].getHeight());
                 virStack.addSlice(virTemps[j]);
-                ParticleArray particles = findParticles(0.0, false, 0, 0, UserVariables.getCurveFitTol(), virStack, true);
+                ParticleArray particles = findParticles(0.0, false, 0, 0, UserVariables.getCurveFitTol(), virStack, null, true);
                 if (!particles.getLevel(0).isEmpty()) {
                     virTemps[j].setInterpolate(true);
                     virTemps[j].setInterpolationMethod(ImageProcessor.BICUBIC);

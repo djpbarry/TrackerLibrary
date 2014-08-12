@@ -6,6 +6,7 @@
 package ui;
 
 import IAClasses.IsoGaussian;
+import IAClasses.Utils;
 import ParticleTracking.Particle;
 import ParticleTracking.ParticleArray;
 import ParticleTracking.Timelapse_Analysis;
@@ -16,7 +17,6 @@ import ij.ImagePlus;
 import ij.ImageStack;
 import ij.gui.ImageCanvas;
 import ij.process.ImageProcessor;
-import ij.process.TypeConverter;
 import java.awt.Color;
 import java.util.ArrayList;
 import javax.swing.DefaultBoundedRangeModel;
@@ -52,8 +52,9 @@ public class UserInterface extends javax.swing.JDialog {
         super(parent, modal);
         this.title = title;
         this.analyser = analyser;
-        imp = new ImagePlus("", analyser.getStack().getProcessor(1));
-        monoChrome = !(imp.getProcessor().getNChannels() > 1);
+        ImageStack[] stacks = analyser.getStacks();
+        this.monoChrome = (stacks[1] == null);
+        this.imp = new ImagePlus("", Utils.updateImage(stacks[0], stacks[1], 1));
         if (monoChrome) {
             UserVariables.setColocal(!monoChrome);
         }
@@ -408,7 +409,7 @@ public class UserInterface extends javax.swing.JDialog {
     jPanel2.add(canvas1, gridBagConstraints);
 
     previewScrollBar.setOrientation(javax.swing.JScrollBar.HORIZONTAL);
-    previewScrollBar.setModel(new DefaultBoundedRangeModel(1, 0, 1, analyser.getStack().getSize()));
+    previewScrollBar.setModel(new DefaultBoundedRangeModel(1, 0, 1, analyser.getStacks()[0].getSize()));
     previewScrollBar.setEnabled(previewToggleButton.isSelected());
     previewScrollBar.addAdjustmentListener(new java.awt.event.AdjustmentListener() {
         public void adjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {
@@ -572,20 +573,14 @@ public class UserInterface extends javax.swing.JDialog {
 //    }
     public void viewDetections() {
         analyser.calcParticleRadius(UserVariables.getSpatialRes());
-        ImageStack stack = analyser.getStack();
+        ImageStack stacks[] = analyser.getStacks();
         ParticleArray detections;
         if (UserVariables.isGpu()) {
-            detections = analyser.cudaFindParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stack, monoChrome);
+            detections = analyser.cudaFindParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stacks[0], stacks[1],monoChrome);
         } else {
-            detections = analyser.findParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stack, monoChrome);
+            detections = analyser.findParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stacks[0], stacks[1],monoChrome);
         }
-        ImageProcessor output;
-        int slice = previewScrollBar.getValue();
-        if (monoChrome) {
-            output = (new TypeConverter((stack.getProcessor(slice)).duplicate(), true)).convertToByte();
-        } else {
-            output = (new TypeConverter((stack.getProcessor(slice)).duplicate(), true)).convertToRGB();
-        }
+        ImageProcessor output = Utils.updateImage(stacks[0], stacks[1], previewScrollBar.getValue());
         double mag = 1.0 / UIMethods.getMagnification(output, canvas1);
         double sr = 1.0 / Double.parseDouble(spatResTextField.getText());
 //        int radius = (int)Math.round(sr);

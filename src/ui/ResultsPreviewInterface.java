@@ -5,7 +5,6 @@
  */
 package ui;
 
-import IAClasses.Utils;
 import ParticleTracking.ParticleTrajectory;
 import ParticleTracking.Timelapse_Analysis;
 import ParticleTracking.UserVariables;
@@ -13,6 +12,7 @@ import UIClasses.UIMethods;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.gui.ImageCanvas;
+import ij.plugin.RGBStackMerge;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
@@ -41,7 +41,7 @@ public class ResultsPreviewInterface extends javax.swing.JDialog {
         super(parent, modal);
         this.title = title;
         this.analyser = analyser;
-        stack = analyser.getStack();
+        stack = RGBStackMerge.mergeStacks(analyser.getStacks()[0], analyser.getStacks()[1], null, true);
         imp = new ImagePlus("", stack.getProcessor(1));
         trajectories = analyser.getTrajectories();
         initComponents();
@@ -167,7 +167,7 @@ public class ResultsPreviewInterface extends javax.swing.JDialog {
         getContentPane().add(jPanel1, gridBagConstraints);
 
         imageScrollBar.setOrientation(javax.swing.JScrollBar.HORIZONTAL);
-        imageScrollBar.setModel(new DefaultBoundedRangeModel(1, 0, 1, stack.getSize()));
+        imageScrollBar.setModel(new DefaultBoundedRangeModel(1, 0, 1, analyser.getStacks()[0].getSize()));
         imageScrollBar.addAdjustmentListener(new java.awt.event.AdjustmentListener() {
             public void adjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {
                 imageScrollBarAdjustmentValueChanged(evt);
@@ -216,7 +216,11 @@ public class ResultsPreviewInterface extends javax.swing.JDialog {
 
     private void trajScrollBarAdjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {//GEN-FIRST:event_trajScrollBarAdjustmentValueChanged
         updateTextField(trajTextField, trajScrollBar.getValue());
-        stack = analyser.mapTrajectories(analyser.getStack(), trajectories, UserVariables.getSpatialRes(), UserVariables.getMinTrajLength(), UserVariables.getTimeRes(), true, trajScrollBar.getValue(), trajScrollBar.getValue(), trajScrollBar.getValue(), true);
+        stack = analyser.mapTrajectories(RGBStackMerge.mergeStacks(analyser.getStacks()[0],
+                analyser.getStacks()[1], null, true),
+                trajectories, UserVariables.getSpatialRes(), UserVariables.getMinTrajLength(),
+                UserVariables.getTimeRes(), true, trajScrollBar.getValue(), trajScrollBar.getValue(),
+                trajScrollBar.getValue(), true);
         imageScrollBar.setValue((trajectories.get(trajScrollBar.getValue())).getStartTimeIndex() + 1);
         imageScrollBarAdjustmentValueChanged(null);
     }//GEN-LAST:event_trajScrollBarAdjustmentValueChanged

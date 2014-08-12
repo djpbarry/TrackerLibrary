@@ -51,16 +51,16 @@ public class Volume_Analysis extends Timelapse_Analysis {
     public Volume_Analysis(ImagePlus imp) {
         super(imp,null);
         this.imp = imp;
-        this.stack = imp.getImageStack();
+        this.stacks[0] = imp.getImageStack();
     }
 
     public void analyse() {
-        if (stack != null) {
+        if (stacks[0] != null) {
             IJ.register(this.getClass());
             int i, count;
-            int width = stack.getWidth(), height = stack.getHeight();
+            int width = stacks[0].getWidth(), height = stacks[0].getHeight();
 
-            findParticles(1.0, true, 0, stack.getSize() - 1, UserVariables.getCurveFitTol(), stack, monoChrome);
+            findParticles(1.0, true, 0, stacks[0].getSize() - 1, UserVariables.getCurveFitTol(), stacks[0], monoChrome);
 
             TextWindow results = new TextWindow(title + " Results", "X\tY\tFrame\tChannel 1 ("
                     + UserVariables.channels[UserVariables.getC1Index()]
@@ -90,7 +90,7 @@ public class Volume_Analysis extends Timelapse_Analysis {
                 }
             }
             n = trajectories.size();
-            mapTrajectories(stack, trajectories, spatialRes, minTrajLength, timeRes, true, 0, trajectories.size() - 1, 1, false);
+            mapTrajectories(stacks[0], trajectories, spatialRes, minTrajLength, timeRes, true, 0, trajectories.size() - 1, 1, false);
             ArrayList distributions = new ArrayList();
             int cropRad = 4 * xyPartRad + 1;
             for (i = 0, count = 1; i < n; i++) {
@@ -109,12 +109,12 @@ public class Volume_Analysis extends Timelapse_Analysis {
                     }
                     int x = (int) Math.round(xsum / s);
                     int y = (int) Math.round(ysum / s);
-                    if (!((x < cropRad) || (y < cropRad) || (stack.getWidth() - x < cropRad)
-                            || (stack.getHeight() - y < cropRad))) {
+                    if (!((x < cropRad) || (y < cropRad) || (stacks[0].getWidth() - x < cropRad)
+                            || (stacks[0].getHeight() - y < cropRad))) {
                         ImageStack dist = new ImageStack(cropRad, cropRad);
                         Rectangle roi = new Rectangle(x - 2 * xyPartRad, y - 2 * xyPartRad, cropRad, cropRad);
-                        for (int k = peakTime + 1; k <= stack.getSize() && k - peakTime < midpoint + 1; k++) {
-                            ImageProcessor currentIP = stack.getProcessor(k);
+                        for (int k = peakTime + 1; k <= stacks[0].getSize() && k - peakTime < midpoint + 1; k++) {
+                            ImageProcessor currentIP = stacks[0].getProcessor(k);
                             currentIP.setRoi(roi);
                             dist.addSlice("" + count, currentIP.crop());
                         }
@@ -122,7 +122,7 @@ public class Volume_Analysis extends Timelapse_Analysis {
                             dist.addSlice("" + count, new ColorProcessor(cropRad, cropRad));
                         }
                         for (int k = peakTime; k > 0 && peakTime - k < midpoint - 1; k--) {
-                            ImageProcessor currentIP = stack.getProcessor(k);
+                            ImageProcessor currentIP = stacks[0].getProcessor(k);
                             currentIP.setRoi(roi);
                             dist.addSlice("" + count, currentIP.crop(), 0);
                         }

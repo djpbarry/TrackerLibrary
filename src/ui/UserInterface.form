@@ -381,7 +381,7 @@
             <EventHandler event="adjustmentValueChanged" listener="java.awt.event.AdjustmentListener" parameters="java.awt.event.AdjustmentEvent" handler="previewScrollBarAdjustmentValueChanged"/>
           </Events>
           <AuxValues>
-            <AuxValue name="JavaCodeGenerator_InitCodePost" type="java.lang.String" value="previewScrollBar.setModel(new DefaultBoundedRangeModel(1, 0, 1, analyser.getStack().getSize()));&#xa;previewScrollBar.setEnabled(previewToggleButton.isSelected());"/>
+            <AuxValue name="JavaCodeGenerator_InitCodePost" type="java.lang.String" value="previewScrollBar.setModel(new DefaultBoundedRangeModel(1, 0, 1, analyser.getStacks()[0].getSize()));&#xa;previewScrollBar.setEnabled(previewToggleButton.isSelected());"/>
           </AuxValues>
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
