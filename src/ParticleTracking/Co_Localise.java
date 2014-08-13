@@ -2,6 +2,7 @@ package ParticleTracking;
 
 import IAClasses.IsoGaussian;
 import IAClasses.Utils;
+import UtilClasses.GenUtils;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -17,57 +18,55 @@ import java.util.ArrayList;
 public class Co_Localise implements PlugIn {
 
     protected ImagePlus imp;
-    protected ImageStack[] stacks;
+    protected ImageStack[] stacks = new ImageStack[2];
     protected final String title = "Colocaliser v1.06";
 //    public static final String[] channels = {"Red", "Green", "Blue"};
-    protected String resultsHeadings, coordHeadings;
-    protected static double coFactor = 2.5;
+    protected String resultsHeadings = "Image\tChannel 1 Detections\tColocalised Channel 2 Detections\t% Colocalisation\t"
+            + "\u0394 (nm)", coordHeadings = "C0_X\tC0_Y\tC1_X\tC1_Y";
+    protected static double coFactor = 1.0;
 //    protected static int channel1 = 0, channel2 = 1;
     public static final int RED = 0, GREEN = 1, BLUE = 2;
     protected DecimalFormat numFormat = new DecimalFormat("0.0");
     protected static boolean partialDetect = false;
     protected TextWindow results = null, particleCoords = null;
     protected boolean findTails = false;
+    private String labels[] = {"Channel 1", "Channel 2"};
 
-//    public static void main(String args[]) {
-//        (new Co_Localise(new ImagePlus("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Co_Localiser_Test\\Co_Localiser_Test.png"))).run(null);
-//    }
+    public static void main(String args[]) {
+        ImageStack stacks[] = new ImageStack[2];
+        stacks[0] = new ImagePlus("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Co_Localiser_Test\\Co_Localiser_Test_Red.png").getImageStack();
+        stacks[1] = new ImagePlus("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Co_Localiser_Test\\Co_Localiser_Test_Green.png").getImageStack();
+        (new Co_Localise(stacks)).run(null);
+    }
+
     public Co_Localise() {
     }
 
-//    public Co_Localise(ImagePlus imp) {
-//        this.imp = imp;
-//        if (imp != null) {
-//            this.stacks = imp.getStack();
-//        } else {
-//            stacks = null;
-//        }
-//    }
+    public Co_Localise(ImageStack[] stacks) {
+        this.stacks = stacks;
+    }
+
+    public Co_Localise(ImagePlus imp) {
+        this.imp = imp;
+        ImagePlus tempImps[] = new ImagePlus[3];
+        tempImps = ChannelSplitter.split(imp);
+        stacks[0] = tempImps[0].getImageStack();
+        stacks[1] = tempImps[1].getImageStack();
+    }
+
     @Override
     public void run(String arg) {
         if (IJ.getInstance() != null) {
-            imp = IJ.getImage();
-            ImagePlus tempImps[] = new ImagePlus[3];
-            tempImps = ChannelSplitter.split(imp);
-            stacks[0] = tempImps[0].getImageStack();
-            stacks[1] = tempImps[1].getImageStack();
+            ImagePlus[] inputs = GenUtils.specifyInputs(labels);
+            stacks[0] = inputs[0].getImageStack();
+            stacks[1] = inputs[1].getImageStack();
         }
-        if (imp == null) {
+        if (stacks[0].getProcessor(1).getNChannels() > 1 || stacks[1].getProcessor(1).getNChannels() > 1) {
             Toolkit.getDefaultToolkit().beep();
-            IJ.error("No image stack open.");
-            return;
-        }
-        if (!(imp.getImageStack().getProcessor(1) instanceof ColorProcessor)) {
-            Toolkit.getDefaultToolkit().beep();
-            IJ.error("Colour (RGB) image required.");
+            IJ.error("Monochrome images required.");
             return;
         }
         if (showDialog()) {
-            resultsHeadings = "Image\tChannel 1 (" + UserVariables.channels[UserVariables.getC1Index()]
-                    + ") Detections\tColocalised Channel 2 (" + UserVariables.channels[UserVariables.getC2Index()]
-                    + ") Detections\t% Colocalisation\t"
-                    + "\u0394 (nm)";
-            coordHeadings = "C0_X\tC0_Y\tC1_X\tC1_Y";
             UserVariables.setPreProcess(true);
             Timelapse_Analysis analyser = new Timelapse_Analysis(stacks);
             analyser.calcParticleRadius(UserVariables.getSpatialRes());
@@ -78,9 +77,9 @@ public class Co_Localise implements PlugIn {
     }
 
     public boolean showDialog() {
-        if (imp == null) {
+        if (stacks == null) {
             Toolkit.getDefaultToolkit().beep();
-            IJ.error("No image open.");
+            IJ.error("No images open.");
             return false;
         }
         boolean valid = false;
@@ -168,7 +167,7 @@ public class Co_Localise implements PlugIn {
         }
         double displaymax = 0.0;
         int colocalisation, count;
-        int width = imp.getWidth(), height = imp.getHeight();
+        int width = stacks[0].getWidth(), height = stacks[0].getHeight();
         ImageStack outStack = new ImageStack(width, height);
         double res = UserVariables.getSpatialRes();
         double sepsum;
@@ -234,7 +233,7 @@ public class Co_Localise implements PlugIn {
             if (results == null) {
                 results = new TextWindow(title + " Results", resultsHeadings, new String(), 1000, 500);
             }
-            results.append(imp.getTitle() + " (Slice " + i + ")\t" + count + "\t" + colocalisation
+            results.append("Slice " + i + "\t" + count + "\t" + colocalisation
                     + "\t" + numFormat.format(100.0 * colocalisation / count)
                     + "\t" + numFormat.format(1000.0 * res * sepsum / count));
 
