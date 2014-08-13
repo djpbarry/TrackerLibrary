@@ -11,6 +11,7 @@ import ij.plugin.ChannelSplitter;
 import ij.plugin.PlugIn;
 import ij.process.*;
 import ij.text.TextWindow;
+import java.awt.Font;
 import java.awt.Toolkit;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 public class Co_Localise implements PlugIn {
 
     protected ImagePlus imp;
+    private ImagePlus[] inputs;
     protected ImageStack[] stacks = new ImageStack[2];
     protected final String title = "Colocaliser v1.06";
 //    public static final String[] channels = {"Red", "Green", "Blue"};
@@ -33,17 +35,20 @@ public class Co_Localise implements PlugIn {
     private String labels[] = {"Channel 1", "Channel 2"};
 
     public static void main(String args[]) {
-        ImageStack stacks[] = new ImageStack[2];
-        stacks[0] = new ImagePlus("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Co_Localiser_Test\\Co_Localiser_Test_Red.png").getImageStack();
-        stacks[1] = new ImagePlus("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Co_Localiser_Test\\Co_Localiser_Test_Green.png").getImageStack();
-        (new Co_Localise(stacks)).run(null);
+        ImagePlus inputs[] = new ImagePlus[2];
+        inputs[0] = new ImagePlus("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Co_Localiser_Test\\Co_Localiser_Test_Red.png");
+        inputs[1] = new ImagePlus("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Co_Localiser_Test\\Co_Localiser_Test_Green.png");
+        (new Co_Localise(inputs)).run(null);
     }
-
     public Co_Localise() {
     }
 
-    public Co_Localise(ImageStack[] stacks) {
-        this.stacks = stacks;
+    public Co_Localise(ImagePlus[] inputs) {
+        ImageStack tempStacks[] = new ImageStack[2];
+        tempStacks[0] = inputs[0].getImageStack();
+        tempStacks[1] = inputs[1].getImageStack();
+        this.inputs = inputs;
+        this.stacks = tempStacks;
     }
 
     public Co_Localise(ImagePlus imp) {
@@ -57,13 +62,16 @@ public class Co_Localise implements PlugIn {
     @Override
     public void run(String arg) {
         if (IJ.getInstance() != null) {
-            ImagePlus[] inputs = GenUtils.specifyInputs(labels);
+            inputs = GenUtils.specifyInputs(labels);
             stacks[0] = inputs[0].getImageStack();
             stacks[1] = inputs[1].getImageStack();
         }
         if (stacks[0].getProcessor(1).getNChannels() > 1 || stacks[1].getProcessor(1).getNChannels() > 1) {
-            Toolkit.getDefaultToolkit().beep();
-            IJ.error("Monochrome images required.");
+            GenUtils.error("Monochrome images required.");
+            return;
+        }
+        if (stacks[0].getSize() != stacks[1].getSize()) {
+            GenUtils.error("Stacks must have same number of slices.");
             return;
         }
         if (showDialog()) {
@@ -86,19 +94,20 @@ public class Co_Localise implements PlugIn {
         while (!valid) {
             valid = true;
             GenericDialog dialog = new GenericDialog(title, IJ.getInstance());
-            dialog.addMessage("Channel 2 will be co-localised with Channel 1.");
-            dialog.addChoice("Channel 1:", UserVariables.channels, UserVariables.channels[RED]);
-            dialog.addChoice("Channel 2:", UserVariables.channels, UserVariables.channels[GREEN]);
-            dialog.addNumericField("Spatial Resolution:", UserVariables.getSpatialRes() * 1000.0, 3, 5, "nm/pixel");
-            dialog.addNumericField("Minimum Peak Size (Ch 1):", UserVariables.getChan1MaxThresh(), 3, 5, "");
-            dialog.addNumericField("Minimum Peak Size (Ch 2):", UserVariables.getChan2MaxThresh(), 3, 5, "");
-            dialog.addNumericField("Curve Fit Tolerance:", UserVariables.getCurveFitTol(), 3, 5, "");
-            dialog.addNumericField("Colocalisation Factor:", coFactor, 3, 5, "");
+            dialog.addMessage("Channel 2 will be co-localised with channel 1", new Font("Helvetica", Font.BOLD, 12));
+            dialog.addMessage("Channel 1: " + inputs[0].getTitle());
+            dialog.addMessage("Channel 2: " + inputs[1].getTitle());
+            dialog.addMessage("");
+            dialog.addNumericField("Spatial Resolution:", UserVariables.getSpatialRes() * 1000.0, 3, 7, "nm/pixel");
+            dialog.addNumericField("Minimum Peak Size (Ch 1):", UserVariables.getChan1MaxThresh(), 3, 7, "");
+            dialog.addNumericField("Minimum Peak Size (Ch 2):", UserVariables.getChan2MaxThresh(), 3, 7, "");
+            dialog.addNumericField("Curve Fit Tolerance:", UserVariables.getCurveFitTol(), 3, 7, "");
+            dialog.addNumericField("Colocalisation Factor:", coFactor, 3, 7, "");
             dialog.addCheckbox("Include Partial Detections", partialDetect);
             dialog.showDialog();
             if (!dialog.wasCanceled()) {
-                UserVariables.setC1Index(dialog.getNextChoiceIndex());
-                UserVariables.setC2Index(dialog.getNextChoiceIndex());
+                UserVariables.setC1Index(0);
+                UserVariables.setC2Index(1);
                 UserVariables.setSpatialRes(dialog.getNextNumber() / 1000.0);
                 UserVariables.setChan1MaxThresh(dialog.getNextNumber());
                 UserVariables.setChan2MaxThresh(dialog.getNextNumber());
