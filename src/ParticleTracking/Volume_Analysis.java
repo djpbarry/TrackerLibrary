@@ -9,6 +9,7 @@ import IAClasses.Utils;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.plugin.ChannelSplitter;
 import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
 import ij.process.FloatProcessor;
@@ -49,8 +50,12 @@ public class Volume_Analysis extends Timelapse_Analysis {
     }
 
     public Volume_Analysis(ImagePlus imp) {
-        super(imp,null);
+        super(imp, null);
         this.imp = imp;
+        ImagePlus tempImps[] = new ImagePlus[3];
+        tempImps = ChannelSplitter.split(imp);
+        stacks[0] = tempImps[0].getImageStack();
+        stacks[1] = tempImps[1].getImageStack();
         this.stacks[0] = imp.getImageStack();
     }
 

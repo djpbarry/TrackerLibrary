@@ -8,6 +8,7 @@ import UtilClasses.Utilities;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.VirtualStack;
 import ij.gui.Plot;
 import ij.gui.PolygonRoi;
 import ij.gui.Roi;
@@ -80,13 +81,13 @@ public class Timelapse_Analysis implements PlugIn {
 
     private native boolean cudaGaussFitter(String folder, String ext, float spatialRes, float sigmaEst, float maxthresh, float fitTol, int startSlice, int endSlice);
 
-    public static void main(String args[]) {
-//        if (imp != null) {
-        Timelapse_Analysis instance = new Timelapse_Analysis();
-        instance.run(null);
-//        }
+//    public static void main(String args[]) {
+////        if (imp != null) {
+//        Timelapse_Analysis instance = new Timelapse_Analysis();
+//        instance.run(null);
+////        }
 //        System.exit(0);
-    }
+//    }
 
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep, double chan1MaxThresh, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
         UserVariables.setSpatialRes(spatialRes);
@@ -122,12 +123,12 @@ public class Timelapse_Analysis implements PlugIn {
         inputDir = Utilities.getFolder(inputDir, null);
         c0Dir = new File(inputDir.getAbsolutePath() + delimiter + "C0");
         ImagePlus imp = Utils.buildStack(c0Dir);
-        stacks = new ImageStack[2];
-        stacks[0] = imp.getImageStack();
+        stacks = new VirtualStack[2];
+        stacks[0] = (VirtualStack)imp.getImageStack();
         this.ext = imp.getTitle();
         c1Dir = new File(inputDir.getAbsolutePath() + delimiter + "C1");
         if (c1Dir.exists()) {
-            stacks[1] = (Utils.buildStack(c1Dir)).getImageStack();
+            stacks[1] = (VirtualStack)(Utils.buildStack(c1Dir)).getImageStack();
         }
 //        if (IJ.getInstance() != null) {
 //            imp = WindowManager.getCurrentImage();
@@ -366,6 +367,7 @@ public class Timelapse_Analysis implements PlugIn {
 
     public ParticleArray cudaFindParticles(double searchScale, boolean update, int startSlice, int endSlice, double fitTol, ImageStack channel1, ImageStack channel2, boolean monoChrome) {
         if (!cudaGaussFitter(c0Dir.getAbsolutePath(), ext, (float) UserVariables.getSpatialRes() * 1000.0f, (float) xySigEst, (float) UserVariables.getChan1MaxThresh(), (float) UserVariables.getCurveFitTol(), startSlice, endSlice)) {
+            IJ.log("CUDA Error");
             return null;
         }
         File cudaFile = new File(c0Dir + delimiter + "cudadata.txt");

@@ -13,7 +13,6 @@ import ij.text.TextWindow;
 import java.awt.Toolkit;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class Co_Localise implements PlugIn {
 
