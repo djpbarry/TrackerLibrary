@@ -1,6 +1,7 @@
 package ParticleTracking;
 
 import IAClasses.IsoGaussian;
+import IAClasses.ProgressDialog;
 import IAClasses.Utils;
 import UtilClasses.GenUtils;
 import ij.IJ;
@@ -34,12 +35,12 @@ public class Co_Localise implements PlugIn {
     protected boolean findTails = false;
     private String labels[] = {"Channel 1", "Channel 2"};
 
-    public static void main(String args[]) {
-        ImagePlus inputs[] = new ImagePlus[2];
-        inputs[0] = new ImagePlus("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Co_Localiser_Test\\Co_Localiser_Test_Red.png");
-        inputs[1] = new ImagePlus("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Co_Localiser_Test\\Co_Localiser_Test_Green.png");
-        (new Co_Localise(inputs)).run(null);
-    }
+//    public static void main(String args[]) {
+//        ImagePlus inputs[] = new ImagePlus[2];
+//        inputs[0] = new ImagePlus("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Co_Localiser_Test\\Co_Localiser_Test_Red.png");
+//        inputs[1] = new ImagePlus("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Co_Localiser_Test\\Co_Localiser_Test_Green.png");
+//        (new Co_Localise(inputs)).run(null);
+//    }
     public Co_Localise() {
     }
 
@@ -180,7 +181,10 @@ public class Co_Localise implements PlugIn {
         ImageStack outStack = new ImageStack(width, height);
         double res = UserVariables.getSpatialRes();
         double sepsum;
+        ProgressDialog progress = new ProgressDialog(null, "Analysing Stacks...", false, true, title);
+        progress.setVisible(true);
         for (int i = 0; i < stacks[0].getSize(); i++) {
+            progress.updateProgress(i, stacks[0].getSize());
 //            ByteProcessor tailImage = new ByteProcessor(stack.getWidth(), stack.getHeight());
 //            tailImage.setPixels(getPixels(channel2, i));
             colocalisation = 0;
@@ -251,6 +255,7 @@ public class Co_Localise implements PlugIn {
                     outPix(ch1proc, ch2proc, BLUE));
             outStack.addSlice("" + i, output);
         }
+        progress.dispose();
         if (results != null) {
             results.append("\n" + toString());
             results.setVisible(true);

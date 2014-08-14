@@ -576,35 +576,37 @@ public class UserInterface extends javax.swing.JDialog {
         ImageStack stacks[] = analyser.getStacks();
         ParticleArray detections;
         if (UserVariables.isGpu()) {
-            detections = analyser.cudaFindParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stacks[0], stacks[1],monoChrome);
+            detections = analyser.cudaFindParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stacks[0], stacks[1], monoChrome);
         } else {
-            detections = analyser.findParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stacks[0], stacks[1],monoChrome);
+            detections = analyser.findParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stacks[0], stacks[1], monoChrome);
         }
-        ImageProcessor output = Utils.updateImage(stacks[0], stacks[1], previewScrollBar.getValue());
-        double mag = 1.0 / UIMethods.getMagnification(output, canvas1);
-        double sr = 1.0 / Double.parseDouble(spatResTextField.getText());
+        if (detections != null) {
+            ImageProcessor output = Utils.updateImage(stacks[0], stacks[1], previewScrollBar.getValue());
+            double mag = 1.0 / UIMethods.getMagnification(output, canvas1);
+            double sr = 1.0 / Double.parseDouble(spatResTextField.getText());
 //        int radius = (int)Math.round(sr);
-        int radius = analyser.getXyPartRad();
-        IsoGaussian c1, c2;
-        ArrayList<Particle> particles = detections.getLevel(0);
-        Color c1Color = !monoChrome ? analyser.getDrawColor(c1ComboBox.getSelectedIndex()) : Color.white;
-        Color c2Color = !monoChrome ? analyser.getDrawColor(c2ComboBox.getSelectedIndex()) : Color.white;
-        output.setLineWidth(1);
-        for (Particle particle : particles) {
-            c1 = particle.getC1Gaussian();
-            c2 = particle.getC2Gaussian();
-            drawDetections(output, (int) (Math.round(sr * c1.getX())), (int) (Math.round(sr * c1.getY())),
-                    radius, c1.getFit() > UserVariables.getCurveFitTol(), c1Color);
-            if (c2 != null) {
-                drawDetections(output, (int) (Math.round(sr * c2.getX())),
-                        (int) (Math.round(sr * c2.getY())), radius,
-                        false, c2Color);
+            int radius = analyser.getXyPartRad();
+            IsoGaussian c1, c2;
+            ArrayList<Particle> particles = detections.getLevel(0);
+            Color c1Color = !monoChrome ? analyser.getDrawColor(c1ComboBox.getSelectedIndex()) : Color.white;
+            Color c2Color = !monoChrome ? analyser.getDrawColor(c2ComboBox.getSelectedIndex()) : Color.white;
+            output.setLineWidth(1);
+            for (Particle particle : particles) {
+                c1 = particle.getC1Gaussian();
+                c2 = particle.getC2Gaussian();
+                drawDetections(output, (int) (Math.round(sr * c1.getX())), (int) (Math.round(sr * c1.getY())),
+                        radius, c1.getFit() > UserVariables.getCurveFitTol(), c1Color);
+                if (c2 != null) {
+                    drawDetections(output, (int) (Math.round(sr * c2.getX())),
+                            (int) (Math.round(sr * c2.getY())), radius,
+                            false, c2Color);
+                }
             }
-        }
-        imp.setProcessor("", output);
-        ((ImageCanvas) canvas1).setMagnification(mag);
+            imp.setProcessor("", output);
+            ((ImageCanvas) canvas1).setMagnification(mag);
 
-        canvas1.repaint();
+            canvas1.repaint();
+        }
     }
 
     public void drawDetections(ImageProcessor image, int x, int y, int radius,
