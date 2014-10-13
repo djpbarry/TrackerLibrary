@@ -74,12 +74,11 @@ public class Timelapse_Analysis implements PlugIn {
     private final String delimiter = GenUtils.getDelimiter();
     String parentDir;
 
-    static {
-        System.loadLibrary("cuda_gauss_tracker"); // Load native library at runtime cudaGaussFitter.dll
-    }
-
-    private native boolean cudaGaussFitter(String folder, String ext, float spatialRes, float sigmaEst, float maxthresh, float fitTol, int startSlice, int endSlice);
-
+//    static {
+//        System.loadLibrary("cuda_gauss_tracker"); // Load native library at runtime cudaGaussFitter.dll
+//    }
+//
+//    private native boolean cudaGaussFitter(String folder, String ext, float spatialRes, float sigmaEst, float maxthresh, float fitTol, int startSlice, int endSlice);
 //    public static void main(String args[]) {
 ////        if (imp != null) {
 //        Timelapse_Analysis instance = new Timelapse_Analysis();
@@ -87,7 +86,6 @@ public class Timelapse_Analysis implements PlugIn {
 ////        }
 //        System.exit(0);
 //    }
-
     public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep, double chan1MaxThresh, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
         UserVariables.setSpatialRes(spatialRes);
         UserVariables.setTimeRes(timeRes);
@@ -119,8 +117,10 @@ public class Timelapse_Analysis implements PlugIn {
     public void run(String arg) {
         Utilities.setLookAndFeel(UserInterface.class);
         title = title + "_v" + VERSION + "." + intFormat.format(Revision.Revision.revisionNumber);
-        inputDir = Utilities.getFolder(inputDir, null);
-        if(inputDir==null)return;
+        inputDir = Utilities.getFolder(inputDir, null, true);
+        if (inputDir == null) {
+            return;
+        }
         c0Dir = new File(inputDir.getAbsolutePath() + delimiter + "C0");
         ImagePlus imp = Utils.buildStack(c0Dir);
         stacks = new ImageStack[2];
@@ -155,10 +155,10 @@ public class Timelapse_Analysis implements PlugIn {
      * Analyses the {@link ImageStack} specified by <code>stack</code>.
      */
     public void analyse() {
-        outputDir = Utilities.getFolder(outputDir, "Specify directory for output files...");
+        outputDir = Utilities.getFolder(outputDir, "Specify directory for output files...", true);
         parentDir = GenUtils.openResultsDirectory(outputDir + delimiter + title, delimiter);
         if (!monoChrome) {
-            calDir = Utilities.getFolder(calDir, "Specify directory containing calibrations...");
+            calDir = Utilities.getFolder(calDir, "Specify directory containing calibrations...", true);
         }
         if (stacks != null) {
             IJ.register(this.getClass());
@@ -168,7 +168,7 @@ public class Timelapse_Analysis implements PlugIn {
             int i, count;
 //            int width = stacks[0].getWidth(), height = stacks[0].getHeight();
             if (UserVariables.isGpu()) {
-                cudaFindParticles(SEARCH_SCALE, true, 0, stacks[0].getSize() - 1, UserVariables.getCurveFitTol(), stacks[0], stacks[1], monoChrome);
+//                cudaFindParticles(SEARCH_SCALE, true, 0, stacks[0].getSize() - 1, UserVariables.getCurveFitTol(), stacks[0], stacks[1], monoChrome);
             } else {
                 findParticles(SEARCH_SCALE, true, 0, stacks[0].getSize() - 1, UserVariables.getCurveFitTol(), stacks[0], stacks[1], monoChrome);
             }
@@ -208,7 +208,7 @@ public class Timelapse_Analysis implements PlugIn {
                 }
             }
             n = trajectories.size();
-            ImageStack maps = mapTrajectories(RGBStackMerge.mergeStacks(stacks[0], stacks[1], null, true),
+            ImageStack maps = mapTrajectories((new RGBStackMerge()).mergeStacks(stacks[0].getWidth(), stacks[0].getHeight(), stacks[0].getSize(), stacks[0], stacks[1], null, true),
                     trajectories, UserVariables.getSpatialRes(), UserVariables.getMinTrajLength(),
                     UserVariables.getTimeRes(), true, 0, trajectories.size() - 1, 1, false);
             for (i = 0, count = 1; i < n; i++) {
@@ -295,7 +295,7 @@ public class Timelapse_Analysis implements PlugIn {
 //        ImageStack detect_output = new ImageStack(stack.getWidth(), stack.getHeight());
 //        ImageStack maxima = new ImageStack(stack.getWidth(), stack.getHeight());
 //        ImageStack input_output = new ImageStack(stack.getWidth(), stack.getHeight());
-        ProgressDialog progress = new ProgressDialog(null, "Finding Particles...", false, true, title);
+        ProgressDialog progress = new ProgressDialog(null, "Finding Particles...", false, title, false);
         progress.setVisible(true);
         for (i = startSlice; i < noOfImages && i <= endSlice; i++) {
 //            ByteProcessor oslice = new ByteProcessor(detect_output.getWidth(), detect_output.getHeight());
@@ -364,77 +364,76 @@ public class Timelapse_Analysis implements PlugIn {
         return particles;
     }
 
-    public ParticleArray cudaFindParticles(double searchScale, boolean update, int startSlice, int endSlice, double fitTol, ImageStack channel1, ImageStack channel2, boolean monoChrome) {
-        if (!cudaGaussFitter(c0Dir.getAbsolutePath(), ext, (float) UserVariables.getSpatialRes() * 1000.0f, (float) xySigEst, (float) UserVariables.getChan1MaxThresh(), (float) UserVariables.getCurveFitTol(), startSlice, endSlice)) {
-            IJ.log("CUDA Error");
-            return null;
-        }
-        File cudaFile = new File(c0Dir + delimiter + "cudadata.txt");
-        File fileList[] = {cudaFile};
-        ArrayList<double[]>[] cudaData = GenUtils.readData(5, fileList, delimiter);
-        int arraySize = endSlice - startSlice + 1;
-        int fitRad = (int) Math.ceil(xyPartRad * 4.0 / 3.0);
-//        int pSize = 2 * fitRad + 1;
-        int c2Points[][];
-//        double[] xCoords = new double[pSize];
-//        double[] yCoords = new double[pSize];
-//        double[][] pixValues = new double[pSize][pSize];
-        double spatialRes = UserVariables.getSpatialRes();
-        ParticleArray particles = new ParticleArray(arraySize);
-        double c2Thresholds[] = new double[channel2.getSize()];
-        ImageStack procChannel2 = new ImageStack(channel2.getWidth(), channel2.getHeight());
-        for (int i = 0; i < channel2.getSize(); i++) {
-            procChannel2.addSlice(preProcess(channel2.getProcessor(i + 1).duplicate()));
-            c2Thresholds[i] = Utils.getPercentileThresh(procChannel2.getProcessor(i + 1),
-                    UserVariables.getChan2MaxThresh());
-        }
-        for (int f = 0; f < fileList.length; f++) {
-            ProgressDialog progress = new ProgressDialog(null,
-                    "Reading data for file " + f + " of " + fileList.length + "...",
-                    false, true, title);
-            progress.setVisible(true);
-            int size = cudaData[f].size();
-            for (int row = 0; row < size; row++) {
-                progress.updateProgress(row, size);
-//                IJ.freeMemory();
-                int t = (int) Math.round(cudaData[f].get(row)[0]);
-                double x = cudaData[f].get(row)[1];
-                double y = cudaData[f].get(row)[2];
-                double mag = cudaData[f].get(row)[3];
-                double fit = cudaData[f].get(row)[4];
-//                FloatProcessor chan2Proc = !monoChrome ? preProcess(channel2.getProcessor(t + 1)) : null;
-                IsoGaussian c1Gaussian = new IsoGaussian(x, y, mag, xySigEst, xySigEst, fit);
-                int c1X = (int) Math.round(x / UserVariables.getSpatialRes());
-                int c1Y = (int) Math.round(y / UserVariables.getSpatialRes());
-                IsoGaussian c2Gaussian = null;
-                c2Points = Utils.searchNeighbourhood(c1X, c1Y,
-                        (int) Math.round(fitRad * searchScale),
-                        (int) Math.round(c2Thresholds[t]),
-                        procChannel2.getProcessor(t + 1));
-                if (c2Points != null) {
-                    int xC2 = c2Points[0][0] - (int) Math.round(fitRad * searchScale);
-                    int yC2 = c2Points[0][1] - (int) Math.round(fitRad * searchScale);
-                    c2Gaussian = new IsoGaussian(xC2 * spatialRes, yC2 * spatialRes,
-                            procChannel2.getProcessor(t + 1).getPixelValue(xC2, yC2), xySigEst, xySigEst, 0.0);
-//                    Utils.extractValues(xCoords, yCoords, pixValues,
-//                            c2Points[0][0], c2Points[0][1], chan2Proc);
-//                    MultiGaussFitter c2Fitter = new MultiGaussFitter(1, fitRad, pSize);
-//                    c2Fitter.fit(pixValues, xySigEst);
-//                    ArrayList<IsoGaussian> c2Fits = c2Fitter.getFits(spatialRes, c2Points[0][0] - fitRad * searchScale, c2Points[0][1] - fitRad * searchScale, c2Threshold, UserVariables.getCurveFitTol());
-//                    if (c2Fits != null && c2Fits.size() > 0) {
-//                        c2Gaussian = c2Fits.get(0);
-//                    }
-                }
-                particles.addDetection(t - startSlice, new Particle(t, c1Gaussian, c2Gaussian, null, -1));
-            }
-            progress.dispose();
-        }
-        if (update) {
-            updateTrajectories(particles, UserVariables.getTimeRes(), UserVariables.getTrajMaxStep(), spatialRes, true);
-        }
-        return particles;
-    }
-
+//    public ParticleArray cudaFindParticles(double searchScale, boolean update, int startSlice, int endSlice, double fitTol, ImageStack channel1, ImageStack channel2, boolean monoChrome) {
+//        if (!cudaGaussFitter(c0Dir.getAbsolutePath(), ext, (float) UserVariables.getSpatialRes() * 1000.0f, (float) xySigEst, (float) UserVariables.getChan1MaxThresh(), (float) UserVariables.getCurveFitTol(), startSlice, endSlice)) {
+//            IJ.log("CUDA Error");
+//            return null;
+//        }
+//        File cudaFile = new File(c0Dir + delimiter + "cudadata.txt");
+//        File fileList[] = {cudaFile};
+//        ArrayList<double[]>[] cudaData = GenUtils.readData(5, fileList, delimiter);
+//        int arraySize = endSlice - startSlice + 1;
+//        int fitRad = (int) Math.ceil(xyPartRad * 4.0 / 3.0);
+////        int pSize = 2 * fitRad + 1;
+//        int c2Points[][];
+////        double[] xCoords = new double[pSize];
+////        double[] yCoords = new double[pSize];
+////        double[][] pixValues = new double[pSize][pSize];
+//        double spatialRes = UserVariables.getSpatialRes();
+//        ParticleArray particles = new ParticleArray(arraySize);
+//        double c2Thresholds[] = new double[channel2.getSize()];
+//        ImageStack procChannel2 = new ImageStack(channel2.getWidth(), channel2.getHeight());
+//        for (int i = 0; i < channel2.getSize(); i++) {
+//            procChannel2.addSlice(preProcess(channel2.getProcessor(i + 1).duplicate()));
+//            c2Thresholds[i] = Utils.getPercentileThresh(procChannel2.getProcessor(i + 1),
+//                    UserVariables.getChan2MaxThresh());
+//        }
+//        for (int f = 0; f < fileList.length; f++) {
+//            ProgressDialog progress = new ProgressDialog(null,
+//                    "Reading data for file " + f + " of " + fileList.length + "...",
+//                    false, true, title);
+//            progress.setVisible(true);
+//            int size = cudaData[f].size();
+//            for (int row = 0; row < size; row++) {
+//                progress.updateProgress(row, size);
+////                IJ.freeMemory();
+//                int t = (int) Math.round(cudaData[f].get(row)[0]);
+//                double x = cudaData[f].get(row)[1];
+//                double y = cudaData[f].get(row)[2];
+//                double mag = cudaData[f].get(row)[3];
+//                double fit = cudaData[f].get(row)[4];
+////                FloatProcessor chan2Proc = !monoChrome ? preProcess(channel2.getProcessor(t + 1)) : null;
+//                IsoGaussian c1Gaussian = new IsoGaussian(x, y, mag, xySigEst, xySigEst, fit);
+//                int c1X = (int) Math.round(x / UserVariables.getSpatialRes());
+//                int c1Y = (int) Math.round(y / UserVariables.getSpatialRes());
+//                IsoGaussian c2Gaussian = null;
+//                c2Points = Utils.searchNeighbourhood(c1X, c1Y,
+//                        (int) Math.round(fitRad * searchScale),
+//                        (int) Math.round(c2Thresholds[t]),
+//                        procChannel2.getProcessor(t + 1));
+//                if (c2Points != null) {
+//                    int xC2 = c2Points[0][0] - (int) Math.round(fitRad * searchScale);
+//                    int yC2 = c2Points[0][1] - (int) Math.round(fitRad * searchScale);
+//                    c2Gaussian = new IsoGaussian(xC2 * spatialRes, yC2 * spatialRes,
+//                            procChannel2.getProcessor(t + 1).getPixelValue(xC2, yC2), xySigEst, xySigEst, 0.0);
+////                    Utils.extractValues(xCoords, yCoords, pixValues,
+////                            c2Points[0][0], c2Points[0][1], chan2Proc);
+////                    MultiGaussFitter c2Fitter = new MultiGaussFitter(1, fitRad, pSize);
+////                    c2Fitter.fit(pixValues, xySigEst);
+////                    ArrayList<IsoGaussian> c2Fits = c2Fitter.getFits(spatialRes, c2Points[0][0] - fitRad * searchScale, c2Points[0][1] - fitRad * searchScale, c2Threshold, UserVariables.getCurveFitTol());
+////                    if (c2Fits != null && c2Fits.size() > 0) {
+////                        c2Gaussian = c2Fits.get(0);
+////                    }
+//                }
+//                particles.addDetection(t - startSlice, new Particle(t, c1Gaussian, c2Gaussian, null, -1));
+//            }
+//            progress.dispose();
+//        }
+//        if (update) {
+//            updateTrajectories(particles, UserVariables.getTimeRes(), UserVariables.getTrajMaxStep(), spatialRes, true);
+//        }
+//        return particles;
+//    }
     public void updateTrajectories(ParticleArray objects, double timeRes, double trajMaxStep, double spatialRes, boolean projectPos) {
         if (objects == null) {
             return;
@@ -442,11 +441,11 @@ public class Timelapse_Analysis implements PlugIn {
         int depth = objects.getDepth();
         ParticleTrajectory traj = null;
         double x, y, score, minScore;
-        ProgressDialog progress = new ProgressDialog(null, "Building Trajectories...", false, true, title);
+        ProgressDialog progress = new ProgressDialog(null, "Building Trajectories...", false, title, false);
         progress.setVisible(true);
         for (int m = 0; m < depth; m++) {
             progress.updateProgress(m, depth);
-            for (int k = m; (k < depth) && (((k - m)) < trajMaxStep); k++) {
+            for (int k = m; k < depth; k++) {
                 int size = trajectories.size();
                 ArrayList<Particle> detections = objects.getLevel(k);
                 for (int j = 0; j < detections.size(); j++) {
@@ -489,9 +488,10 @@ public class Timelapse_Analysis implements PlugIn {
                                     x = ch1G.getX();
                                     y = ch1G.getY();
                                     double vector1[] = {x, y, currentParticle.getTimePoint(),
-                                        ch1G.getMagnitude() / 255.0};
+                                        ch1G.getMagnitude(), ch1G.getXSigma(), ch1G.getYSigma()};
                                     double vector2[] = {last.getX(), last.getY(),
-                                        last.getTimePoint(), last.getC1Intensity() / 255.0};
+                                        last.getTimePoint(), last.getC1Intensity(),
+                                        last.getC1Gaussian().getXSigma(), last.getC1Gaussian().getYSigma()};
                                     score = Utils.calcEuclidDist(vector1, vector2);
                                     if (projectPos) {
                                         double vector3[] = {x, y};
@@ -589,11 +589,11 @@ public class Timelapse_Analysis implements PlugIn {
      * Outputs velocity and directionality data on the particle specified by
      * <code>particleNumber</code>. Directionality ( <code>D</code>) is
      * calculated according to: <br> <br>
-     * <code>D = 1 / (1 + &lambda<sub>1</sub> &lambda<sub>2</sub><sup>-1</sup>)</code>
+     * <code>D = 1 / (1 + &lambda<sub>1</sub>
+     * &lambda<sub>2</sub><sup>-1</sup>)</code>
      * <br> <br> where <code>&lambda<sub>1</sub></code> and
      * <code>&lambda<sub>2</sub></code> are the eigenvalues of the trajectory
-     * data and      <code>&lambda<sub>1</sub> <
-     * &lambda<sub>2</sub></code>.
+     * data and      <code>&lambda<sub>1</sub> < &lambda<sub>2</sub></code>.
      *
      */
     public boolean printData(int particleNumber, TextWindow output, int label) {
@@ -732,7 +732,7 @@ public class Timelapse_Analysis implements PlugIn {
         }
         Random r = new Random();
         int tLength = (int) Math.round(TRACK_LENGTH / UserVariables.getSpatialRes());
-        ProgressDialog progress = new ProgressDialog(null, "Mapping Output...", false, true, title);
+        ProgressDialog progress = new ProgressDialog(null, "Mapping Output...", false, title, false);
         progress.setVisible(true);
         for (i = startT; i <= endT && i < n; i++) {
             progress.updateProgress(i, n);

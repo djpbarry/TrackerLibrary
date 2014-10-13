@@ -574,9 +574,9 @@ public class UserInterface extends javax.swing.JDialog {
     public void viewDetections() {
         analyser.calcParticleRadius(UserVariables.getSpatialRes());
         ImageStack stacks[] = analyser.getStacks();
-        ParticleArray detections;
+        ParticleArray detections=null;
         if (UserVariables.isGpu()) {
-            detections = analyser.cudaFindParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stacks[0], stacks[1], monoChrome);
+//            detections = analyser.cudaFindParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stacks[0], stacks[1], monoChrome);
         } else {
             detections = analyser.findParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stacks[0], stacks[1], monoChrome);
         }

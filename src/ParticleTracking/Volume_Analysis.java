@@ -301,4 +301,4 @@ public class Volume_Analysis extends Timelapse_Analysis {
                 + decFormat.format(fluorMin / fluorMaj));
         return true;
     }
-}
+    }

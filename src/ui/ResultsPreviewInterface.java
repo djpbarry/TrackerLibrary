@@ -41,7 +41,8 @@ public class ResultsPreviewInterface extends javax.swing.JDialog {
         super(parent, modal);
         this.title = title;
         this.analyser = analyser;
-        stack = RGBStackMerge.mergeStacks(analyser.getStacks()[0], analyser.getStacks()[1], null, true);
+        ImageStack stacks[] = analyser.getStacks();
+        stack = (new RGBStackMerge()).mergeStacks(stacks[0].getWidth(),stacks[0].getHeight(),stacks[0].getSize(),stacks[0], stacks[1], null, true);
         imp = new ImagePlus("", stack.getProcessor(1));
         trajectories = analyser.getTrajectories();
         initComponents();
@@ -216,8 +217,8 @@ public class ResultsPreviewInterface extends javax.swing.JDialog {
 
     private void trajScrollBarAdjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {//GEN-FIRST:event_trajScrollBarAdjustmentValueChanged
         updateTextField(trajTextField, trajScrollBar.getValue());
-        stack = analyser.mapTrajectories(RGBStackMerge.mergeStacks(analyser.getStacks()[0],
-                analyser.getStacks()[1], null, true),
+        ImageStack stacks[] = analyser.getStacks();
+        stack = analyser.mapTrajectories((new RGBStackMerge()).mergeStacks(stacks[0].getWidth(),stacks[0].getHeight(),stacks[0].getSize(),stacks[0], stacks[1], null, true),
                 trajectories, UserVariables.getSpatialRes(), UserVariables.getMinTrajLength(),
                 UserVariables.getTimeRes(), true, trajScrollBar.getValue(), trajScrollBar.getValue(),
                 trajScrollBar.getValue(), true);

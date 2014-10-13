@@ -103,7 +103,7 @@ public class PSF_Estimator extends Timelapse_Analysis {
         double[][] pixValues = new double[pSize][pSize];
         double spatialRes = UserVariables.getSpatialRes();
         ParticleArray particles = new ParticleArray(arraySize);
-        ProgressDialog progress = new ProgressDialog(null, "Finding Particles...", false, true, title);
+        ProgressDialog progress = new ProgressDialog(null, "Finding Particles...", false, title, false);
         progress.setVisible(true);
         for (i = startSlice; i < noOfImages && i <= endSlice; i++) {
             IJ.freeMemory();

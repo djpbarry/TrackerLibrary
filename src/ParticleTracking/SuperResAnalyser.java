@@ -104,7 +104,7 @@ public class SuperResAnalyser extends Co_Localise {
         DecimalFormat format = new DecimalFormat("000");
         int width = imp.getWidth() * scaleFactor, height = imp.getHeight() * scaleFactor;
         //ImageStack outStack = new ImageStack(width, height);
-        ProgressDialog dialog = new ProgressDialog(null, "Processing...", false, false, TITLE);
+        ProgressDialog dialog = new ProgressDialog(null, "Processing...", false, TITLE, false);
         dialog.setVisible(true);
         FloatProcessor ch1proc = new FloatProcessor(width, height);
         for (int i = 0; i < stacks[0].getSize(); i++) {

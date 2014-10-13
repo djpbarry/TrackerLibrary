@@ -177,7 +177,7 @@ public class Probabilistic_Tracker extends PFTracking3D {
     protected void calcFromHereButtonPressed() {
         ImagePlus imp = getMOriginalImagePlus();
         ImageProcessor proc = imp.getImageStack().getProcessor(1);
-        ArrayList<int[]> maxima = Utils.findLocalMaxima(3, 3, proc, 200.0, true);
+        ArrayList<int[]> maxima = Utils.findLocalMaxima(3, 3, proc, 200.0, true, true);
         int size = maxima.size();
         for (int i = 0; i < size; i++) {
             int[] thismax = maxima.get(i);

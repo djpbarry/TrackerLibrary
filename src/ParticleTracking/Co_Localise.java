@@ -181,7 +181,7 @@ public class Co_Localise implements PlugIn {
         ImageStack outStack = new ImageStack(width, height);
         double res = UserVariables.getSpatialRes();
         double sepsum;
-        ProgressDialog progress = new ProgressDialog(null, "Analysing Stacks...", false, true, title);
+        ProgressDialog progress = new ProgressDialog(null, "Analysing Stacks...", false, title, false);
         progress.setVisible(true);
         for (int i = 0; i < stacks[0].getSize(); i++) {
             progress.updateProgress(i, stacks[0].getSize());
