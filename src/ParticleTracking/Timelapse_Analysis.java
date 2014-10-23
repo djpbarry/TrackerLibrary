@@ -445,7 +445,7 @@ public class Timelapse_Analysis implements PlugIn {
         progress.setVisible(true);
         for (int m = 0; m < depth; m++) {
             progress.updateProgress(m, depth);
-            for (int k = m; k < depth; k++) {
+            for (int k = m; (k < depth) && (((k - m)) < trajMaxStep); k++) {
                 int size = trajectories.size();
                 ArrayList<Particle> detections = objects.getLevel(k);
                 for (int j = 0; j < detections.size(); j++) {
@@ -488,10 +488,9 @@ public class Timelapse_Analysis implements PlugIn {
                                     x = ch1G.getX();
                                     y = ch1G.getY();
                                     double vector1[] = {x, y, currentParticle.getTimePoint(),
-                                        ch1G.getMagnitude(), ch1G.getXSigma(), ch1G.getYSigma()};
+                                        ch1G.getMagnitude()};
                                     double vector2[] = {last.getX(), last.getY(),
-                                        last.getTimePoint(), last.getC1Intensity(),
-                                        last.getC1Gaussian().getXSigma(), last.getC1Gaussian().getYSigma()};
+                                        last.getTimePoint(), last.getC1Intensity()};
                                     score = Utils.calcEuclidDist(vector1, vector2);
                                     if (projectPos) {
                                         double vector3[] = {x, y};

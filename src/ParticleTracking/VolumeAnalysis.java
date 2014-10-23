@@ -25,7 +25,7 @@ import java.util.Arrays;
  *
  * @author barry05
  */
-public class Volume_Analysis extends Timelapse_Analysis {
+public class VolumeAnalysis extends Timelapse_Analysis {
 
     private int outputsize = 51, midpoint = (outputsize - 1) / 2;
     double spatialRes = UserVariables.getSpatialRes();
@@ -45,11 +45,11 @@ public class Volume_Analysis extends Timelapse_Analysis {
 //        }
 //        return;
 //    }
-    public Volume_Analysis() {
+    public VolumeAnalysis() {
         super();
     }
 
-    public Volume_Analysis(ImagePlus imp) {
+    public VolumeAnalysis(ImagePlus imp) {
         super(imp, null);
         this.imp = imp;
         ImagePlus tempImps[] = new ImagePlus[3];
