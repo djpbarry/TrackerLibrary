@@ -22,7 +22,7 @@ public class Co_Localise implements PlugIn {
     protected ImagePlus imp;
     private ImagePlus[] inputs;
     protected ImageStack[] stacks = new ImageStack[2];
-    protected final String title = "Colocaliser v1.06";
+    protected String title = "Colocaliser";
 //    public static final String[] channels = {"Red", "Green", "Blue"};
     protected String resultsHeadings = "Image\tChannel 1 Detections\tColocalised Channel 2 Detections\t% Colocalisation\t"
             + "\u0394 (nm)", coordHeadings = "C0_X\tC0_Y\tC1_X\tC1_Y";
@@ -34,6 +34,7 @@ public class Co_Localise implements PlugIn {
     protected TextWindow results = null, particleCoords = null;
     protected boolean findTails = false;
     private String labels[] = {"Channel 1", "Channel 2"};
+    private DecimalFormat intFormat = new DecimalFormat("000");
 
 //    public static void main(String args[]) {
 //        ImagePlus inputs[] = new ImagePlus[2];
@@ -62,6 +63,7 @@ public class Co_Localise implements PlugIn {
 
     @Override
     public void run(String arg) {
+        title = title + "_v" + Timelapse_Analysis.VERSION + "." + intFormat.format(Revision.Revision.revisionNumber);
         if (IJ.getInstance() != null) {
             inputs = GenUtils.specifyInputs(labels);
             stacks[0] = inputs[0].getImageStack();

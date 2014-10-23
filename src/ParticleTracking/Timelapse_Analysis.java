@@ -50,8 +50,8 @@ public class Timelapse_Analysis implements PlugIn {
 //    protected static double hystDiff = 1.25;
     protected double xySigEst; //Initial estimate of standard deviation for IsoGaussian fitting
     protected int xyPartRad; //Radius over which to draw particles in visualisation
-    public final int SHOW_RESULTS = -1,
-            VERSION = 4;
+    public final int SHOW_RESULTS = -1;
+    public static final int VERSION = 4;
     protected final double LAMBDA = 650.0, //Wavelength of light
             NUM_AP = 1.4; //Numerical aperture of system
     protected static double colocalThresh = 0.1;
@@ -330,7 +330,7 @@ public class Timelapse_Analysis implements PlugIn {
                                     c2Points[0][0], c2Points[0][1], chan2Proc);
                             MultiGaussFitter c2Fitter = new MultiGaussFitter(1, fitRad, pSize);
                             c2Fitter.fit(pixValues, xySigEst);
-                            ArrayList<IsoGaussian> c2Fits = c2Fitter.getFits(spatialRes, c2Points[0][0] - fitRad * searchScale, c2Points[0][1] - fitRad * searchScale, c2Threshold, UserVariables.getCurveFitTol());
+                            ArrayList<IsoGaussian> c2Fits = c2Fitter.getFits(spatialRes, c2Points[0][0] - fitRad, c2Points[0][1] - fitRad, c2Threshold, UserVariables.getCurveFitTol());
                             if (c2Fits != null && c2Fits.size() > 0) {
                                 c2Gaussian = c2Fits.get(0);
                             }
