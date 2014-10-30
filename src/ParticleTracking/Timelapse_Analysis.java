@@ -64,6 +64,7 @@ public class Timelapse_Analysis implements PlugIn {
     String title = "Particle Tracker", ext;
     protected static boolean msdPlot = false, intensPlot = false, trajPlot = false, prevRes = true;
     protected boolean monoChrome;
+    private final double IMAGE_MAX = 255.0;
     private final double SEARCH_SCALE = 1.0;
     private final double TRACK_LENGTH = 5.0;
     private final double TRACK_WIDTH = 4.0;
@@ -125,10 +126,12 @@ public class Timelapse_Analysis implements PlugIn {
         ImagePlus imp = Utils.buildStack(c0Dir);
         stacks = new ImageStack[2];
         stacks[0] = imp.getImageStack();
+        Utils.normaliseStack(stacks[0], IMAGE_MAX);
         this.ext = imp.getTitle();
         c1Dir = new File(inputDir.getAbsolutePath() + delimiter + "C1");
         if (c1Dir.exists()) {
             stacks[1] = (Utils.buildStack(c1Dir)).getImageStack();
+            Utils.normaliseStack(stacks[1], IMAGE_MAX);
         }
 //        if (IJ.getInstance() != null) {
 //            imp = WindowManager.getCurrentImage();
@@ -301,9 +304,12 @@ public class Timelapse_Analysis implements PlugIn {
 //            ByteProcessor oslice = new ByteProcessor(detect_output.getWidth(), detect_output.getHeight());
             IJ.freeMemory();
             progress.updateProgress(i - startSlice, arraySize);
-            FloatProcessor chan1Proc = preProcess(channel1.getProcessor(i + 1));
-            FloatProcessor chan2Proc = !monoChrome ? preProcess(channel2.getProcessor(i + 1)) : null;
-            // TODO Maybe express threshold as a percentage? See Ponti et al., 2003
+            FloatProcessor chan1Proc = preProcess(channel1.getProcessor(i + 1).duplicate());
+            chan1Proc.multiply(1.0 / IMAGE_MAX);
+            FloatProcessor chan2Proc = !monoChrome ? preProcess(channel2.getProcessor(i + 1).duplicate()) : null;
+            if (chan2Proc != null) {
+                chan2Proc.multiply(1.0 / IMAGE_MAX);
+            }
             double c1Threshold = Utils.getPercentileThresh(chan1Proc, UserVariables.getChan1MaxThresh());
             ByteProcessor thisC1Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, UserVariables.FOREGROUND, chan1Proc, c1Threshold, true);
 //            maxima.addSlice(thisC1Max);
