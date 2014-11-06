@@ -246,7 +246,7 @@ public class VolumeAnalysis extends Timelapse_Analysis {
             }
         }
         if (update) {
-            updateTrajectories(particles, timeRes, UserVariables.getTrajMaxStep(), spatialRes, true);
+            updateTrajectories(particles, timeRes, UserVariables.getTrajMaxStep(), spatialRes, true, 1.0);
         }
         return particles;
     }

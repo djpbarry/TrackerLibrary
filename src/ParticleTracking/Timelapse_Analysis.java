@@ -75,11 +75,13 @@ public class Timelapse_Analysis implements PlugIn {
     private final String delimiter = GenUtils.getDelimiter();
     String parentDir;
 
-//    static {
-//        System.loadLibrary("cuda_gauss_tracker"); // Load native library at runtime cudaGaussFitter.dll
-//    }
+    static {
+        System.loadLibrary("cuda_gauss_tracker"); // Load native library at runtime cudaGaussFitter.dll
+    }
 //
-//    private native boolean cudaGaussFitter(String folder, String ext, float spatialRes, float sigmaEst, float maxthresh, float fitTol, int startSlice, int endSlice);
+
+    private native boolean cudaGaussFitter(String folder, String ext, float spatialRes, float sigmaEst, float maxthresh, float fitTol, int startSlice, int endSlice);
+
 //    public static void main(String args[]) {
 ////        if (imp != null) {
 //        Timelapse_Analysis instance = new Timelapse_Analysis();
@@ -126,12 +128,12 @@ public class Timelapse_Analysis implements PlugIn {
         ImagePlus imp = Utils.buildStack(c0Dir);
         stacks = new ImageStack[2];
         stacks[0] = imp.getImageStack();
-        Utils.normaliseStack(stacks[0], IMAGE_MAX);
+//        Utils.normaliseStack(stacks[0], IMAGE_MAX);
         this.ext = imp.getTitle();
         c1Dir = new File(inputDir.getAbsolutePath() + delimiter + "C1");
         if (c1Dir.exists()) {
             stacks[1] = (Utils.buildStack(c1Dir)).getImageStack();
-            Utils.normaliseStack(stacks[1], IMAGE_MAX);
+//            Utils.normaliseStack(stacks[1], IMAGE_MAX);
         }
 //        if (IJ.getInstance() != null) {
 //            imp = WindowManager.getCurrentImage();
@@ -171,9 +173,9 @@ public class Timelapse_Analysis implements PlugIn {
             int i, count;
 //            int width = stacks[0].getWidth(), height = stacks[0].getHeight();
             if (UserVariables.isGpu()) {
-//                cudaFindParticles(SEARCH_SCALE, true, 0, stacks[0].getSize() - 1, UserVariables.getCurveFitTol(), stacks[0], stacks[1], monoChrome);
+                cudaFindParticles(SEARCH_SCALE, true, 0, stacks[0].getSize() - 1, UserVariables.getCurveFitTol(), stacks[0], stacks[1], monoChrome);
             } else {
-                findParticles(SEARCH_SCALE, true, 0, stacks[0].getSize() - 1, UserVariables.getCurveFitTol(), stacks[0], stacks[1], monoChrome);
+                findParticles(SEARCH_SCALE, true, 0, stacks[0].getSize() - 1, UserVariables.getCurveFitTol(), stacks[0], stacks[1], monoChrome, false);
             }
             TextWindow results = new TextWindow(title + " Results", "X\tY\tFrame\tChannel 1 ("
                     + UserVariables.channels[UserVariables.getC1Index()]
@@ -281,7 +283,7 @@ public class Timelapse_Analysis implements PlugIn {
         return fp;
     }
 
-    public ParticleArray findParticles(double searchScale, boolean update, int startSlice, int endSlice, double fitTol, ImageStack channel1, ImageStack channel2, boolean monoChrome) {
+    public ParticleArray findParticles(double searchScale, boolean update, int startSlice, int endSlice, double fitTol, ImageStack channel1, ImageStack channel2, boolean monoChrome, boolean fitC2Gaussian) {
         if (channel1 == null) {
             return null;
         }
@@ -305,10 +307,10 @@ public class Timelapse_Analysis implements PlugIn {
             IJ.freeMemory();
             progress.updateProgress(i - startSlice, arraySize);
             FloatProcessor chan1Proc = preProcess(channel1.getProcessor(i + 1).duplicate());
-            chan1Proc.multiply(1.0 / IMAGE_MAX);
+            Utils.normalise(chan1Proc, 1.0);
             FloatProcessor chan2Proc = !monoChrome ? preProcess(channel2.getProcessor(i + 1).duplicate()) : null;
             if (chan2Proc != null) {
-                chan2Proc.multiply(1.0 / IMAGE_MAX);
+                Utils.normalise(chan2Proc, 1.0);
             }
             double c1Threshold = Utils.getPercentileThresh(chan1Proc, UserVariables.getChan1MaxThresh());
             ByteProcessor thisC1Max = Utils.findLocalMaxima(xyPartRad, xyPartRad, UserVariables.FOREGROUND, chan1Proc, c1Threshold, true);
@@ -320,7 +322,7 @@ public class Timelapse_Analysis implements PlugIn {
                         IsoGaussian c2Gaussian = null;
                         c2Points = Utils.searchNeighbourhood(c1X, c1Y,
                                 (int) Math.round(fitRad * searchScale),
-                                (int) Math.round(c2Threshold),
+                                c2Threshold,
                                 (ImageProcessor) chan2Proc);
                         /*
                          * Search for local maxima in green image within
@@ -332,13 +334,20 @@ public class Timelapse_Analysis implements PlugIn {
                         ArrayList<IsoGaussian> c1Fits = c1Fitter.getFits(spatialRes, c1X - fitRad, c1Y - fitRad, c1Threshold, fitTol);
 
                         if (c2Points != null) {
-                            Utils.extractValues(xCoords, yCoords, pixValues,
-                                    c2Points[0][0], c2Points[0][1], chan2Proc);
-                            MultiGaussFitter c2Fitter = new MultiGaussFitter(1, fitRad, pSize);
-                            c2Fitter.fit(pixValues, xySigEst);
-                            ArrayList<IsoGaussian> c2Fits = c2Fitter.getFits(spatialRes, c2Points[0][0] - fitRad, c2Points[0][1] - fitRad, c2Threshold, UserVariables.getCurveFitTol());
-                            if (c2Fits != null && c2Fits.size() > 0) {
-                                c2Gaussian = c2Fits.get(0);
+                            if (fitC2Gaussian) {
+                                Utils.extractValues(xCoords, yCoords, pixValues,
+                                        c2Points[0][0], c2Points[0][1], chan2Proc);
+                                MultiGaussFitter c2Fitter = new MultiGaussFitter(1, fitRad, pSize);
+                                c2Fitter.fit(pixValues, xySigEst);
+                                ArrayList<IsoGaussian> c2Fits = c2Fitter.getFits(spatialRes, c2Points[0][0] - fitRad, c2Points[0][1] - fitRad, c2Threshold, UserVariables.getCurveFitTol());
+                                if (c2Fits != null && c2Fits.size() > 0) {
+                                    c2Gaussian = c2Fits.get(0);
+                                }
+                            } else {
+//                                int xC2 = c2Points[0][0] - (int) Math.round(fitRad * searchScale);
+//                                int yC2 = c2Points[0][1] - (int) Math.round(fitRad * searchScale);
+                                c2Gaussian = new IsoGaussian(c2Points[0][0] * spatialRes, c2Points[0][1] * spatialRes,
+                                        chan2Proc.getPixelValue(c2Points[0][0], c2Points[0][1]), xySigEst, xySigEst, 0.0);
                             }
                         }
 
@@ -365,82 +374,83 @@ public class Timelapse_Analysis implements PlugIn {
 //        IJ.saveAs(new ImagePlus("", maxima), "TIF", parentDir + "/all_maxima.tif");
 //        IJ.saveAs(new ImagePlus("", input_output), "TIF", parentDir + "/input_output.tif");
         if (update) {
-            updateTrajectories(particles, UserVariables.getTimeRes(), UserVariables.getTrajMaxStep(), spatialRes, true);
+            updateTrajectories(particles, UserVariables.getTimeRes(), UserVariables.getTrajMaxStep(), spatialRes, true, 1.0);
         }
         return particles;
     }
 
-//    public ParticleArray cudaFindParticles(double searchScale, boolean update, int startSlice, int endSlice, double fitTol, ImageStack channel1, ImageStack channel2, boolean monoChrome) {
-//        if (!cudaGaussFitter(c0Dir.getAbsolutePath(), ext, (float) UserVariables.getSpatialRes() * 1000.0f, (float) xySigEst, (float) UserVariables.getChan1MaxThresh(), (float) UserVariables.getCurveFitTol(), startSlice, endSlice)) {
-//            IJ.log("CUDA Error");
-//            return null;
-//        }
-//        File cudaFile = new File(c0Dir + delimiter + "cudadata.txt");
-//        File fileList[] = {cudaFile};
-//        ArrayList<double[]>[] cudaData = GenUtils.readData(5, fileList, delimiter);
-//        int arraySize = endSlice - startSlice + 1;
-//        int fitRad = (int) Math.ceil(xyPartRad * 4.0 / 3.0);
-////        int pSize = 2 * fitRad + 1;
-//        int c2Points[][];
-////        double[] xCoords = new double[pSize];
-////        double[] yCoords = new double[pSize];
-////        double[][] pixValues = new double[pSize][pSize];
-//        double spatialRes = UserVariables.getSpatialRes();
-//        ParticleArray particles = new ParticleArray(arraySize);
-//        double c2Thresholds[] = new double[channel2.getSize()];
-//        ImageStack procChannel2 = new ImageStack(channel2.getWidth(), channel2.getHeight());
-//        for (int i = 0; i < channel2.getSize(); i++) {
-//            procChannel2.addSlice(preProcess(channel2.getProcessor(i + 1).duplicate()));
-//            c2Thresholds[i] = Utils.getPercentileThresh(procChannel2.getProcessor(i + 1),
-//                    UserVariables.getChan2MaxThresh());
-//        }
-//        for (int f = 0; f < fileList.length; f++) {
-//            ProgressDialog progress = new ProgressDialog(null,
-//                    "Reading data for file " + f + " of " + fileList.length + "...",
-//                    false, true, title);
-//            progress.setVisible(true);
-//            int size = cudaData[f].size();
-//            for (int row = 0; row < size; row++) {
-//                progress.updateProgress(row, size);
-////                IJ.freeMemory();
-//                int t = (int) Math.round(cudaData[f].get(row)[0]);
-//                double x = cudaData[f].get(row)[1];
-//                double y = cudaData[f].get(row)[2];
-//                double mag = cudaData[f].get(row)[3];
-//                double fit = cudaData[f].get(row)[4];
-////                FloatProcessor chan2Proc = !monoChrome ? preProcess(channel2.getProcessor(t + 1)) : null;
-//                IsoGaussian c1Gaussian = new IsoGaussian(x, y, mag, xySigEst, xySigEst, fit);
-//                int c1X = (int) Math.round(x / UserVariables.getSpatialRes());
-//                int c1Y = (int) Math.round(y / UserVariables.getSpatialRes());
-//                IsoGaussian c2Gaussian = null;
-//                c2Points = Utils.searchNeighbourhood(c1X, c1Y,
-//                        (int) Math.round(fitRad * searchScale),
-//                        (int) Math.round(c2Thresholds[t]),
-//                        procChannel2.getProcessor(t + 1));
-//                if (c2Points != null) {
+    public ParticleArray cudaFindParticles(double searchScale, boolean update, int startSlice, int endSlice, double fitTol, ImageStack channel1, ImageStack channel2, boolean monoChrome) {
+        if (!cudaGaussFitter(c0Dir.getAbsolutePath(), ext, (float) UserVariables.getSpatialRes() * 1000.0f, (float) xySigEst, (float) UserVariables.getChan1MaxThresh(), (float) UserVariables.getCurveFitTol(), startSlice, endSlice)) {
+            IJ.log("CUDA Error");
+            return null;
+        }
+        File cudaFile = new File(c0Dir + delimiter + "cudadata.txt");
+        File fileList[] = {cudaFile};
+        ArrayList<double[]>[] cudaData = GenUtils.readData(5, fileList, delimiter);
+        int arraySize = endSlice - startSlice + 1;
+        int fitRad = (int) Math.ceil(xyPartRad * 4.0 / 3.0);
+//        int pSize = 2 * fitRad + 1;
+        int c2Points[][];
+//        double[] xCoords = new double[pSize];
+//        double[] yCoords = new double[pSize];
+//        double[][] pixValues = new double[pSize][pSize];
+        double spatialRes = UserVariables.getSpatialRes();
+        ParticleArray particles = new ParticleArray(arraySize);
+        double c2Thresholds[] = new double[channel2.getSize()];
+        ImageStack procChannel2 = new ImageStack(channel2.getWidth(), channel2.getHeight());
+        for (int i = 0; i < channel2.getSize(); i++) {
+            procChannel2.addSlice(Utils.normalise(preProcess(channel2.getProcessor(i + 1).duplicate()), 1.0));
+            c2Thresholds[i] = Utils.getPercentileThresh(procChannel2.getProcessor(i + 1),
+                    UserVariables.getChan2MaxThresh());
+        }
+        for (int f = 0; f < fileList.length; f++) {
+            ProgressDialog progress = new ProgressDialog(null,
+                    "Reading data for file " + f + " of " + fileList.length + "...",
+                    false, title, false);
+            progress.setVisible(true);
+            int size = cudaData[f].size();
+            for (int row = 0; row < size; row++) {
+                progress.updateProgress(row, size);
+//                IJ.freeMemory();
+                int t = (int) Math.round(cudaData[f].get(row)[0]);
+                double x = cudaData[f].get(row)[1];
+                double y = cudaData[f].get(row)[2];
+                double mag = cudaData[f].get(row)[3];
+                double fit = cudaData[f].get(row)[4];
+//                FloatProcessor chan2Proc = !monoChrome ? preProcess(channel2.getProcessor(t + 1)) : null;
+                IsoGaussian c1Gaussian = new IsoGaussian(x, y, mag, xySigEst, xySigEst, fit);
+                int c1X = (int) Math.round(x / UserVariables.getSpatialRes());
+                int c1Y = (int) Math.round(y / UserVariables.getSpatialRes());
+                IsoGaussian c2Gaussian = null;
+                c2Points = Utils.searchNeighbourhood(c1X, c1Y,
+                        (int) Math.round(fitRad * searchScale),
+                        c2Thresholds[t],
+                        procChannel2.getProcessor(t + 1));
+                if (c2Points != null) {
 //                    int xC2 = c2Points[0][0] - (int) Math.round(fitRad * searchScale);
 //                    int yC2 = c2Points[0][1] - (int) Math.round(fitRad * searchScale);
-//                    c2Gaussian = new IsoGaussian(xC2 * spatialRes, yC2 * spatialRes,
-//                            procChannel2.getProcessor(t + 1).getPixelValue(xC2, yC2), xySigEst, xySigEst, 0.0);
-////                    Utils.extractValues(xCoords, yCoords, pixValues,
-////                            c2Points[0][0], c2Points[0][1], chan2Proc);
-////                    MultiGaussFitter c2Fitter = new MultiGaussFitter(1, fitRad, pSize);
-////                    c2Fitter.fit(pixValues, xySigEst);
-////                    ArrayList<IsoGaussian> c2Fits = c2Fitter.getFits(spatialRes, c2Points[0][0] - fitRad * searchScale, c2Points[0][1] - fitRad * searchScale, c2Threshold, UserVariables.getCurveFitTol());
-////                    if (c2Fits != null && c2Fits.size() > 0) {
-////                        c2Gaussian = c2Fits.get(0);
-////                    }
-//                }
-//                particles.addDetection(t - startSlice, new Particle(t, c1Gaussian, c2Gaussian, null, -1));
-//            }
-//            progress.dispose();
-//        }
-//        if (update) {
-//            updateTrajectories(particles, UserVariables.getTimeRes(), UserVariables.getTrajMaxStep(), spatialRes, true);
-//        }
-//        return particles;
-//    }
-    public void updateTrajectories(ParticleArray objects, double timeRes, double trajMaxStep, double spatialRes, boolean projectPos) {
+                    c2Gaussian = new IsoGaussian(c2Points[0][0] * spatialRes, c2Points[0][1] * spatialRes,
+                            procChannel2.getProcessor(t + 1).getPixelValue(c2Points[0][0], c2Points[0][1]), xySigEst, xySigEst, 0.0);
+//                    Utils.extractValues(xCoords, yCoords, pixValues,
+//                            c2Points[0][0], c2Points[0][1], chan2Proc);
+//                    MultiGaussFitter c2Fitter = new MultiGaussFitter(1, fitRad, pSize);
+//                    c2Fitter.fit(pixValues, xySigEst);
+//                    ArrayList<IsoGaussian> c2Fits = c2Fitter.getFits(spatialRes, c2Points[0][0] - fitRad * searchScale, c2Points[0][1] - fitRad * searchScale, c2Threshold, UserVariables.getCurveFitTol());
+//                    if (c2Fits != null && c2Fits.size() > 0) {
+//                        c2Gaussian = c2Fits.get(0);
+//                    }
+                }
+                particles.addDetection(t - startSlice, new Particle(t, c1Gaussian, c2Gaussian, null, -1));
+            }
+            progress.dispose();
+        }
+        if (update) {
+            updateTrajectories(particles, UserVariables.getTimeRes(), UserVariables.getTrajMaxStep(), spatialRes, true, Utils.getStackMinMax(stacks[0])[1]);
+        }
+        return particles;
+    }
+
+    public void updateTrajectories(ParticleArray objects, double timeRes, double trajMaxStep, double spatialRes, boolean projectPos, double magNormFactor) {
         if (objects == null) {
             return;
         }
@@ -494,9 +504,9 @@ public class Timelapse_Analysis implements PlugIn {
                                     x = ch1G.getX();
                                     y = ch1G.getY();
                                     double vector1[] = {x, y, currentParticle.getTimePoint(),
-                                        ch1G.getMagnitude()};
+                                        ch1G.getMagnitude() / magNormFactor};
                                     double vector2[] = {last.getX(), last.getY(),
-                                        last.getTimePoint(), last.getC1Intensity()};
+                                        last.getTimePoint(), last.getC1Intensity() / magNormFactor};
                                     score = Utils.calcEuclidDist(vector1, vector2);
                                     if (projectPos) {
                                         double vector3[] = {x, y};
@@ -924,7 +934,7 @@ public class Timelapse_Analysis implements PlugIn {
             if (sigTemps[j] != null && sigTemps[j].getWidth() >= outputWidth) {
                 ImageStack virStack = new ImageStack(virTemps[j].getWidth(), virTemps[j].getHeight());
                 virStack.addSlice(virTemps[j]);
-                ParticleArray particles = findParticles(0.0, false, 0, 0, UserVariables.getCurveFitTol(), virStack, null, true);
+                ParticleArray particles = findParticles(0.0, false, 0, 0, UserVariables.getCurveFitTol(), virStack, null, true, true);
                 if (!particles.getLevel(0).isEmpty()) {
                     virTemps[j].setInterpolate(true);
                     virTemps[j].setInterpolationMethod(ImageProcessor.BICUBIC);
