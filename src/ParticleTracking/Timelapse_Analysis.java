@@ -64,14 +64,15 @@ public class Timelapse_Analysis implements PlugIn {
     String title = "Particle Tracker", ext;
     protected static boolean msdPlot = false, intensPlot = false, trajPlot = false, prevRes = true;
     protected boolean monoChrome;
-    private final double IMAGE_MAX = 255.0;
+//    private final double IMAGE_MAX = 255.0;
     private final double SEARCH_SCALE = 1.0;
     private final double TRACK_LENGTH = 5.0;
     private final double TRACK_WIDTH = 4.0;
-    public static final float TRACK_OFFSET = 1.0f;
-    private static File inputDir = new File("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences\\TestSequence43\\Input\\C0"),
-            c0Dir, c1Dir, outputDir = new File(inputDir.getAbsolutePath()),
-            calDir = new File(inputDir.getAbsolutePath());
+    public static final float TRACK_EXT = 1.0f;
+    public static final float TRACK_OFFSET = 0.75f;
+    private static File inputDir,
+            c0Dir, c1Dir, outputDir,
+            calDir;
     private final String delimiter = GenUtils.getDelimiter();
     String parentDir;
 
@@ -233,7 +234,7 @@ public class Timelapse_Analysis implements PlugIn {
                         if (type == ParticleTrajectory.COLOCAL) {
                             ImageStack signals[] = extractSignalValues(traj,
                                     (int) Math.round(TRACK_LENGTH / UserVariables.getSpatialRes()),
-                                    (int) Math.round(TRACK_WIDTH / UserVariables.getSpatialRes()), TRACK_OFFSET / ((float) UserVariables.getSpatialRes()));
+                                    (int) Math.round(TRACK_WIDTH / UserVariables.getSpatialRes()), TRACK_EXT / ((float) UserVariables.getSpatialRes()));
                             if (signals[0].getSize() > 0) {
                                 for (int j = 1; j <= signals[0].getSize(); j++) {
                                     IJ.saveAs((new ImagePlus("", signals[0].getProcessor(j))),
@@ -923,7 +924,7 @@ public class Timelapse_Analysis implements PlugIn {
             virTemps[i] = straightener.straighten(virImp, virProi, signalWidth);
             sigStartP = sigStartP.getLink();
         }
-        int xc = (int) Math.ceil(0.75 * offset);
+        int xc = (int) Math.ceil(TRACK_OFFSET);
         int yc = (signalWidth - 1) / 2;
         int outputWidth = (int) Math.round(signalLength + offset);
         ImageStack output[] = new ImageStack[2];
@@ -931,7 +932,7 @@ public class Timelapse_Analysis implements PlugIn {
         output[1] = new ImageStack(outputWidth, signalWidth);
 
         for (int j = 0; j < iterations; j++) {
-            if (sigTemps[j] != null && sigTemps[j].getWidth() >= outputWidth) {
+            if (virTemps[j] != null && sigTemps[j] != null && sigTemps[j].getWidth() >= outputWidth) {
                 ImageStack virStack = new ImageStack(virTemps[j].getWidth(), virTemps[j].getHeight());
                 virStack.addSlice(virTemps[j]);
                 ParticleArray particles = findParticles(0.0, false, 0, 0, UserVariables.getCurveFitTol(), virStack, null, true, true);

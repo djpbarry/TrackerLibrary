@@ -40,7 +40,7 @@ public class TailFitter extends IsoGaussianFitter {
 
 //    public static void main(String args[]) {
 //        Random r = new Random();
-//        File directory = Utilities.getFolder(null, "Select input folder");
+//        File directory = Utilities.getFolder(null, "Select input folder", true);
 //        File files[] = directory.listFiles();
 //        int dirSize = files.length;
 //        ImagePlus temp = IJ.openImage(files[0].getAbsolutePath());
@@ -48,7 +48,9 @@ public class TailFitter extends IsoGaussianFitter {
 //        int stackwidth = tempIP.getWidth();
 //        int stackheight = tempIP.getHeight();
 //        temp.close();
+//        System.out.println(directory);
 //        for (int i = 0; i < 100; i++) {
+//            System.out.print(i);
 //            ImageStack stack = new ImageStack(stackwidth, stackheight);
 //            for (int j = 0; j < dirSize; j++) {
 //                int fileindex = r.nextInt(dirSize);
@@ -118,14 +120,14 @@ public class TailFitter extends IsoGaussianFitter {
         maxIter = IterFactor * numParams * numParams;  // Where does this estimate come from?
         restarts = defaultRestarts;
         nRestarts = 0;
-        simp[0][0] = 0.2 * xData.length * spatialRes;
-        simp[0][1] = 0.2;
-        simp[0][2] = 0.25 * xData.length * spatialRes;
-        simp[0][3] = 0.4;
+        simp[0][0] = 0.15 * xData.length * spatialRes;
+        simp[0][1] = 0.4;
+        simp[0][2] = 0.4 * xData.length * spatialRes;
+        simp[0][3] = 1.25;
         simp[0][4] = yData.length * spatialRes / 2.0;
-        simp[0][5] = 0.15;
-        simp[0][6] = 0.3;
-        simp[0][7] = 0.7;
+        simp[0][5] = 0.2;
+        simp[0][6] = 0.45;
+        simp[0][7] = 0.3;
 
         return true;
     }
@@ -152,7 +154,7 @@ public class TailFitter extends IsoGaussianFitter {
         double x22 = x2 * x2;
         double s2 = params[3];
         double s22 = s2 * s2;
-        double yCentre = params[4]-yOffset;
+        double yCentre = params[4] - yOffset;
 
         double c = 2.0 * s12 * s22 * (Math.log(s2) - Math.log(s1));
         double d = c + s12 * x22 - s22 * x12;
@@ -168,6 +170,15 @@ public class TailFitter extends IsoGaussianFitter {
             xCentre = root1 - xOffset;
         }
 
-        System.out.println("x0: " + xCentre + " y0: " + yCentre + " R^2: " + params[numParams]);
+        System.out.print(" p[0]: " + params[0]
+                + " p[1]: " + params[1]
+                + " p[2]: " + params[2]
+                + " p[3]: " + params[3]
+                + " p[4]: " + params[4]
+                + " p[5]: " + params[5]
+                + " p[6]: " + params[6]
+                + " p[7]: " + params[7]);
+        System.out.print(" x0: " + xCentre + " y0: " + yCentre + " R^2: " + params[numParams]);
+        System.out.println();
     }
 }
