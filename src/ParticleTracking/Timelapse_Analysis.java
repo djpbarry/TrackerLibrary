@@ -174,7 +174,9 @@ public class Timelapse_Analysis implements PlugIn {
             int i, count;
 //            int width = stacks[0].getWidth(), height = stacks[0].getHeight();
             if (UserVariables.isGpu()) {
-                cudaFindParticles(SEARCH_SCALE, true, 0, stacks[0].getSize() - 1, UserVariables.getCurveFitTol(), stacks[0], stacks[1], monoChrome);
+                if (cudaFindParticles(SEARCH_SCALE, true, 0, stacks[0].getSize() - 1, UserVariables.getCurveFitTol(), stacks[0], stacks[1], monoChrome) == null) {
+                    return;
+                }
             } else {
                 findParticles(SEARCH_SCALE, true, 0, stacks[0].getSize() - 1, UserVariables.getCurveFitTol(), stacks[0], stacks[1], monoChrome, false);
             }
@@ -924,7 +926,7 @@ public class Timelapse_Analysis implements PlugIn {
             virTemps[i] = straightener.straighten(virImp, virProi, signalWidth);
             sigStartP = sigStartP.getLink();
         }
-        int xc = (int) Math.ceil(TRACK_OFFSET);
+        int xc = (int) Math.ceil(TRACK_OFFSET * offset);
         int yc = (signalWidth - 1) / 2;
         int outputWidth = (int) Math.round(signalLength + offset);
         ImageStack output[] = new ImageStack[2];

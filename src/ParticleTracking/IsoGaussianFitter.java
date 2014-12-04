@@ -23,7 +23,7 @@ public class IsoGaussianFitter {
     protected int numVertices;        // numParams+1 (includes sumLocalResiduaalsSqrd)
     private int worst;          // worst current parametre estimates
     private int nextWorst;      // 2nd worst current parametre estimates
-    private int best;           // best current parametre estimates
+    protected int best;           // best current parametre estimates
     protected double[][] simp;        // the simplex (the last element of the array at each vertice is the sum of the square of the residuals)
     protected double[] next;      // new vertex to be tested
     private int numIter;        // number of iterations so far
