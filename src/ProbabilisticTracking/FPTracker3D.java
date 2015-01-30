@@ -31,7 +31,7 @@ import java.util.Vector;
  * MODIFICATIONS.<p>
  *
  */
-public class FPTracker_3D extends PFTracking3D {
+public class FPTracker3D extends PFTracking3D {
 
     private float mBackground = 1;
     private float[] mSigmaOfDynamics = {100, 100, 100, 1};

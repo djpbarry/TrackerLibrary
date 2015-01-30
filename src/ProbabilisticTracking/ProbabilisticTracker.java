@@ -15,7 +15,7 @@ import java.awt.Graphics;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Vector;
-import ProbabilisticTracking.LinearMovementFPTracker_3D;
+import ProbabilisticTracking.LinearMovementFPTracker3D;
 import ProbabilisticTracking.PFTracking3D;
 import ProbabilisticTracking.PFTracking3D.Point3D;
 
@@ -23,7 +23,7 @@ import ProbabilisticTracking.PFTracking3D.Point3D;
  *
  * @author barry05
  */
-public class Probabilistic_Tracker extends PFTracking3D {
+public class ProbabilisticTracker extends PFTracking3D {
 
     private float mBackground = 1;
     private float[] mSigmaOfDynamics = {20, 20, 20, 1};
@@ -196,7 +196,7 @@ public class Probabilistic_Tracker extends PFTracking3D {
                 //first setup the state vector then run
                 mStateVectors = copyStateVector(mStateVectorsMemory.elementAt(mZProjectedImagePlus.getCurrentSlice() - 1));
                 mFrameOfInitialization = mZProjectedImagePlus.getCurrentSlice();
-                Probabilistic_Tracker.this.run(new FloatProcessor(1, 1));
+                ProbabilisticTracker.this.run(new FloatProcessor(1, 1));
                 mStateOfFilter = STATE_OF_FILTER.RUNNING;
             } else {
                 IJ.showMessage("No initialization in this frame.");
@@ -205,7 +205,7 @@ public class Probabilistic_Tracker extends PFTracking3D {
         if (mStateOfFilter == STATE_OF_FILTER.READY_TO_RUN) {
             //we're sure that there is a correct initialization at a certain frame
             mStateOfFilter = STATE_OF_FILTER.RUNNING;
-            Probabilistic_Tracker.this.run(new FloatProcessor(1, 1));
+            ProbabilisticTracker.this.run(new FloatProcessor(1, 1));
             mStateOfFilter = STATE_OF_FILTER.VISUALIZING;
         }
     }

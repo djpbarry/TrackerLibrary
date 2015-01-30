@@ -28,7 +28,7 @@ import java.util.Vector;
  * OBLIGATIONS TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.<p>
  *
  */
-public class LinearMovementFPTracker_3D extends PFTracking3D {
+public class LinearMovementFPTracker3D extends PFTracking3D {
 	float mBackground = 1;
 	float[] mSigmaOfDynamics = {20, 20, 20, 1};
 	boolean mDoPrecisionOptimization = true;

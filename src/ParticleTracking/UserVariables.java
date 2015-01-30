@@ -16,6 +16,7 @@ public class UserVariables {
     private static double timeRes = 1.0;
     private static double trajMaxStep = 2.5;
     private static double minTrajLength = 10.0;
+    private static double minTrajDist = 2.0;
     private static double chan1MaxThresh = 0.99;
     private static double chan2MaxThresh = 0.99;
     private static double curveFitTol = 0.95d;
@@ -128,6 +129,14 @@ public class UserVariables {
 
     public static void setGpu(boolean gpu) {
         UserVariables.gpu = gpu;
+    }
+
+    public static double getMinTrajDist() {
+        return minTrajDist;
+    }
+
+    public static void setMinTrajDist(double minTrajDist) {
+        UserVariables.minTrajDist = minTrajDist;
     }
 
 }

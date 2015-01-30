@@ -45,7 +45,7 @@ import ui.UserInterface;
  * @author David J Barry
  * @version 2.0, FEB 2011
  */
-public class Timelapse_Analysis implements PlugIn {
+public class Analyse_Movie implements PlugIn {
 
 //    protected static double hystDiff = 1.25;
     protected double xySigEst; //Initial estimate of standard deviation for IsoGaussian fitting
@@ -85,12 +85,12 @@ public class Timelapse_Analysis implements PlugIn {
 
 //    public static void main(String args[]) {
 ////        if (imp != null) {
-//        Timelapse_Analysis instance = new Timelapse_Analysis();
+//        Analyse_Movie instance = new Analyse_Movie();
 //        instance.run(null);
 ////        }
 //        System.exit(0);
 //    }
-    public Timelapse_Analysis(double spatialRes, double timeRes, double trajMaxStep, double chan1MaxThresh, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
+    public Analyse_Movie(double spatialRes, double timeRes, double trajMaxStep, double chan1MaxThresh, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
         UserVariables.setSpatialRes(spatialRes);
         UserVariables.setTimeRes(timeRes);
         UserVariables.setTrajMaxStep(trajMaxStep);
@@ -102,14 +102,14 @@ public class Timelapse_Analysis implements PlugIn {
 //        this.stacks = imp.getStack();
     }
 
-    public Timelapse_Analysis() {
+    public Analyse_Movie() {
     }
 
-    public Timelapse_Analysis(ImageStack[] stacks) {
+    public Analyse_Movie(ImageStack[] stacks) {
         this.stacks = stacks;
     }
 
-    public Timelapse_Analysis(ImagePlus imp, String ext) {
+    public Analyse_Movie(ImagePlus imp, String ext) {
 //        this.imp = imp;
 //        this.stacks = imp.getImageStack();
         this.ext = ext;
@@ -200,7 +200,9 @@ public class Timelapse_Analysis implements PlugIn {
             int n = trajectories.size();
             for (i = 0; i < n; i++) {
                 ParticleTrajectory traj = (ParticleTrajectory) trajectories.get(i);
-                if (!(traj.getSize() > UserVariables.getMinTrajLength() && ((traj.getType(colocalThresh) == ParticleTrajectory.COLOCAL)
+                if (!(traj.getSize() > UserVariables.getMinTrajLength()
+                        && traj.getDisplacement(traj.getEnd(), traj.getSize()) * UserVariables.getSpatialRes() > UserVariables.getMinTrajDist()
+                        && ((traj.getType(colocalThresh) == ParticleTrajectory.COLOCAL)
                         || ((traj.getType(colocalThresh) == ParticleTrajectory.NON_COLOCAL) && !UserVariables.isColocal())))) {
                     trajectories.remove(i);
                     i--;
@@ -540,8 +542,8 @@ public class Timelapse_Analysis implements PlugIn {
                     }
                 }
             }
-            for (ParticleTrajectory trajectorie : trajectories) {
-                traj = (ParticleTrajectory) trajectorie;
+            for (ParticleTrajectory trajectory : trajectories) {
+                traj = (ParticleTrajectory) trajectory;
                 Particle temp = traj.getTemp();
                 if (temp != null) {
                     int row = traj.getTempRow();

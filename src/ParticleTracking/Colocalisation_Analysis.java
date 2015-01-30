@@ -17,7 +17,7 @@ import java.awt.Toolkit;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
-public class Co_Localise implements PlugIn {
+public class Colocalisation_Analysis implements PlugIn {
 
     protected ImagePlus imp;
     private ImagePlus[] inputs;
@@ -42,10 +42,10 @@ public class Co_Localise implements PlugIn {
 //        inputs[1] = new ImagePlus("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Co_Localiser_Test\\Co_Localiser_Test_Green.png");
 //        (new Co_Localise(inputs)).run(null);
 //    }
-    public Co_Localise() {
+    public Colocalisation_Analysis() {
     }
 
-    public Co_Localise(ImagePlus[] inputs) {
+    public Colocalisation_Analysis(ImagePlus[] inputs) {
         ImageStack tempStacks[] = new ImageStack[2];
         tempStacks[0] = inputs[0].getImageStack();
         tempStacks[1] = inputs[1].getImageStack();
@@ -53,7 +53,7 @@ public class Co_Localise implements PlugIn {
         this.stacks = tempStacks;
     }
 
-    public Co_Localise(ImagePlus imp) {
+    public Colocalisation_Analysis(ImagePlus imp) {
         this.imp = imp;
         ImagePlus tempImps[] = new ImagePlus[3];
         tempImps = ChannelSplitter.split(imp);
@@ -63,7 +63,7 @@ public class Co_Localise implements PlugIn {
 
     @Override
     public void run(String arg) {
-        title = title + "_v" + Timelapse_Analysis.VERSION + "." + intFormat.format(Revision.Revision.revisionNumber);
+        title = title + "_v" + Analyse_Movie.VERSION + "." + intFormat.format(Revision.Revision.revisionNumber);
         if (IJ.getInstance() != null) {
             inputs = GenUtils.specifyInputs(labels);
             stacks[0] = inputs[0].getImageStack();
@@ -79,7 +79,7 @@ public class Co_Localise implements PlugIn {
         }
         if (showDialog()) {
             UserVariables.setPreProcess(true);
-            Timelapse_Analysis analyser = new Timelapse_Analysis(stacks);
+            Analyse_Movie analyser = new Analyse_Movie(stacks);
             analyser.calcParticleRadius(UserVariables.getSpatialRes());
             UserVariables.setnMax(1);
             //Timelapse_Analysis.setGaussianRadius(0.139 / Timelapse_Analysis.getSpatialRes());
@@ -170,12 +170,12 @@ public class Co_Localise implements PlugIn {
         }
     }
 
-    ImagePlus buildOutput(Timelapse_Analysis analyser) {
+    ImagePlus buildOutput(Analyse_Movie analyser) {
         if (stacks == null) {
             return null;
         }
         if (analyser == null) {
-            analyser = new Timelapse_Analysis(stacks);
+            analyser = new Analyse_Movie(stacks);
         }
         double displaymax = 0.0;
         int colocalisation, count;

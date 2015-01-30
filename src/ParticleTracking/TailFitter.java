@@ -40,57 +40,57 @@ public class TailFitter extends IsoGaussianFitter {
     private static double sigmaEst = 1.06;
     double sqrt2 = Math.pow(2.0, 0.5);
 
-    public static void main(String args[]) {
-//        Random r = new Random();
-        File directory = Utilities.getFolder(null, "Select input folder", true);
-        File files[] = directory.listFiles();
-        int dirSize = files.length;
-        ImagePlus temp = IJ.openImage(files[0].getAbsolutePath());
-        ImageProcessor tempIP = temp.getProcessor();
-        int stackwidth = tempIP.getWidth();
-        int stackheight = tempIP.getHeight();
-        temp.close();
-        System.out.println(directory);
-//        for (int i = 0; i < 100; i++) {
-//            System.out.print(i);
-            ImageStack stack = new ImageStack(stackwidth, stackheight);
-            for (int j = 0; j < dirSize; j++) {
-//                int fileindex = r.nextInt(dirSize);
-//                ImagePlus imp = IJ.openImage(files[fileindex].getAbsolutePath());
-            ImagePlus imp = IJ.openImage(files[j].getAbsolutePath());
-                stack.addSlice(imp.getProcessor().duplicate());
-                imp.close();
-            }
-            ZProjector zproj = new ZProjector(new ImagePlus("", stack));
-            zproj.setMethod(ZProjector.AVG_METHOD);
-            zproj.doProjection();
-            ImageProcessor stackAverage = zproj.getProjection().getProcessor();
-            ImageStatistics stats = stackAverage.getStatistics();
-            double max = stats.max;
-            stackAverage.multiply(1.0 / max);
-            Rectangle cropRoi = new Rectangle(0, 6, stackAverage.getWidth() - 2, stackAverage.getHeight() - 12);
-            stackAverage.setRoi(cropRoi);
-            stackAverage = stackAverage.crop();
-            int width = stackAverage.getWidth();
-            int height = stackAverage.getHeight();
-            double xVals[] = new double[width];
-            double yVals[] = new double[height];
-            double zVals[][] = new double[width][height];
-            for (int y = 0; y < height; y++) {
-                yVals[y] = y * spatialRes;
-                for (int x = 0; x < width; x++) {
-                    xVals[x] = x * spatialRes;
-                    zVals[x][y] = stackAverage.getPixelValue(x, y);
-                }
-            }
-            TailFitter tf = new TailFitter(xVals, yVals, zVals);
-            tf.doFit(TailFitter.sigmaEst);
-            tf.findPeak(Timelapse_Analysis.TRACK_OFFSET, 2.0 - 6.0 * spatialRes);
-//            IJ.saveAs((new ImagePlus("", stackAverage)), "TIFF", "C:\\Users\\barry05\\Desktop\\SuperRes Actin Tails\\Averages\\" + i);
-//        }
-        tf.printImage();
-        System.exit(0);
-    }
+//    public static void main(String args[]) {
+////        Random r = new Random();
+//        File directory = Utilities.getFolder(null, "Select input folder", true);
+//        File files[] = directory.listFiles();
+//        int dirSize = files.length;
+//        ImagePlus temp = IJ.openImage(files[0].getAbsolutePath());
+//        ImageProcessor tempIP = temp.getProcessor();
+//        int stackwidth = tempIP.getWidth();
+//        int stackheight = tempIP.getHeight();
+//        temp.close();
+//        System.out.println(directory);
+////        for (int i = 0; i < 100; i++) {
+////            System.out.print(i);
+//            ImageStack stack = new ImageStack(stackwidth, stackheight);
+//            for (int j = 0; j < dirSize; j++) {
+////                int fileindex = r.nextInt(dirSize);
+////                ImagePlus imp = IJ.openImage(files[fileindex].getAbsolutePath());
+//            ImagePlus imp = IJ.openImage(files[j].getAbsolutePath());
+//                stack.addSlice(imp.getProcessor().duplicate());
+//                imp.close();
+//            }
+//            ZProjector zproj = new ZProjector(new ImagePlus("", stack));
+//            zproj.setMethod(ZProjector.AVG_METHOD);
+//            zproj.doProjection();
+//            ImageProcessor stackAverage = zproj.getProjection().getProcessor();
+//            ImageStatistics stats = stackAverage.getStatistics();
+//            double max = stats.max;
+//            stackAverage.multiply(1.0 / max);
+//            Rectangle cropRoi = new Rectangle(0, 6, stackAverage.getWidth() - 2, stackAverage.getHeight() - 12);
+//            stackAverage.setRoi(cropRoi);
+//            stackAverage = stackAverage.crop();
+//            int width = stackAverage.getWidth();
+//            int height = stackAverage.getHeight();
+//            double xVals[] = new double[width];
+//            double yVals[] = new double[height];
+//            double zVals[][] = new double[width][height];
+//            for (int y = 0; y < height; y++) {
+//                yVals[y] = y * spatialRes;
+//                for (int x = 0; x < width; x++) {
+//                    xVals[x] = x * spatialRes;
+//                    zVals[x][y] = stackAverage.getPixelValue(x, y);
+//                }
+//            }
+//            TailFitter tf = new TailFitter(xVals, yVals, zVals);
+//            tf.doFit(TailFitter.sigmaEst);
+//            tf.findPeak(Analyse_Movie.TRACK_OFFSET, 2.0 - 6.0 * spatialRes);
+////            IJ.saveAs((new ImagePlus("", stackAverage)), "TIFF", "C:\\Users\\barry05\\Desktop\\SuperRes Actin Tails\\Averages\\" + i);
+////        }
+//        tf.printImage();
+//        System.exit(0);
+//    }
 
     public TailFitter(double[] xVals, double[] yVals, double[][] zVals) {
         super();
@@ -127,14 +127,14 @@ public class TailFitter extends IsoGaussianFitter {
         maxIter = IterFactor * numParams * numParams;  // Where does this estimate come from?
         restarts = defaultRestarts;
         nRestarts = 0;
-        simp[0][0] = 0.15 * xData.length * spatialRes;
-        simp[0][1] = 0.25;
-        simp[0][2] = 0.4 * xData.length * spatialRes;
-        simp[0][3] = 1.1;
+        simp[0][0] = 0.14 * xData.length * spatialRes;
+        simp[0][1] = 0.23;
+        simp[0][2] = 0.38 * xData.length * spatialRes;
+        simp[0][3] = 1.18;
         simp[0][4] = 0.5 * yData.length * spatialRes;
-        simp[0][5] = 0.2;
-        simp[0][6] = 0.4;
-        simp[0][7] = 0.35;
+        simp[0][5] = 0.18;
+        simp[0][6] = 0.53;
+        simp[0][7] = 0.28;
 
         return true;
     }

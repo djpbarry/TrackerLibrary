@@ -22,7 +22,7 @@ import java.util.ArrayList;
  *
  * @author barry05
  */
-public class PSFEstimator extends Timelapse_Analysis {
+public class PSFEstimator extends Analyse_Movie {
 
     private TextWindow results;
     private String psfTitle = "PSF Estimator v1.0";
