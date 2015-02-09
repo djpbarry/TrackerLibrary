@@ -66,7 +66,7 @@ public class TailFitter extends IsoGaussianFitter {
         zproj.setMethod(ZProjector.AVG_METHOD);
         zproj.doProjection();
         ImageProcessor stackAverage = zproj.getProjection().getProcessor();
-        Rectangle cropRoi = new Rectangle(0, 14, stackAverage.getWidth() - 4, 1);
+        Rectangle cropRoi = new Rectangle(0, 6, stackAverage.getWidth() - 2, stackAverage.getHeight() - 12);
         stackAverage.setRoi(cropRoi);
         stackAverage = stackAverage.crop();
         ImageStatistics stats = stackAverage.getStatistics();
@@ -97,7 +97,7 @@ public class TailFitter extends IsoGaussianFitter {
 
     public TailFitter(double[] xVals, double[] yVals, double[][] zVals) {
         super();
-        numParams = 5;
+        numParams = 7;
         this.xData = xVals;
         this.yData = yVals;
         this.zData = new double[xData.length * yData.length];
@@ -135,11 +135,13 @@ public class TailFitter extends IsoGaussianFitter {
         simp[0][2] = 0.3; //sigma
         simp[0][3] = 0.5; //nu
         simp[0][4] = 0.0; //noise
+        simp[0][5] = yData.length * spatialRes / 2.0;
+        simp[0][6] = sigmaEst;
 
         return true;
     }
 
-    public double evaluate(double[] p, double x, double y) {
+    public double evaluate1D(double[] p, double x) {
         if (p == null) {
             return Double.NaN;
         }
@@ -147,7 +149,16 @@ public class TailFitter extends IsoGaussianFitter {
         double a = 0.5 * p[0] * (2.0 * p[1] + p[0] * p22 - 2.0 * x);
         double b = (p[1] + p[0] * p22 - x) / (sqrt2 * p[2]);
 
-        return p[3] * p[0] * Math.exp(a) * Erf.erfc(b) + p[4];
+        return p[3] * p[0] * Math.exp(a) * Erf.erfc(b);
+    }
+
+    public double evaluate2D(double[] p, double xVal, double y) {
+        if (p == null) {
+            return Double.NaN;
+        }
+        double v = Math.pow((y - p[5]) / (p[6] * sqrt2), 2.0);
+
+        return xVal * Math.exp(-0.5 * v) + p[4];
     }
 
     protected boolean sumResiduals(double[] x) {
@@ -162,7 +173,7 @@ public class TailFitter extends IsoGaussianFitter {
         double tail1d[] = buildTail(x);
         for (int i = 0; i < xData.length; i++) {
             for (int j = 0; j < yData.length; j++) {
-                e = tail1d[i + xData.length / 2] - zData[j * xData.length + i];
+                e = evaluate2D(x, tail1d[i + xData.length / 2], yData[j]) - zData[j * xData.length + i];
                 x[numParams] = x[numParams] + (e * e);
             }
         }
@@ -175,7 +186,7 @@ public class TailFitter extends IsoGaussianFitter {
         double[] gaussian = new double[emg.length];
         for (int i = 0; i < emg.length; i++) {
             gaussian[i] = gauss.value(i);
-            emg[i] = evaluate(p, xData[i], 0);
+            emg[i] = evaluate1D(p, xData[i]);
         }
         return MathArrays.convolve(emg, gaussian);
     }
@@ -195,8 +206,9 @@ public class TailFitter extends IsoGaussianFitter {
         double tail1d[] = buildTail(simp[best]);
         for (int y = 0; y < yData.length; y++) {
             for (int x = 0; x < xData.length; x++) {
-                convolved.putPixelValue(x, y, tail1d[x + xData.length / 2]);
-                deconvolved.putPixelValue(x, y, evaluate(simp[best], xData[x], yData[y]));
+                double xVal = tail1d[x + xData.length / 2];
+                convolved.putPixelValue(x, y, xVal);
+                deconvolved.putPixelValue(x, y, evaluate2D(simp[best], xVal, yData[y]));
             }
         }
         IJ.saveAs((new ImagePlus("", convolved)), "text image", "C:\\Users\\barry05\\Desktop\\SuperRes Actin Tails\\Convolved.txt");
