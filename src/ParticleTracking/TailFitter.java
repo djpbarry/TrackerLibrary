@@ -38,7 +38,7 @@ import org.apache.commons.math3.util.MathArrays;
 public class TailFitter extends IsoGaussianFitter {
 
     private static double spatialRes = 0.133333;
-    private static double sigmaEst = 1.06;
+    private static double sigmaEst = 0.145;
     double sqrt2 = Math.pow(2.0, 0.5);
 
     public static void main(String args[]) {
@@ -66,12 +66,14 @@ public class TailFitter extends IsoGaussianFitter {
         zproj.setMethod(ZProjector.AVG_METHOD);
         zproj.doProjection();
         ImageProcessor stackAverage = zproj.getProjection().getProcessor();
-        ImageStatistics stats = stackAverage.getStatistics();
-        double max = stats.max;
-        stackAverage.multiply(1.0 / max);
         Rectangle cropRoi = new Rectangle(0, 14, stackAverage.getWidth() - 4, 1);
         stackAverage.setRoi(cropRoi);
         stackAverage = stackAverage.crop();
+        ImageStatistics stats = stackAverage.getStatistics();
+        double max = stats.max;
+        double min = stats.min;
+        stackAverage.subtract(min);
+        stackAverage.multiply(1.0 / (max - min));
         int width = stackAverage.getWidth();
         int height = stackAverage.getHeight();
         double xVals[] = new double[width];
@@ -86,7 +88,7 @@ public class TailFitter extends IsoGaussianFitter {
         }
         TailFitter tf = new TailFitter(xVals, yVals, zVals);
         tf.doFit(TailFitter.sigmaEst);
-        tf.findPeak(Analyse_Movie.TRACK_OFFSET, 2.0 - 6.0 * spatialRes);
+        tf.printParams();
 //        IJ.saveAs((new ImagePlus("", stackAverage)), "TIFF", "C:\\Users\\barry05\\Desktop\\SuperRes Actin Tails\\Average.tif");
 //        }
         tf.printImage();
@@ -132,18 +134,20 @@ public class TailFitter extends IsoGaussianFitter {
         simp[0][1] = 0.14 * xData.length * spatialRes; //mu
         simp[0][2] = 0.3; //sigma
         simp[0][3] = 0.5; //nu
-        simp[0][4] = 0.4; //noise
+        simp[0][4] = 0.0; //noise
 
         return true;
     }
 
-    public double evaluate(double[] p, double tailval, double x, double y) {
+    public double evaluate(double[] p, double x, double y) {
         if (p == null) {
             return Double.NaN;
         }
-        double v = Math.pow((y - p[3]) / (sigmaEst * sqrt2), 2.0);
+        double p22 = p[2] * p[2];
+        double a = 0.5 * p[0] * (2.0 * p[1] + p[0] * p22 - 2.0 * x);
+        double b = (p[1] + p[0] * p22 - x) / (sqrt2 * p[2]);
 
-        return p[4] * tailval * Math.exp(-0.5 * v);
+        return p[3] * p[0] * Math.exp(a) * Erf.erfc(b) + p[4];
     }
 
     protected boolean sumResiduals(double[] x) {
@@ -155,77 +159,47 @@ public class TailFitter extends IsoGaussianFitter {
          */
         double e;
         x[numParams] = 0.0;
-        double tail1d[] = buildTail(x, 10);
+        double tail1d[] = buildTail(x);
         for (int i = 0; i < xData.length; i++) {
             for (int j = 0; j < yData.length; j++) {
-                e = evaluate(x, tail1d[i + xData.length / 2], xData[i], yData[j]) - zData[j * xData.length + i];
+                e = tail1d[i + xData.length / 2] - zData[j * xData.length + i];
                 x[numParams] = x[numParams] + (e * e);
             }
         }
         return true;
     }
 
-    double[] buildTail(double[] p, int padding) {
-        double[] emg = new double[xData.length+padding];
-        Gaussian gauss = new Gaussian(emg.length / 2.0, sigmaEst);
+    double[] buildTail(double[] p) {
+        double[] emg = new double[xData.length];
+        Gaussian gauss = new Gaussian((emg.length - 1.0) / 2.0, sigmaEst / spatialRes);
         double[] gaussian = new double[emg.length];
         for (int i = 0; i < emg.length; i++) {
             gaussian[i] = gauss.value(i);
-            double a = 0.5 * p[0] * (2.0 * p[1] + p[0] * p[2] * p[2] - 2.0 * xData[i]);
-            double b = (p[1] + p[0] * p[2] * p[2] - xData[i]) / (sqrt2 * p[2]);
-
-            emg[i] = p[3] * p[0] * Math.exp(a) * Erf.erfc(b) + p[4];
+            emg[i] = evaluate(p, xData[i], 0);
         }
         return MathArrays.convolve(emg, gaussian);
     }
 
-    public void findPeak(double xOffset, double yOffset) {
+    public void printParams() {
         double params[] = getParams();
 
-//        double x1 = params[0];
-//        double x12 = x1 * x1;
-//        double s1 = params[1];
-//        double s12 = s1 * s1;
-//        double x2 = params[2];
-//        double x22 = x2 * x2;
-//        double s2 = params[3];
-//        double s22 = s2 * s2;
-//        double yCentre = params[4] - yOffset;
-//
-//        double c = 2.0 * s12 * s22 * (Math.log(s2) - Math.log(s1));
-//        double d = c + s12 * x22 - s22 * x12;
-//        double b = 2.0 * (s22 * x1 - s12 * x2);
-//        double a = s12 - s22;
-//
-//        double root1 = (-b + Math.sqrt(b * b - 4.0 * a * d)) / (2.0 * a);
-//        double root2 = (-b - Math.sqrt(b * b - 4.0 * a * d)) / (2.0 * a);
-//        double xCentre;
-//        if (root1 < xOffset) {
-//            xCentre = root2 - xOffset;
-//        } else {
-//            xCentre = root1 - xOffset;
-//        }
-        System.out.print(" p[0]: " + params[0]
-                + " p[1]: " + params[1]
-                + " p[2]: " + params[2]
-                + " p[3]: " + params[3]
-                + " p[4]: " + params[4]
-                + " p[5]: " + params[5]);
-//                + " p[6]: " + params[6]);
-//                + " p[7]: " + params[7]);
-//        System.out.print(" x0: " + xCentre + " y0: " + yCentre + " R^2: " + params[numParams]);
+        for (int i = 0; i < numParams; i++) {
+            System.out.print(" p[" + String.valueOf(i) + "]: " + params[i]);
+        }
         System.out.println();
     }
 
     void printImage() {
         FloatProcessor deconvolved = new FloatProcessor(xData.length, yData.length);
         FloatProcessor convolved = new FloatProcessor(xData.length, yData.length);
-        double tail1d[] = buildTail(simp[best], 10);
+        double tail1d[] = buildTail(simp[best]);
         for (int y = 0; y < yData.length; y++) {
             for (int x = 0; x < xData.length; x++) {
-                deconvolved.putPixelValue(x, y, evaluate(simp[best], tail1d[x + xData.length / 2], xData[x], yData[y]));
+                convolved.putPixelValue(x, y, tail1d[x + xData.length / 2]);
+                deconvolved.putPixelValue(x, y, evaluate(simp[best], xData[x], yData[y]));
             }
         }
+        IJ.saveAs((new ImagePlus("", convolved)), "text image", "C:\\Users\\barry05\\Desktop\\SuperRes Actin Tails\\Convolved.txt");
         IJ.saveAs((new ImagePlus("", deconvolved)), "text image", "C:\\Users\\barry05\\Desktop\\SuperRes Actin Tails\\Deconvolved.txt");
     }
 }
