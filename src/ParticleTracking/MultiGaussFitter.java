@@ -12,7 +12,7 @@ import java.util.Arrays;
  * @author David J Barry
  * @version 1.0, JAN 2011
  */
-public class MultiGaussFitter {
+public class MultiGaussFitter extends Fitter {
 
     double _2sig2, xyStepSize, magStepSize, bgStepSize;
     int N_MAX = 1, FIT_RADIUS = 3, FIT_SIZE = 7;

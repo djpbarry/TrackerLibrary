@@ -8,7 +8,7 @@ package ParticleTracking;
  * @author David J Barry
  * @version 1.0, JAN 2011
  */
-public class IsoGaussianFitter {
+public class IsoGaussianFitter extends Fitter {
 
     //private native double evaluate(double x, double y, double p0, double p1,            double p2, double p3, double p4);
     // private native double sumResiduals(double x[], double xData[], double yData[], double zData[]);

@@ -31,15 +31,16 @@ public class Colocalisation_Analysis implements PlugIn {
     protected static boolean partialDetect = false;
     protected TextWindow results = null, particleCoords = null;
     protected boolean findTails = false;
-    private String labels[] = {"Channel 1", "Channel 2"};
-    private DecimalFormat intFormat = new DecimalFormat("000");
+    private final String labels[] = {"Channel 1", "Channel 2"};
+    private final DecimalFormat intFormat = new DecimalFormat("000");
 
 //    public static void main(String args[]) {
 //        ImagePlus inputs[] = new ImagePlus[2];
 //        inputs[0] = new ImagePlus("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Co_Localiser_Test\\Co_Localiser_Test_Red.png");
 //        inputs[1] = new ImagePlus("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Co_Localiser_Test\\Co_Localiser_Test_Green.png");
-//        (new Co_Localise(inputs)).run(null);
+//        (new Colocalisation_Analysis(inputs)).run(null);
 //    }
+
     public Colocalisation_Analysis() {
     }
 
@@ -53,8 +54,7 @@ public class Colocalisation_Analysis implements PlugIn {
 
     public Colocalisation_Analysis(ImagePlus imp) {
         this.imp = imp;
-        ImagePlus tempImps[] = new ImagePlus[3];
-        tempImps = ChannelSplitter.split(imp);
+        ImagePlus tempImps[] = ChannelSplitter.split(imp);
         stacks[0] = tempImps[0].getImageStack();
         stacks[1] = tempImps[1].getImageStack();
     }
