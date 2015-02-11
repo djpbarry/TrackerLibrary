@@ -66,7 +66,7 @@ public class Analyse_Movie implements PlugIn {
     protected boolean monoChrome;
 //    private final double IMAGE_MAX = 255.0;
     private final double SEARCH_SCALE = 1.0;
-    private final double TRACK_LENGTH = 5.0;
+//    private final double TRACK_LENGTH = 5.0;
     private final double TRACK_WIDTH = 4.0;
     public static final float TRACK_EXT = 1.0f;
     public static final float TRACK_OFFSET = 0.75f;
@@ -237,7 +237,7 @@ public class Analyse_Movie implements PlugIn {
                         traj.printTrajectory(count, results, numFormat, title);
                         if (type == ParticleTrajectory.COLOCAL) {
                             ImageStack signals[] = extractSignalValues(traj,
-                                    (int) Math.round(TRACK_LENGTH / UserVariables.getSpatialRes()),
+                                    (int) Math.round(UserVariables.getTrackLength() / UserVariables.getSpatialRes()),
                                     (int) Math.round(TRACK_WIDTH / UserVariables.getSpatialRes()), TRACK_EXT / ((float) UserVariables.getSpatialRes()));
                             if (signals[0].getSize() > 0) {
                                 for (int j = 1; j <= signals[0].getSize(); j++) {
@@ -751,7 +751,7 @@ public class Analyse_Movie implements PlugIn {
             outputStack.addSlice("" + i, processor.resize(width, height));
         }
         Random r = new Random();
-        int tLength = (int) Math.round(TRACK_LENGTH / UserVariables.getSpatialRes());
+        int tLength = (int) Math.round(UserVariables.getTrackLength() / UserVariables.getSpatialRes());
         ProgressDialog progress = new ProgressDialog(null, "Mapping Output...", false, title, false);
         progress.setVisible(true);
         for (i = startT; i <= endT && i < n; i++) {

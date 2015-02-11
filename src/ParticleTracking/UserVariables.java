@@ -20,6 +20,7 @@ public class UserVariables {
     private static double chan1MaxThresh = 0.99;
     private static double chan2MaxThresh = 0.99;
     private static double curveFitTol = 0.95d;
+    private static double trackLength = 5.0;
     private static int nMax = 1;
     private static boolean colocal = true, preProcess = true, gpu = false;
     public static final String[] channels = {"Red", "Green", "Blue"};
@@ -137,6 +138,14 @@ public class UserVariables {
 
     public static void setMinTrajDist(double minTrajDist) {
         UserVariables.minTrajDist = minTrajDist;
+    }
+
+    public static double getTrackLength() {
+        return trackLength;
+    }
+
+    public static void setTrackLength(double trackLength) {
+        UserVariables.trackLength = trackLength;
     }
 
 }
