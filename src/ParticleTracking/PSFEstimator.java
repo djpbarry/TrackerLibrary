@@ -7,6 +7,7 @@ package ParticleTracking;
 import IAClasses.IsoGaussian;
 import IAClasses.ProgressDialog;
 import IAClasses.Utils;
+import UtilClasses.Utilities;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -16,6 +17,7 @@ import ij.process.FloatProcessor;
 import ij.process.TypeConverter;
 import ij.text.TextWindow;
 import java.awt.Toolkit;
+import java.io.File;
 import java.util.ArrayList;
 
 /**
@@ -28,10 +30,10 @@ public class PSFEstimator extends Analyse_Movie {
     private String psfTitle = "PSF Estimator v1.0";
 
 //    public static void main(String args[]) {
-//        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test Data Sets\\PSF Estimator\\Test 1"), null);
-//        ImageStack stack = Utils.buildStack(image);
-//        ImagePlus imp = new ImagePlus("Stack", stack);
-//        PSF_Estimator instance = new PSF_Estimator(imp);
+//        File image = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\Test Data Sets\\PSF Estimator\\Test 1"), null, true);
+////        ImageStack stack = Utils.buildStack(image);
+//        ImagePlus imp = Utils.buildStack(image);
+//        PSFEstimator instance = new PSFEstimator(imp);
 //        if (instance.showDialog()) {
 //            instance.analyse();
 //        }
@@ -42,11 +44,12 @@ public class PSFEstimator extends Analyse_Movie {
     }
 
     public PSFEstimator(ImagePlus imp) {
-        super(imp,null);
+        super(imp, null);
         this.imp = imp;
     }
 
     public void analyse() {
+        stacks = new ImageStack[2];
         stacks[0] = imp.getImageStack();
         if (stacks[0] != null) {
             calcParticleRadius(UserVariables.getSpatialRes());
