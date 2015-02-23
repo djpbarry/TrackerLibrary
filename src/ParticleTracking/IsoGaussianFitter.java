@@ -32,7 +32,7 @@ public class IsoGaussianFitter extends Fitter {
     protected static int defaultRestarts = 2;  // default number of restarts
     protected int nRestarts;  // the number of restarts that occurred
     private static double maxError = 1e-10;    // maximum error tolerance
-    private double x0, y0, mag, xsig, ysig;
+    private double x0, y0, mag, xsig, ysig, xsig2, ysig2;
 
 //    public static void main(String args[]) {
 //        ImagePlus imp = new ImagePlus("C:\\Users\\Dave\\Desktop\\lac.tif");
@@ -239,6 +239,8 @@ public class IsoGaussianFitter extends Fitter {
         simp[0][2] = xmean;          // c
         simp[0][3] = ymean; // d
         xsig = ysig = xySigEst;
+        xsig2 = 2.0 * xsig * xsig;
+        ysig2 = 2.0 * ysig * ysig;
         return true;
     }
 
@@ -292,8 +294,8 @@ public class IsoGaussianFitter extends Fitter {
         if (p == null) {
             return Double.NaN;
         }
-        return p[0] + p[1] * Math.exp(-(((x - p[2]) * (x - p[2])) + ((y - p[3])
-                * (y - p[3]))) / (2 * xsig * xsig));
+        return p[0] + p[1] * Math.exp(-(((x - p[2]) * (x - p[2])) / (2 * xsig * xsig) + ((y - p[3])
+                * (y - p[3])) / (2 * ysig * ysig)));
     }
 
     /**

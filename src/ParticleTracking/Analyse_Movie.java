@@ -90,6 +90,7 @@ public class Analyse_Movie implements PlugIn {
 ////        }
 //        System.exit(0);
 //    }
+
     public Analyse_Movie(double spatialRes, double timeRes, double trajMaxStep, double chan1MaxThresh, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
         UserVariables.setSpatialRes(spatialRes);
         UserVariables.setTimeRes(timeRes);
@@ -163,6 +164,8 @@ public class Analyse_Movie implements PlugIn {
     public void analyse() {
         outputDir = Utilities.getFolder(outputDir, "Specify directory for output files...", true);
         parentDir = GenUtils.openResultsDirectory(outputDir + delimiter + title, delimiter);
+        String sigc0Dir = GenUtils.openResultsDirectory(parentDir + delimiter + "C0", delimiter);
+        String sigc1Dir = GenUtils.openResultsDirectory(parentDir + delimiter + "C1", delimiter);
         if (!monoChrome) {
             calDir = Utilities.getFolder(calDir, "Specify directory containing calibrations...", true);
         }
@@ -242,10 +245,10 @@ public class Analyse_Movie implements PlugIn {
                             if (signals[0].getSize() > 0) {
                                 for (int j = 1; j <= signals[0].getSize(); j++) {
                                     IJ.saveAs((new ImagePlus("", signals[0].getProcessor(j))),
-                                            "TIF", parentDir + "/C0-" + String.valueOf(count)
+                                            "TIF", sigc0Dir + delimiter + String.valueOf(count)
                                             + "-" + String.valueOf(j));
                                     IJ.saveAs((new ImagePlus("", signals[1].getProcessor(j))),
-                                            "TIF", parentDir + "/C1-" + String.valueOf(count)
+                                            "TIF", sigc1Dir + delimiter + String.valueOf(count)
                                             + "-" + String.valueOf(j));
                                 }
                             }
@@ -926,6 +929,8 @@ public class Analyse_Movie implements PlugIn {
             virImp.setRoi(virProi);
             sigTemps[i] = straightener.straighten(sigImp, sigProi, signalWidth);
             virTemps[i] = straightener.straighten(virImp, virProi, signalWidth);
+//            IJ.saveAs((new ImagePlus("", virTemps[i])), "TIF", "c:\\users\\barry05\\desktop\\virTemps_" + i);
+//            System.out.println("virTemp: " + virTemps[i].getWidth() + "virProi: " + virProi.getLength());
             sigStartP = sigStartP.getLink();
         }
         int xc = (int) Math.ceil(TRACK_OFFSET * offset);
@@ -988,15 +993,33 @@ public class Analyse_Movie implements PlugIn {
         return xyPartRad;
     }
 
+    void goshtasbyErrorEval(ImageProcessor xcoeffs, ImageProcessor ycoeffs, ImageProcessor coords) {
+        int size = xcoeffs.getHeight();
+        for (int index = 3; index < size; index++) {
+            int coordindex = index - 3;
+//            ImageProcessor xTempCoeffs = xcoeffs.duplicate();
+//            ImageProcessor yTempCoeffs = ycoeffs.duplicate();
+//            xTempCoeffs.putPixelValue(0, index, 0.0);
+//            yTempCoeffs.putPixelValue(0, index, 0.0);
+            double xg = goshtasbyEval(xcoeffs, coords, coords.getPixelValue(0, coordindex), coords.getPixelValue(1, coordindex));
+            double yg = goshtasbyEval(ycoeffs, coords, coords.getPixelValue(0, coordindex), coords.getPixelValue(1, coordindex));
+            System.out.println("x," + coords.getPixelValue(0, coordindex)
+                    + ",y," + coords.getPixelValue(1, coordindex)
+                    + ",xg," + xg + ",yg," + yg);
+        }
+    }
+
     double goshtasbyEval(ImageProcessor coeffs, ImageProcessor coords, double x, double y) {
         int l = coeffs.getHeight();
         double sum = 0.0;
         for (int i = 3; i < l; i++) {
-            double r = Math.pow((x - coords.getPixelValue(0, i - 3)), 2.0) + Math.pow((y - coords.getPixelValue(1, i - 3)), 2.0);
-            if (r > 0.0) {
-                double R = r * Math.log(r);
-                sum = sum + coeffs.getPixelValue(0, i) * R;
-            }
+//            if (Utils.calcDistance(x, y, coords.getPixelValue(0, i - 3), coords.getPixelValue(1, i - 3)) < 20.0) {
+                double r = Math.pow((x - coords.getPixelValue(0, i - 3)), 2.0) + Math.pow((y - coords.getPixelValue(1, i - 3)), 2.0);
+                if (r > 0.0) {
+                    double R = r * Math.log(r);
+                    sum = sum + coeffs.getPixelValue(0, i) * R;
+                }
+//            }
         }
         return coeffs.getPixelValue(0, 0) + coeffs.getPixelValue(0, 1) * x + coeffs.getPixelValue(0, 2) * y + sum;
     }
@@ -1021,6 +1044,7 @@ public class Analyse_Movie implements PlugIn {
         paramStream.println(UserInterface.getFpsLabelText() + "," + UserVariables.getTimeRes());
         paramStream.println(UserInterface.getMinTrajLengthLabelText() + "," + UserVariables.getMinTrajLength());
         paramStream.println(UserInterface.getMaxLinkDistLabelText() + "," + UserVariables.getTrajMaxStep());
+        paramStream.println(UserInterface.getTrackLengthText() + "," + UserVariables.getTrackLength());
         paramStream.println(UserInterface.getChan1MaxThreshLabelText() + "," + UserVariables.getChan1MaxThresh());
         paramStream.println(UserInterface.getChan2MaxThreshLabelText() + "," + UserVariables.getChan2MaxThresh());
         paramStream.println(UserInterface.getCurveFitTolLabelText() + "," + UserVariables.getCurveFitTol());

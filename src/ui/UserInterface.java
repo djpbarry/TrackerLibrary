@@ -746,6 +746,10 @@ public class UserInterface extends javax.swing.JDialog {
         return gpuToggleText;
     }
 
+    public static String getTrackLengthText() {
+        return trackLengthText;
+    }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox c1ComboBox;
     private javax.swing.JLabel c1Label;

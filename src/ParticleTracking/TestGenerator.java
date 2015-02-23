@@ -23,11 +23,15 @@ public class TestGenerator {
 
     DecimalFormat indFormat = new DecimalFormat("000");
     private double noise = 3.0;
+    private double randNoise = 50.0;
+    private double separation = 0.4;
     private Random rand = new Random();
     private double numAp = 1.4;
     private double lambda = 602.0;
-    private double res = 0.212;
-    private double sigmaEstPix = 0.305 * lambda / (numAp * res * 1000.0);
+    private double res = 0.133333;
+//    private double sigmaEstPix = 0.305 * lambda / (numAp * res * 1000.0);
+    private double sigmaEstPix = 0.131/res;
+    private double sens = 0.05;
 
 //    public static void main(String args[]) {
 //        ByteProcessor template = new ByteProcessor(1000, 250);
@@ -39,12 +43,11 @@ public class TestGenerator {
 //        TestGenerator tg = new TestGenerator();
 //        tg.generateSwitchingSequenceFromBitMap(template, 1000, 0.002, 5.0, "C:/Users/barry05/Desktop/Test_Data_Sets/Test_Generator_Output");
 //    }
-    
-//    public static void main(String args[]){
-//         TestGenerator tg = new TestGenerator();
-//         tg.generateMulti(1, 256, 256, 60);
+//    public static void main(String args[]) {
+//        TestGenerator tg = new TestGenerator();
+//        tg.generateMulti(20, 512, 512, 60);
 //    }
-    
+
     public TestGenerator() {
     }
 
@@ -65,20 +68,26 @@ public class TestGenerator {
     }
 
     public void generateMulti(int n, int width, int height, int length) {
-        int totalcount = n;
+//        int totalcount = n;
 //        Co_Localise cl = new Co_Localise();
         MotileGaussian particles[] = new MotileGaussian[n];
         Random r = new Random();
         for (int i = 0; i < n; i++) {
             particles[i] = new MotileGaussian(width * res * r.nextDouble(), height * res * r.nextDouble(),
-                    255.0, sigmaEstPix, sigmaEstPix, 0.1, 0.02, true, false);
+                    100.0, sigmaEstPix, sigmaEstPix, 0.1, sens, true, false);
         }
         for (int i = 0; i < length; i++) {
-            ByteProcessor image = new ByteProcessor(width, height);
-            image.setColor(255);
+            FloatProcessor c1image = new FloatProcessor(width, height);
+            c1image.setColor(100);
+//            FloatProcessor c2image = new FloatProcessor(width, height);
+//            c2image.setColor(1000);
             for (int j = 0; j < n; j++) {
                 if (particles[j] != null) {
-                    Utils.draw2DGaussian(image, particles[j], 0.0, res, false, false);
+                    Utils.draw2DGaussian(c1image, particles[j], 0.0, res, false, false);
+//                    double projectedPos[] = particles[j].projectPosition(false, separation);
+//                    IsoGaussian temp = new IsoGaussian(projectedPos[0], projectedPos[1], particles[j].getMagnitude(),
+//                            particles[j].getXSigma(), particles[j].getYSigma(), particles[j].getFit());
+//                    Utils.draw2DGaussian(c2image, temp, 0.0, res, false, false);
                     particles[j].updateVelocity();
                     particles[j].updatePosition();
                     double x = particles[j].getX() / res;
@@ -89,17 +98,21 @@ public class TestGenerator {
                             || y > height + 2.0 * particles[j].getYSigma()) {
 //                        particles[j] = null;
                         particles[j] = new MotileGaussian(width * res * r.nextDouble(),
-                                height * res * r.nextDouble(), 255.0, sigmaEstPix, sigmaEstPix,
-                                0.1, 0.02, true, false);
-                        totalcount++;
+                                height * res * r.nextDouble(), 100.0, sigmaEstPix, sigmaEstPix,
+                                0.1, sens, true, false);
+//                        totalcount++;
 
                     }
-                    System.out.println("X:\t" + particles[j].getX() + "\tY:\t" + particles[j].getY());
+//                    System.out.println("X:\t" + particles[j].getX() + "\tY:\t" + particles[j].getY());
                 }
             }
-            IJ.saveAs(new ImagePlus("", image.duplicate()), "PNG",
-                    "C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences\\Simulation\\"
+//            c2image.noise(randNoise);
+            IJ.saveAs(new ImagePlus("", c1image.duplicate()), "TIF",
+                    "C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences\\Simulation\\C0\\"
                     + indFormat.format(i));
+//            IJ.saveAs(new ImagePlus("", c2image.duplicate()), "TIF",
+//                    "C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Tracking_Test_Sequences\\Simulation\\C1\\"
+//                    + indFormat.format(i));
 //            System.out.println("Frame:\t" + i + "\tTotal Count:\t" + totalcount);
         }
     }
