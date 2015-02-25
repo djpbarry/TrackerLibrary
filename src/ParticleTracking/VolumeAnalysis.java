@@ -25,7 +25,7 @@ import java.util.Arrays;
  *
  * @author barry05
  */
-public class VolumeAnalysis extends Analyse_Movie {
+public class VolumeAnalysis extends Analyse_ {
 
     private int outputsize = 51, midpoint = (outputsize - 1) / 2;
     double spatialRes = UserVariables.getSpatialRes();

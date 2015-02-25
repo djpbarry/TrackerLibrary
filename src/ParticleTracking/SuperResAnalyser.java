@@ -52,7 +52,7 @@ public class SuperResAnalyser extends Colocalisation_Analysis {
                     + ") Detections\tColocalised Channel 2 (" + UserVariables.channels[UserVariables.getC2Index()]
                     + ") Detections\t% Colocalisation";
             UserVariables.setPreProcess(true);
-            Analyse_Movie analyser = new Analyse_Movie(stacks);
+            Analyse_ analyser = new Analyse_(stacks);
             analyser.calcParticleRadius(UserVariables.getSpatialRes());
             //Timelapse_Analysis.setGaussianRadius(0.139 / Timelapse_Analysis.getSpatialRes());
             //IJ.saveAs(buildOutput(analyser), "TIF", "C:\\Users\\barry05\\Desktop\\SuperResTestOutputII.tif");
@@ -94,12 +94,12 @@ public class SuperResAnalyser extends Colocalisation_Analysis {
         return true;
     }
 
-    ImagePlus buildOutput(Analyse_Movie analyser) {
+    ImagePlus buildOutput(Analyse_ analyser) {
         if (stacks == null) {
             return null;
         }
         if (analyser == null) {
-            analyser = new Analyse_Movie(stacks);
+            analyser = new Analyse_(stacks);
         }
         DecimalFormat format = new DecimalFormat("000");
         int width = imp.getWidth() * scaleFactor, height = imp.getHeight() * scaleFactor;

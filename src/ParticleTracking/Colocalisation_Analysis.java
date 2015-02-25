@@ -17,11 +17,10 @@ import java.awt.Toolkit;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
-public class Colocalisation_Analysis implements PlugIn {
+public class Colocalisation_Analysis extends Analyse_ implements PlugIn {
 
     protected ImagePlus imp;
-    private ImagePlus[] inputs;
-    protected ImageStack[] stacks = new ImageStack[2];
+//    protected ImageStack[] stacks = new ImageStack[2];
     protected String title = "Colocaliser";
     protected String resultsHeadings = "Image\tChannel 1 Detections\tColocalised Channel 2 Detections\t% Colocalisation\t"
             + "\u0394 (nm)", coordHeadings = "C0_X\tC0_Y\tC1_X\tC1_Y";
@@ -31,7 +30,7 @@ public class Colocalisation_Analysis implements PlugIn {
     protected static boolean partialDetect = false;
     protected TextWindow results = null, particleCoords = null;
     protected boolean findTails = false;
-    private final String labels[] = {"Channel 1", "Channel 2"};
+//    private final String labels[] = {"Channel 1", "Channel 2"};
     private final DecimalFormat intFormat = new DecimalFormat("000");
 
 //    public static void main(String args[]) {
@@ -40,7 +39,6 @@ public class Colocalisation_Analysis implements PlugIn {
 //        inputs[1] = new ImagePlus("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Co_Localiser_Test\\Co_Localiser_Test_Green.png");
 //        (new Colocalisation_Analysis(inputs)).run(null);
 //    }
-
     public Colocalisation_Analysis() {
     }
 
@@ -61,23 +59,18 @@ public class Colocalisation_Analysis implements PlugIn {
 
     @Override
     public void run(String arg) {
-        title = title + "_v" + Analyse_Movie.VERSION + "." + intFormat.format(Revision.Revision.revisionNumber);
-        if (IJ.getInstance() != null) {
-            inputs = GenUtils.specifyInputs(labels);
-            stacks[0] = inputs[0].getImageStack();
-            stacks[1] = inputs[1].getImageStack();
-        }
-        if (stacks[0].getProcessor(1).getNChannels() > 1 || stacks[1].getProcessor(1).getNChannels() > 1) {
-            GenUtils.error("Monochrome images required.");
-            return;
-        }
-        if (stacks[0].getSize() != stacks[1].getSize()) {
-            GenUtils.error("Stacks must have same number of slices.");
+        title = title + "_v" + Analyse_.VERSION + "." + intFormat.format(Revision.Revision.revisionNumber);
+        labels[0] = "Channel 1";
+        labels[1] = "Channel 2";
+        stacks = new ImageStack[2];
+        getActiveImages();
+        if (stacks[1] == null) {
+            GenUtils.error("Not enough stacks open.");
             return;
         }
         if (showDialog()) {
             UserVariables.setPreProcess(true);
-            Analyse_Movie analyser = new Analyse_Movie(stacks);
+            Analyse_ analyser = new Analyse_(stacks);
             analyser.calcParticleRadius(UserVariables.getSpatialRes());
             UserVariables.setnMax(1);
             (buildOutput(analyser)).show();
@@ -145,14 +138,14 @@ public class Colocalisation_Analysis implements PlugIn {
         }
     }
 
-    ImagePlus buildOutput(Analyse_Movie analyser) {
+    ImagePlus buildOutput(Analyse_ analyser) {
         if (stacks == null) {
             return null;
         }
         if (analyser == null) {
-            analyser = new Analyse_Movie(stacks);
+            analyser = new Analyse_(stacks);
         }
-        double displaymax = 0.0;
+//        double displaymax = 0.0;
         int colocalisation, count;
         int width = stacks[0].getWidth(), height = stacks[0].getHeight();
         ImageStack outStack = new ImageStack(width, height);
@@ -176,16 +169,16 @@ public class Colocalisation_Analysis implements PlugIn {
                     particleCoords = new TextWindow(title + " Particle Coordinates", coordHeadings, new String(), 1000, 500);
                 }
                 if (Utils.draw2DGaussian(ch1proc, c1, UserVariables.getCurveFitTol(), UserVariables.getSpatialRes(), partialDetect, false)) {
-                    if (c1.getMagnitude() > displaymax) {
-                        displaymax = c1.getMagnitude();
-                    }
+//                    if (c1.getMagnitude() > displaymax) {
+//                        displaymax = c1.getMagnitude();
+//                    }
                     count++;
                     IsoGaussian c2 = ((Particle) detections.get(j)).getC2Gaussian();
                     if (Utils.draw2DGaussian(ch2proc, c2, UserVariables.getCurveFitTol(), UserVariables.getSpatialRes(),
                             partialDetect, false)) {
-                        if (c2.getMagnitude() > displaymax) {
-                            displaymax = c2.getMagnitude();
-                        }
+//                        if (c2.getMagnitude() > displaymax) {
+//                            displaymax = c2.getMagnitude();
+//                        }
                         colocalisation++;
                         sepsum += Utils.calcDistance(c1.getX(), c1.getY(), c2.getX(), c2.getY());
                         coordString = String.valueOf(c1.getX()) + "\t" + String.valueOf(c1.getY())
@@ -217,10 +210,10 @@ public class Colocalisation_Analysis implements PlugIn {
             particleCoords.setVisible(true);
         }
         ImagePlus output = new ImagePlus("Detected Particles", outStack);
-        if (displaymax > 255) {
-            displaymax = 255;
-        }
-        output.setDisplayRange(0.0, displaymax);
+//        if (displaymax > 255) {
+//            displaymax = 255;
+//        }
+//        output.setDisplayRange(0.0, displaymax);
         return output;
     }
 }

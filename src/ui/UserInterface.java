@@ -9,7 +9,7 @@ import IAClasses.IsoGaussian;
 import IAClasses.Utils;
 import ParticleTracking.Particle;
 import ParticleTracking.ParticleArray;
-import ParticleTracking.Analyse_Movie;
+import ParticleTracking.Analyse_;
 import ParticleTracking.UserVariables;
 import UIClasses.UIMethods;
 import ij.IJ;
@@ -27,7 +27,7 @@ import javax.swing.DefaultBoundedRangeModel;
  */
 public class UserInterface extends javax.swing.JDialog {
 
-    private final Analyse_Movie analyser;
+    private final Analyse_ analyser;
     private final ImagePlus imp;
     private final String title;
     private boolean wasOKed = false, monoChrome;
@@ -50,7 +50,7 @@ public class UserInterface extends javax.swing.JDialog {
     /**
      * Creates new form UserInterface
      */
-    public UserInterface(java.awt.Frame parent, boolean modal, String title, Analyse_Movie analyser) {
+    public UserInterface(java.awt.Frame parent, boolean modal, String title, Analyse_ analyser) {
         super(parent, modal);
         this.title = title;
         this.analyser = analyser;
@@ -380,6 +380,7 @@ public class UserInterface extends javax.swing.JDialog {
         jPanel1.add(nMaxLabel, gridBagConstraints);
 
         gpuToggleButton.setText(gpuToggleText);
+        gpuToggleButton.setEnabled(false);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 15;
@@ -627,11 +628,11 @@ public class UserInterface extends javax.swing.JDialog {
         analyser.calcParticleRadius(UserVariables.getSpatialRes());
         ImageStack stacks[] = analyser.getStacks();
         ParticleArray detections=null;
-        if (UserVariables.isGpu()) {
-            detections = analyser.cudaFindParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stacks[0], stacks[1], monoChrome);
-        } else {
+//        if (UserVariables.isGpu()) {
+//            detections = analyser.cudaFindParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stacks[0], stacks[1], monoChrome);
+//        } else {
             detections = analyser.findParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stacks[0], stacks[1], monoChrome, false);
-        }
+//        }
         if (detections != null) {
             ImageProcessor output = Utils.updateImage(stacks[0], stacks[1], previewScrollBar.getValue());
             double mag = 1.0 / UIMethods.getMagnification(output, canvas1);
