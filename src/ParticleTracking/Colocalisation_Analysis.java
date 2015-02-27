@@ -194,7 +194,7 @@ public class Colocalisation_Analysis extends Analyse_ implements PlugIn {
             }
             results.append("Slice " + i + "\t" + count + "\t" + colocalisation
                     + "\t" + numFormat.format(100.0 * colocalisation / count)
-                    + "\t" + numFormat.format(1000.0 * res * sepsum / count));
+                    + "\t" + numFormat.format(1000.0 * sepsum / count));
 
             ColorProcessor output = new ColorProcessor(width, height);
             output.setRGB(outPix(ch1proc, ch2proc, RED), outPix(ch1proc, ch2proc, GREEN),

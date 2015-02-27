@@ -63,7 +63,7 @@ public class Analyse_ implements PlugIn {
     protected DecimalFormat intFormat = new DecimalFormat("000");
     String title = "Particle Tracker", ext;
     protected static boolean msdPlot = false, intensPlot = false, trajPlot = false, prevRes = true;
-    protected boolean monoChrome, useCals = false;
+    protected boolean monoChrome, useCals = true;
 //    private final double IMAGE_MAX = 255.0;
     private final double SEARCH_SCALE = 1.0;
 //    private final double TRACK_LENGTH = 5.0;
@@ -83,13 +83,14 @@ public class Analyse_ implements PlugIn {
 //    }
 //
 //    private native boolean cudaGaussFitter(String folder, String ext, float spatialRes, float sigmaEst, float maxthresh, float fitTol, int startSlice, int endSlice);
-//    public static void main(String args[]) {
-////        if (imp != null) {
-//        Analyse_Movie instance = new Analyse_Movie();
-//        instance.run(null);
-////        }
-//        System.exit(0);
-//    }
+    public static void main(String args[]) {
+//        if (imp != null) {
+        Analyse_ instance = new Analyse_();
+        instance.run(null);
+//        }
+        System.exit(0);
+    }
+
     public Analyse_(double spatialRes, double timeRes, double trajMaxStep, double chan1MaxThresh, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
         UserVariables.setSpatialRes(spatialRes);
         UserVariables.setTimeRes(timeRes);
@@ -900,6 +901,8 @@ public class Analyse_ implements PlugIn {
             ycoeffs = reader.open(calDir + delimiter + "ycoeffs.txt");
             coords = reader.open(calDir + delimiter + "coords.txt");
         }
+//        goshtasbyShiftEval(xcoeffs, ycoeffs, coords);
+//        goshtasbyErrorEval(coords);
         Particle sigStartP = ptraj.getEnd();
         if (signalWidth % 2 == 0) {
             signalWidth++;
@@ -1002,19 +1005,37 @@ public class Analyse_ implements PlugIn {
         return xyPartRad;
     }
 
-    void goshtasbyErrorEval(ImageProcessor xcoeffs, ImageProcessor ycoeffs, ImageProcessor coords) {
-        int size = xcoeffs.getHeight();
-        for (int index = 3; index < size; index++) {
-            int coordindex = index - 3;
-//            ImageProcessor xTempCoeffs = xcoeffs.duplicate();
-//            ImageProcessor yTempCoeffs = ycoeffs.duplicate();
-//            xTempCoeffs.putPixelValue(0, index, 0.0);
-//            yTempCoeffs.putPixelValue(0, index, 0.0);
-            double xg = goshtasbyEval(xcoeffs, coords, coords.getPixelValue(0, coordindex), coords.getPixelValue(1, coordindex));
-            double yg = goshtasbyEval(ycoeffs, coords, coords.getPixelValue(0, coordindex), coords.getPixelValue(1, coordindex));
-            System.out.println("x," + coords.getPixelValue(0, coordindex)
-                    + ",y," + coords.getPixelValue(1, coordindex)
-                    + ",xg," + xg + ",yg," + yg);
+    void goshtasbyShiftEval(ImageProcessor xcoeffs, ImageProcessor ycoeffs, ImageProcessor coords) {
+        for (int y = 0; y < 512; y++) {
+            for (int x = 0; x < 256; x++) {
+                double xg = goshtasbyEval(xcoeffs, coords, x, y);
+                System.out.print(" " + 1000.0*(xg - x) + " ");
+            }
+            System.out.println();
+        }
+        System.out.println();
+        for (int y = 0; y < 512; y++) {
+            for (int x = 0; x < 256; x++) {
+                double yg = goshtasbyEval(ycoeffs, coords, x, y);
+                System.out.print(" " + 1000.0*(yg - y) + " ");
+            }
+            System.out.println();
+        }
+    }
+
+    void goshtasbyErrorEval(ImageProcessor coords) {
+        int size = coords.getHeight();
+        TextReader reader = new TextReader();
+        System.out.println("x,y,xg,yg");
+        for (int i = 1; i <= size; i++) {
+            ImageProcessor xcoeffs = reader.open(calDir + delimiter + "goshtasby/xcoeffs_" + i + ".txt");
+            ImageProcessor ycoeffs = reader.open(calDir + delimiter + "goshtasby/ycoeffs_" + i + ".txt");
+            ImageProcessor tcoords = reader.open(calDir + delimiter + "goshtasby/coords_" + i + ".txt");
+            double x = coords.getPixelValue(0, i - 1);
+            double y = coords.getPixelValue(1, i - 1);
+            double xg = goshtasbyEval(xcoeffs, tcoords, x, y);
+            double yg = goshtasbyEval(ycoeffs, tcoords, x, y);
+            System.out.println(x + "," + y + "," + xg + "," + yg + "");
         }
     }
 
