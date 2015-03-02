@@ -52,7 +52,7 @@ public class PSFEstimator extends Analyse_ {
         stacks = new ImageStack[2];
         stacks[0] = imp.getImageStack();
         if (stacks[0] != null) {
-            calcParticleRadius(UserVariables.getSpatialRes());
+            calcParticleRadius(UserVariables.getSpatialRes(), sigEst);
             IJ.register(this.getClass());
             results = new TextWindow(psfTitle + " Results", "frame\tx (" + IJ.micronSymbol + "m)\ty (" + IJ.micronSymbol + "m)\tA\tsigma (nm)\tR^2",
                     new String(), 1000, 500);
@@ -99,6 +99,7 @@ public class PSFEstimator extends Analyse_ {
         int i, noOfImages = stack.getSize(), width = stack.getWidth(), height = stack.getHeight(),
                 arraySize = endSlice - startSlice + 1;
         byte c1Pix[];
+        int xyPartRad = calcParticleRadius(UserVariables.getSpatialRes(), sigEst);
         int fitRad = (int) Math.ceil(xyPartRad * 4.0 / 3.0);
         int c1X, c1Y, pSize = 2 * fitRad + 1;
         double[] xCoords = new double[pSize];
@@ -124,7 +125,7 @@ public class PSFEstimator extends Analyse_ {
                          */
                         Utils.extractValues(xCoords, yCoords, pixValues, c1X, c1Y, chan1Proc);
                         FloatingMultiGaussFitter c1Fitter = new FloatingMultiGaussFitter(UserVariables.getnMax(), fitRad, pSize);
-                        c1Fitter.fit(pixValues, xySigEst);
+                        c1Fitter.fit(pixValues, sigEst/UserVariables.getSpatialRes());
                         ArrayList<IsoGaussian> c1Fits = c1Fitter.getFits(spatialRes, c1X - fitRad, c1Y - fitRad, c1Threshold, fitTol);
                         if (c1Fits != null) {
                             for (IsoGaussian c1Fit : c1Fits) {

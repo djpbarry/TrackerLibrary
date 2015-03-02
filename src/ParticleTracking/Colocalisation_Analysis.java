@@ -32,13 +32,15 @@ public class Colocalisation_Analysis extends Analyse_ implements PlugIn {
     protected boolean findTails = false;
 //    private final String labels[] = {"Channel 1", "Channel 2"};
     private final DecimalFormat intFormat = new DecimalFormat("000");
+    private final double SIG_EST_RED = 0.158, SIG_EST_GREEN = 0.168;
 
 //    public static void main(String args[]) {
 //        ImagePlus inputs[] = new ImagePlus[2];
-//        inputs[0] = new ImagePlus("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Co_Localiser_Test\\Co_Localiser_Test_Red.png");
-//        inputs[1] = new ImagePlus("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Co_Localiser_Test\\Co_Localiser_Test_Green.png");
+//        inputs[0] = new ImagePlus("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Co_Localiser_Test\\C1.tif");
+//        inputs[1] = new ImagePlus("C:\\Users\\barry05\\Desktop\\Test_Data_Sets\\Co_Localiser_Test\\C0.tif");
 //        (new Colocalisation_Analysis(inputs)).run(null);
 //    }
+
     public Colocalisation_Analysis() {
     }
 
@@ -62,8 +64,10 @@ public class Colocalisation_Analysis extends Analyse_ implements PlugIn {
         title = title + "_v" + Analyse_.VERSION + "." + intFormat.format(Revision.Revision.revisionNumber);
         labels[0] = "Channel 1";
         labels[1] = "Channel 2";
-        stacks = new ImageStack[2];
-        getActiveImages();
+        if (IJ.getInstance() != null) {
+            stacks = new ImageStack[2];
+            getActiveImages();
+        }
         if (stacks[1] == null) {
             GenUtils.error("Not enough stacks open.");
             return;
@@ -71,7 +75,7 @@ public class Colocalisation_Analysis extends Analyse_ implements PlugIn {
         if (showDialog()) {
             UserVariables.setPreProcess(true);
             Analyse_ analyser = new Analyse_(stacks);
-            analyser.calcParticleRadius(UserVariables.getSpatialRes());
+            analyser.calcParticleRadius(UserVariables.getSpatialRes(), sigEst);
             UserVariables.setnMax(1);
             (buildOutput(analyser)).show();
         }
@@ -149,7 +153,7 @@ public class Colocalisation_Analysis extends Analyse_ implements PlugIn {
         int colocalisation, count;
         int width = stacks[0].getWidth(), height = stacks[0].getHeight();
         ImageStack outStack = new ImageStack(width, height);
-        double res = UserVariables.getSpatialRes();
+//        double res = UserVariables.getSpatialRes();
         double sepsum;
         ProgressDialog progress = new ProgressDialog(null, "Analysing Stacks...", false, title, false);
         progress.setVisible(true);
@@ -158,7 +162,7 @@ public class Colocalisation_Analysis extends Analyse_ implements PlugIn {
             colocalisation = 0;
             count = 0;
             sepsum = 0.0;
-            ParticleArray curves = analyser.findParticles(coFactor, false, i, i, UserVariables.getCurveFitTol(), stacks[0], stacks[1], false, true);
+            ParticleArray curves = analyser.findParticles(coFactor, false, i, i, UserVariables.getCurveFitTol(), stacks[0], stacks[1], false, true, SIG_EST_RED, SIG_EST_GREEN);
             FloatProcessor ch1proc = new FloatProcessor(width, height);
             FloatProcessor ch2proc = new FloatProcessor(width, height);
             ArrayList detections = curves.getLevel(0);
