@@ -10,7 +10,11 @@ import ij.ImageStack;
 import ij.gui.GenericDialog;
 import ij.plugin.ChannelSplitter;
 import ij.plugin.PlugIn;
-import ij.process.*;
+import ij.process.ByteProcessor;
+import ij.process.ColorProcessor;
+import ij.process.FloatProcessor;
+import ij.process.ImageProcessor;
+import ij.process.TypeConverter;
 import ij.text.TextWindow;
 import java.awt.Font;
 import java.awt.Toolkit;
@@ -32,7 +36,6 @@ public class Colocalisation_Analysis extends Analyse_ implements PlugIn {
     protected boolean findTails = false;
 //    private final String labels[] = {"Channel 1", "Channel 2"};
     private final DecimalFormat intFormat = new DecimalFormat("000");
-    private final double SIG_EST_RED = 0.158, SIG_EST_GREEN = 0.168;
 
 //    public static void main(String args[]) {
 //        ImagePlus inputs[] = new ImagePlus[2];
@@ -75,7 +78,7 @@ public class Colocalisation_Analysis extends Analyse_ implements PlugIn {
         if (showDialog()) {
             UserVariables.setPreProcess(true);
             Analyse_ analyser = new Analyse_(stacks);
-            analyser.calcParticleRadius(UserVariables.getSpatialRes(), sigEst);
+            analyser.calcParticleRadius(UserVariables.getSpatialRes(), SIG_EST_RED);
             UserVariables.setnMax(1);
             (buildOutput(analyser)).show();
         }
@@ -162,7 +165,7 @@ public class Colocalisation_Analysis extends Analyse_ implements PlugIn {
             colocalisation = 0;
             count = 0;
             sepsum = 0.0;
-            ParticleArray curves = analyser.findParticles(coFactor, false, i, i, UserVariables.getCurveFitTol(), stacks[0], stacks[1], false, true, SIG_EST_RED, SIG_EST_GREEN);
+            ParticleArray curves = analyser.findParticles(coFactor, false, i, i, UserVariables.getCurveFitTol(), stacks[0], stacks[1], true, SIG_EST_RED, SIG_EST_GREEN);
             FloatProcessor ch1proc = new FloatProcessor(width, height);
             FloatProcessor ch2proc = new FloatProcessor(width, height);
             ArrayList detections = curves.getLevel(0);

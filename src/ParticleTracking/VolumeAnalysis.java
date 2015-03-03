@@ -98,7 +98,7 @@ public class VolumeAnalysis extends Analyse_ {
             n = trajectories.size();
             mapTrajectories(stacks[0], trajectories, spatialRes, minTrajLength, timeRes, true, 0, trajectories.size() - 1, 1, false);
             ArrayList distributions = new ArrayList();
-            xyPartRad = calcParticleRadius(spatialRes, sigEst);
+            xyPartRad = calcParticleRadius(spatialRes, SIG_EST_RED);
             int cropRad = 4 * xyPartRad + 1;
             for (i = 0, count = 1; i < n; i++) {
                 ParticleTrajectory traj = (ParticleTrajectory) trajectories.get(i);
@@ -186,8 +186,8 @@ public class VolumeAnalysis extends Analyse_ {
         if (stack == null) {
             return null;
         }
-        sigEst = (0.21 * 650.0 / 1.4) / (spatialRes * 1000.0);
-        xyPartRad = (int) Math.round(2.0 * sigEst / 0.95);
+//        SIG_EST_RED = (0.21 * 650.0 / 1.4) / (spatialRes * 1000.0);
+        xyPartRad = (int) Math.round(2.0 * SIG_EST_RED / 0.95);
         int i, noOfImages = stack.getSize(), width = stack.getWidth(), height = stack.getHeight(),
                 size = width * height, arraySize = endSlice - startSlice + 1;
         byte c1Pix[] = new byte[size], c2Pix[] = new byte[size],
@@ -225,7 +225,7 @@ public class VolumeAnalysis extends Analyse_ {
                          * Remove adjacent Gaussians
                          */
                         IsoGaussianFitter c1GF = new IsoGaussianFitter(xCoords, yCoords, pixValues);
-                        c1GF.doFit(sigEst);
+                        c1GF.doFit(SIG_EST_RED);
                         //if (c1GF.getXsig() < (c1SigmaTol * xySigEst)) {
                         if (c1GF.getRSquared() > c1CurveFitTol) {
                             c1Gaussian = new IsoGaussian((c1GF.getX0() + c1X - xyPartRad) * spatialRes,
@@ -233,7 +233,7 @@ public class VolumeAnalysis extends Analyse_ {
                                     c1GF.getXsig(), c1GF.getYsig(), c1GF.getRSquared() - c1CurveFitTol);
                         } else {
                             c1Gaussian = new IsoGaussian(c1X * spatialRes, c1Y * spatialRes, chan1Proc.getPixelValue(c1X, c1Y),
-                                    sigEst, sigEst, c1GF.getRSquared() - c1CurveFitTol);
+                                    SIG_EST_RED, SIG_EST_RED, c1GF.getRSquared() - c1CurveFitTol);
                         }
                         /*
                          * A particle has been isolated - trajectories need to

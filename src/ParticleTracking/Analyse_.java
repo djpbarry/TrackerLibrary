@@ -48,7 +48,7 @@ import ui.UserInterface;
 public class Analyse_ implements PlugIn {
 
 //    protected static double hystDiff = 1.25;
-    protected double sigEst = 0.158; //Initial estimate of standard deviation for IsoGaussian fitting
+    protected final double SIG_EST_RED = 0.158, SIG_EST_GREEN = 0.168;
 //    protected int xyPartRad; //Radius over which to draw particles in visualisation
     public final int SHOW_RESULTS = -1;
     public static final int VERSION = 4;
@@ -70,9 +70,7 @@ public class Analyse_ implements PlugIn {
     private final double TRACK_WIDTH = 4.0;
     public static final float TRACK_EXT = 1.0f;
     public static final float TRACK_OFFSET = 0.75f;
-    private static File inputDir,
-            c0Dir, c1Dir, outputDir,
-            calDir;
+    private static File inputDir, c0Dir, c1Dir, outputDir, calDir;
     private final String delimiter = GenUtils.getDelimiter();
     String parentDir;
     protected ImagePlus[] inputs;
@@ -177,7 +175,7 @@ public class Analyse_ implements PlugIn {
             IJ.register(this.getClass());
             startTime = System.currentTimeMillis();
             //gaussianRadius = 0.139d / spatialRes; // IsoGaussian filter radius set to 139 nm
-            calcParticleRadius(UserVariables.getSpatialRes(), sigEst);
+            calcParticleRadius(UserVariables.getSpatialRes(), SIG_EST_RED);
             int i, count;
 //            int width = stacks[0].getWidth(), height = stacks[0].getHeight();
 //            if (UserVariables.isGpu()) {
@@ -185,7 +183,7 @@ public class Analyse_ implements PlugIn {
 //                    return;
 //                }
 //            } else {
-            findParticles(SEARCH_SCALE, true, 0, stacks[0].getSize() - 1, UserVariables.getCurveFitTol(), stacks[0], stacks[1], monoChrome, false, sigEst, sigEst);
+            findParticles(SEARCH_SCALE, true, 0, stacks[0].getSize() - 1, UserVariables.getCurveFitTol(), stacks[0], stacks[1], false, SIG_EST_RED, SIG_EST_GREEN);
 //            }
             TextWindow results = new TextWindow(title + " Results", "X\tY\tFrame\tChannel 1 ("
                     + UserVariables.channels[UserVariables.getC1Index()]
@@ -287,7 +285,7 @@ public class Analyse_ implements PlugIn {
         if (UserVariables.isPreProcess()) {
             TypeConverter tc = new TypeConverter(processor, false);
             fp = (FloatProcessor) tc.convertToFloat(null);
-            (new GaussianBlur()).blur(fp, sigEst);
+            (new GaussianBlur()).blur(fp, SIG_EST_RED);
         } else {
             TypeConverter tc = new TypeConverter(processor, false);
             fp = (FloatProcessor) tc.convertToFloat(null);
@@ -295,9 +293,12 @@ public class Analyse_ implements PlugIn {
         return fp;
     }
 
-    public ParticleArray findParticles(double searchScale, boolean update, int startSlice,
-            int endSlice, double fitTol, ImageStack channel1, ImageStack channel2,
-            boolean monoChrome, boolean fitC2Gaussian, double sigEst1, double sigEst2) {
+    public ParticleArray findParticles(double searchScale, boolean update, int startSlice, int endSlice, double fitTol, ImageStack channel1, ImageStack channel2, boolean fitC2Gaussian) {
+        return findParticles(searchScale, update, startSlice, endSlice, fitTol,
+                channel1, channel2, fitC2Gaussian, SIG_EST_RED, SIG_EST_GREEN);
+    }
+
+    public ParticleArray findParticles(double searchScale, boolean update, int startSlice, int endSlice, double fitTol, ImageStack channel1, ImageStack channel2, boolean fitC2Gaussian, double sigEst1, double sigEst2) {
         if (channel1 == null) {
             return null;
         }
@@ -323,7 +324,7 @@ public class Analyse_ implements PlugIn {
             progress.updateProgress(i - startSlice, arraySize);
             FloatProcessor chan1Proc = preProcess(channel1.getProcessor(i + 1).duplicate());
             Utils.normalise(chan1Proc, 1.0);
-            FloatProcessor chan2Proc = !monoChrome ? preProcess(channel2.getProcessor(i + 1).duplicate()) : null;
+            FloatProcessor chan2Proc = (channel2 == null) ? preProcess(channel2.getProcessor(i + 1).duplicate()) : null;
             if (chan2Proc != null) {
                 Utils.normalise(chan2Proc, 1.0);
             }
@@ -731,7 +732,7 @@ public class Analyse_ implements PlugIn {
         if (stack == null) {
             return null;
         }
-        int radius = calcParticleRadius(spatialRes, sigEst);
+        int radius = calcParticleRadius(spatialRes, SIG_EST_RED);
         int i, j, width = stack.getWidth(), height = stack.getHeight(),
                 type, frames = stack.getSize();
         double lastX, lastY;
@@ -834,6 +835,10 @@ public class Analyse_ implements PlugIn {
         if (string) {
             processor.drawString(label, x, y);
         }
+    }
+
+    public int calcParticleRadius(double spatialRes) {
+        return calcParticleRadius(spatialRes, SIG_EST_RED);
     }
 
     public int calcParticleRadius(double spatialRes, double sigEst) {
@@ -959,7 +964,7 @@ public class Analyse_ implements PlugIn {
             if (virTemps[j] != null && sigTemps[j] != null && sigTemps[j].getWidth() >= outputWidth) {
                 ImageStack virStack = new ImageStack(virTemps[j].getWidth(), virTemps[j].getHeight());
                 virStack.addSlice(virTemps[j]);
-                ParticleArray particles = findParticles(0.0, false, 0, 0, UserVariables.getCurveFitTol(), virStack, null, true, true, sigEst, sigEst);
+                ParticleArray particles = findParticles(0.0, false, 0, 0, UserVariables.getCurveFitTol(), virStack, null, true, SIG_EST_RED, SIG_EST_GREEN);
                 if (!particles.getLevel(0).isEmpty()) {
                     virTemps[j].setInterpolate(true);
                     virTemps[j].setInterpolationMethod(ImageProcessor.BICUBIC);
@@ -1091,10 +1096,9 @@ public class Analyse_ implements PlugIn {
         return outputDir;
     }
 
-    public double getSigEst() {
-        return sigEst;
-    }
-
+//    public double getSigEst() {
+//        return sigEst;
+//    }
     protected void getActiveImages() {
         if (IJ.getInstance() != null) {
             inputs = GenUtils.specifyInputs(labels);

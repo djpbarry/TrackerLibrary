@@ -53,7 +53,7 @@ public class SuperResAnalyser extends Colocalisation_Analysis {
                     + ") Detections\t% Colocalisation";
             UserVariables.setPreProcess(true);
             Analyse_ analyser = new Analyse_(stacks);
-            analyser.calcParticleRadius(UserVariables.getSpatialRes(), sigEst);
+            analyser.calcParticleRadius(UserVariables.getSpatialRes(), SIG_EST_RED);
             //Timelapse_Analysis.setGaussianRadius(0.139 / Timelapse_Analysis.getSpatialRes());
             //IJ.saveAs(buildOutput(analyser), "TIF", "C:\\Users\\barry05\\Desktop\\SuperResTestOutputII.tif");
             buildOutput(analyser);
@@ -109,7 +109,7 @@ public class SuperResAnalyser extends Colocalisation_Analysis {
         FloatProcessor ch1proc = new FloatProcessor(width, height);
         for (int i = 0; i < stacks[0].getSize(); i++) {
             dialog.updateProgress(i, stacks[0].getSize());
-            ParticleArray curves = analyser.findParticles(coFactor, false, i, i, UserVariables.getCurveFitTol(), stacks[0], stacks[1],false, true, sigEst, sigEst);
+            ParticleArray curves = analyser.findParticles(coFactor, false, i, i, UserVariables.getCurveFitTol(), stacks[0], stacks[1], true, SIG_EST_RED, SIG_EST_GREEN);
             //ImagePlus temp = new ImagePlus("", ch1proc);
             //temp.show();
             //temp.setDisplayRange(0.0, 255.0);

@@ -625,20 +625,20 @@ public class UserInterface extends javax.swing.JDialog {
 //        paramStream.close();
 //    }
     public void viewDetections() {
-        analyser.calcParticleRadius(UserVariables.getSpatialRes(), analyser.getSigEst());
+        analyser.calcParticleRadius(UserVariables.getSpatialRes());
         ImageStack stacks[] = analyser.getStacks();
         ParticleArray detections=null;
 //        if (UserVariables.isGpu()) {
 //            detections = analyser.cudaFindParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stacks[0], stacks[1], monoChrome);
 //        } else {
-            detections = analyser.findParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stacks[0], stacks[1], monoChrome, false, analyser.getSigEst(), analyser.getSigEst());
+            detections = analyser.findParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stacks[0], stacks[1], false);
 //        }
         if (detections != null) {
             ImageProcessor output = Utils.updateImage(stacks[0], stacks[1], previewScrollBar.getValue());
             double mag = 1.0 / UIMethods.getMagnification(output, canvas1);
             double sr = 1.0 / Double.parseDouble(spatResTextField.getText());
 //        int radius = (int)Math.round(sr);
-            int radius = analyser.calcParticleRadius(UserVariables.getSpatialRes(), analyser.getSigEst());
+            int radius = analyser.calcParticleRadius(UserVariables.getSpatialRes());
             IsoGaussian c1, c2;
             ArrayList<Particle> particles = detections.getLevel(0);
             Color c1Color = !monoChrome ? analyser.getDrawColor(c1ComboBox.getSelectedIndex()) : Color.white;
