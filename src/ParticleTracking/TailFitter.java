@@ -39,12 +39,12 @@ import org.apache.commons.math3.util.MathArrays;
 public class TailFitter extends IsoGaussianFitter {
 
     private static double spatialRes = 0.133333;
-    private static double sigmaEst = 0.154;
+    private static double sigmaEst = 0.158;
     double sqrt2 = Math.pow(2.0, 0.5);
 
 //    public static void main(String args[]) {
 //        Random r = new Random();
-//        File directory = Utilities.getFolder(null, "Select input folder", true);
+//        File directory = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\SuperRes Actin Tails"), "Select input folder", true);
 //        File files[] = directory.listFiles();
 //        int dirSize = files.length;
 //        ImagePlus temp = IJ.openImage(files[0].getAbsolutePath());
@@ -54,7 +54,7 @@ public class TailFitter extends IsoGaussianFitter {
 //        temp.close();
 //        System.out.println(directory);
 //        for (int i = 0; i < 100; i++) {
-//            System.out.print(i);
+//            System.out.print(i+",");
 //            ImageStack stack = new ImageStack(stackwidth, stackheight);
 //            for (int j = 0; j < dirSize; j++) {
 //                int fileindex = r.nextInt(dirSize);
@@ -69,7 +69,11 @@ public class TailFitter extends IsoGaussianFitter {
 //            zproj.setMethod(ZProjector.AVG_METHOD);
 //            zproj.doProjection();
 //            ImageProcessor stackAverage = zproj.getProjection().getProcessor();
-//            Rectangle cropRoi = new Rectangle(0, 15, stackAverage.getWidth()-2, 1);
+////            IJ.saveAs((new ImagePlus("", stackAverage)), "text image", directory.getParent() + "/" + directory.getName() + "_Average.txt");
+////            zproj.setMethod(ZProjector.SD_METHOD);
+////            zproj.doProjection();
+////            IJ.saveAs((new ImagePlus("", zproj.getProjection().getProcessor())), "text image", directory.getParent() + "/" + directory.getName() + "_SD.txt");
+//            Rectangle cropRoi = new Rectangle(0, 15, stackAverage.getWidth() - 2, 1);
 //            stackAverage.setRoi(cropRoi);
 //            stackAverage = stackAverage.crop();
 //            ImageStatistics stats = stackAverage.getStatistics();
@@ -92,9 +96,9 @@ public class TailFitter extends IsoGaussianFitter {
 //            TailFitter tf = new TailFitter(xVals, yVals, zVals);
 //            tf.doFit(TailFitter.sigmaEst);
 //            tf.printParams();
-//            IJ.saveAs((new ImagePlus("", stackAverage)), "text image", "C:\\Users\\barry05\\Desktop\\SuperRes Actin Tails\\Average.txt");
 //        }
-////        tf.printImage();
+////        tf.printImage(directory);
+////        IJ.saveAs((new ImagePlus("", stackAverage)), "text image", directory.getParent() + "/" + directory.getName() + "_NormAverage.txt");
 //        System.exit(0);
 //    }
 
@@ -160,13 +164,85 @@ public class TailFitter extends IsoGaussianFitter {
         return p[3] * p[0] * Math.exp(a) * Erf.erfc(b) + p[4];
     }
 
+    public double evaluate1DEMGFirstDerivative(double[] p, double x) {
+        if (p == null) {
+            return Double.NaN;
+        }
+        double p22 = p[2] * p[2];
+        double a = (p[0] / 2.0) * (2.0 * p[1] + p[0] * p22 - 2.0 * x);
+        double b = (p[1] + p[0] * p22 - x) / (sqrt2 * p[2]);
+        double b2 = b * b;
+        double c = p[0] * p[3] * sqrt2 / (p[2] * Math.sqrt(Math.PI));
+        double d = p[0] * p[0] * p[3];
+
+        return Math.exp(a) * (c * Math.exp(-b2) - d * Erf.erfc(b));
+    }
+
+//    public double evaluate1DEMGSecondDerivative(double[] p, double x) {
+//        if (p == null) {
+//            return Double.NaN;
+//        }
+//        double lambda = p[0];
+//        double mu = p[1];
+//        double sigma = p[2];
+//        double nu = p[3];
+//        double sigma2 = sigma * sigma;
+//        double a = (lambda / 2.0) * (2.0 * mu + lambda * sigma2 - 2.0 * x);
+//        double b = (mu + lambda * sigma2 - x) / (sqrt2 * sigma);
+//        double b2 = b * b;
+//        double c = lambda * nu * sqrt2 / (sigma * Math.sqrt(Math.PI));
+//        double d = lambda * lambda * nu;
+//        double e = (-2.0 * mu - 2.0 * lambda * sigma2 + x) / (2.0 * sigma2);
+//
+////        return Math.exp(a) * (
+////                c * Math.exp(-b2) * (-a * e + lambda * b2)
+////                - d * sqrt2 * Math.exp(-b2) / (Math.sqrt(Math.PI) * sigma)
+////                + Erf.erfc(b) * lambda * d);
+//        return Math.exp(-a * b2)
+//                * (e * c - d * sqrt2 / (sigma * Math.sqrt(Math.PI)))
+//                - lambda * Math.exp(a) * (c * Math.exp(-b2) - d * Erf.erfc(b));
+//    }
+    double findEMGRoot(int Nmax, double a, double b, double tol, double[] p) {
+        int N = 1;
+        while (N < Nmax) {
+            double fa = evaluate1DEMGFirstDerivative(p, a);
+//            double fb = evaluate1DEMGFirstDerivative(p, b);
+            double c = (a + b) / 2;
+            double fc = evaluate1DEMGFirstDerivative(p, c);
+            if (fc == 0.0 || (b - a) / 2 < tol) {
+                return c;
+            }
+            N++;
+            if (fa * fc > 0.0) {
+                a = c;
+            } else {
+                b = c;
+            }
+        }
+        return Double.NaN;
+    }
+
+//    public double findEMGPeak(double[] p, double x0, double tol) {
+//        double error = Double.POSITIVE_INFINITY;
+//        double xe = x0;
+//        while (error > tol) {
+//            double y0 = evaluate1DEMG(p, x0);
+//            double y1 = evaluate1DEMGFirstDerivative(p, x0);
+//            double y2 = evaluate1DEMGSecondDerivative(p, x0);
+//            xe = x0 - evaluate1DEMGFirstDerivative(p, x0) / evaluate1DEMGSecondDerivative(p, x0);
+//            System.out.println("y0: " + y0 + " y1: " + y1 + " y2: " + y2 + " xe: " + xe);
+//            error = Math.abs(xe - x0);
+//            x0 = xe;
+//        }
+//        return xe;
+//    }
     public double evaluate1DGaussianPlusEMG(double[] p, double x) {
         if (p == null) {
             return Double.NaN;
         }
-        double lambda = 0.7166;
-        double mu = 0.2655 + .75;
-        double sigma = 0.1933;
+        double lambda = 0.6648;
+        double mu = 0.2377 + .75;
+        double sigma = 0.2722;
         double a = 0.5 * lambda * (2.0 * mu + lambda * sigma * sigma - 2.0 * x);
         double b = (mu + lambda * sigma * sigma - x) / (Math.sqrt(2.0) * sigma);
 
@@ -202,8 +278,8 @@ public class TailFitter extends IsoGaussianFitter {
         double tail1d[] = buildTail(x);
         for (int i = 0; i < xData.length; i++) {
             for (int j = 0; j < yData.length; j++) {
-//                e = tail1d[i + xData.length / 2] - zData[j * xData.length + i];
-                e = tail1d[i] - zData[j * xData.length + i];
+                e = tail1d[i + xData.length / 2] - zData[j * xData.length + i];
+//                e = tail1d[i] - zData[j * xData.length + i];
                 x[numParams] = x[numParams] + (e * e);
             }
         }
@@ -212,36 +288,40 @@ public class TailFitter extends IsoGaussianFitter {
 
     double[] buildTail(double[] p) {
         double[] emg = new double[xData.length];
-//        Gaussian gauss = new Gaussian((emg.length - 1.0) / 2.0, sigmaEst / spatialRes);
-//        double[] gaussian = new double[emg.length];
+        Gaussian gauss = new Gaussian((emg.length - 1.0) / 2.0, sigmaEst / spatialRes);
+        double[] gaussian = new double[emg.length];
         for (int i = 0; i < emg.length; i++) {
-//            gaussian[i] = gauss.value(i);
+            gaussian[i] = gauss.value(i);
             emg[i] = evaluate1DGaussian(p, xData[i]);
         }
-//        return MathArrays.convolve(emg, gaussian);
-        return emg;
+        return MathArrays.convolve(emg, gaussian);
+//        return emg;
     }
 
     public void printParams() {
         double params[] = getParams();
 
         for (int i = 0; i < numParams; i++) {
-            System.out.print(" p[" + String.valueOf(i) + "]: " + params[i]);
+            System.out.print("p[" + String.valueOf(i) + "]:," + params[i] + ",");
         }
+//        System.out.print("Peak:,x=," + findEMGRoot(10000, params[1], params[1] + 2.0 * params[2], 1.0E-10, params) + ",");
         System.out.println();
     }
 
-    void printImage() {
+    void printImage(File directory) {
         FloatProcessor deconvolved = new FloatProcessor(xData.length, yData.length);
         FloatProcessor convolved = new FloatProcessor(xData.length, yData.length);
+//        FloatProcessor derivative = new FloatProcessor(xData.length, yData.length);
         double tail1d[] = buildTail(simp[best]);
         for (int y = 0; y < yData.length; y++) {
             for (int x = 0; x < xData.length; x++) {
                 convolved.putPixelValue(x, y, tail1d[x + xData.length / 2]);
                 deconvolved.putPixelValue(x, y, evaluate1DGaussian(simp[best], xData[x]));
+//                derivative.putPixelValue(x, y, evaluate1DEMGFirstDerivative(simp[best], xData[x]));
             }
         }
-        IJ.saveAs((new ImagePlus("", convolved)), "text image", "C:\\Users\\barry05\\Desktop\\SuperRes Actin Tails\\Convolved.txt");
-        IJ.saveAs((new ImagePlus("", deconvolved)), "text image", "C:\\Users\\barry05\\Desktop\\SuperRes Actin Tails\\Deconvolved.txt");
+        IJ.saveAs((new ImagePlus("", convolved)), "text image", directory.getParent() + "/" + directory.getName() + "_Convolved.txt");
+        IJ.saveAs((new ImagePlus("", deconvolved)), "text image", directory.getParent() + "/" + directory.getName() + "_Deconvolved.txt");
+//        IJ.saveAs((new ImagePlus("", derivative)), "text image", directory.getParent() + "/" + directory.getName() + "_Derivative.txt");
     }
 }

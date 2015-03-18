@@ -380,7 +380,6 @@ public class UserInterface extends javax.swing.JDialog {
         jPanel1.add(nMaxLabel, gridBagConstraints);
 
         gpuToggleButton.setText(gpuToggleText);
-        gpuToggleButton.setEnabled(false);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 15;
@@ -628,11 +627,11 @@ public class UserInterface extends javax.swing.JDialog {
         analyser.calcParticleRadius(UserVariables.getSpatialRes());
         ImageStack stacks[] = analyser.getStacks();
         ParticleArray detections=null;
-//        if (UserVariables.isGpu()) {
-//            detections = analyser.cudaFindParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stacks[0], stacks[1], monoChrome);
-//        } else {
+        if (UserVariables.isGpu()) {
+            detections = analyser.cudaFindParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stacks[0], stacks[1], monoChrome);
+        } else {
             detections = analyser.findParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stacks[0], stacks[1], false);
-//        }
+        }
         if (detections != null) {
             ImageProcessor output = Utils.updateImage(stacks[0], stacks[1], previewScrollBar.getValue());
             double mag = 1.0 / UIMethods.getMagnification(output, canvas1);
