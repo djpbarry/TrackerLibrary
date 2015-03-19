@@ -206,7 +206,7 @@ public class Analyse_ implements PlugIn {
             int n = trajectories.size();
             for (i = 0; i < n; i++) {
                 ParticleTrajectory traj = (ParticleTrajectory) trajectories.get(i);
-                if (!(traj.getSize() > UserVariables.getMinTrajLength()
+                if (!(traj.getSize() / UserVariables.getTimeRes() > UserVariables.getMinTrajLength()
                         && traj.getDisplacement(traj.getEnd(), traj.getSize()) * UserVariables.getSpatialRes() > UserVariables.getMinTrajDist()
                         && ((traj.getType(colocalThresh) == ParticleTrajectory.COLOCAL)
                         || ((traj.getType(colocalThresh) == ParticleTrajectory.NON_COLOCAL) && !UserVariables.isColocal())))) {
@@ -226,7 +226,7 @@ public class Analyse_ implements PlugIn {
             n = trajectories.size();
             ImageStack maps = mapTrajectories((new RGBStackMerge()).mergeStacks(stacks[0].getWidth(), stacks[0].getHeight(), stacks[0].getSize(), stacks[0], stacks[1], null, true),
                     trajectories, UserVariables.getSpatialRes(), UserVariables.getMinTrajLength(),
-                    UserVariables.getTimeRes(), true, 0, trajectories.size() - 1, 0, false);
+                    UserVariables.getTimeRes(), true, 0, trajectories.size() - 1, 1, false);
             for (i = 0, count = 1; i < n; i++) {
                 ParticleTrajectory traj = (ParticleTrajectory) trajectories.get(i);
                 if (traj != null) {
@@ -249,10 +249,10 @@ public class Analyse_ implements PlugIn {
                                 for (int j = 1; j <= signals[0].getSize(); j++) {
                                     IJ.saveAs((new ImagePlus("", signals[0].getProcessor(j))),
                                             "TIF", sigc0Dir + delimiter + "C0-" + String.valueOf(count)
-                                            + "-" + String.valueOf(j));
+                                            + "-" + signals[0].getSliceLabel(j));
                                     IJ.saveAs((new ImagePlus("", signals[1].getProcessor(j))),
                                             "TIF", sigc1Dir + delimiter + "C1-" + String.valueOf(count)
-                                            + "-" + String.valueOf(j));
+                                            + "-" + signals[1].getSliceLabel(j));
                                 }
                             }
                         }
@@ -397,7 +397,9 @@ public class Analyse_ implements PlugIn {
     }
 
     public ParticleArray cudaFindParticles(double searchScale, boolean update, int startSlice, int endSlice, double fitTol, ImageStack channel1, ImageStack channel2, boolean monoChrome) {
-        if (!cudaGaussFitter(c0Dir.getAbsolutePath(), ext, (float) UserVariables.getSpatialRes() * 1000.0f, (float) SIG_EST_RED, (float) UserVariables.getChan1MaxThresh(), (float) UserVariables.getCurveFitTol(), startSlice, endSlice)) {
+        if (!cudaGaussFitter(c0Dir.getAbsolutePath(), ext, (float) UserVariables.getSpatialRes() * 1000.0f,
+                (float) (SIG_EST_GREEN / UserVariables.getSpatialRes()), (float) UserVariables.getChan1MaxThresh(),
+                (float) UserVariables.getCurveFitTol(), startSlice, endSlice)) {
             IJ.log("CUDA Error");
             return null;
         }
@@ -920,14 +922,19 @@ public class Analyse_ implements PlugIn {
         }
         int size = ptraj.getSize();
         int iterations = ptraj.getSize();
-        float xSigPoints[] = new float[size + 1];
-        float ySigPoints[] = new float[size + 1];
-        float xVirPoints[] = new float[size + 1];
-        float yVirPoints[] = new float[size + 1];
+        float xSigArray[];
+        float ySigArray[];
+        float xVirArray[];
+        float yVirArray[];
+        ArrayList<Float> xSigPoints, ySigPoints, xVirPoints, yVirPoints;
         ImageProcessor[] sigTemps = new ImageProcessor[iterations];
         ImageProcessor[] virTemps = new ImageProcessor[iterations];
         for (int i = 0; i < iterations; i++) {
             Particle current = sigStartP;
+            xSigPoints = new ArrayList();
+            ySigPoints = new ArrayList();
+            xVirPoints = new ArrayList();
+            yVirPoints = new ArrayList();
             for (int index = 1; index <= size && current != null; index++) {
                 double xg = current.getC1Gaussian().getX();
                 double yg = current.getC1Gaussian().getY();
@@ -935,27 +942,40 @@ public class Analyse_ implements PlugIn {
                     xg = goshtasbyEval(xcoeffs, coords, current.getC1Gaussian().getX(), current.getC1Gaussian().getY());
                     yg = goshtasbyEval(ycoeffs, coords, current.getC1Gaussian().getX(), current.getC1Gaussian().getY());
                 }
-                xSigPoints[index] = (float) (xg / UserVariables.getSpatialRes());
-                ySigPoints[index] = (float) (yg / UserVariables.getSpatialRes());
-                xVirPoints[index] = (float) (current.getC1Gaussian().getX() / UserVariables.getSpatialRes());
-                yVirPoints[index] = (float) (current.getC1Gaussian().getY() / UserVariables.getSpatialRes());
+                xSigPoints.add((float) (xg / UserVariables.getSpatialRes()));
+                ySigPoints.add((float) (yg / UserVariables.getSpatialRes()));
+                xVirPoints.add((float) (current.getC1Gaussian().getX() / UserVariables.getSpatialRes()));
+                yVirPoints.add((float) (current.getC1Gaussian().getY() / UserVariables.getSpatialRes()));
                 current = current.getLink();
             }
-            extendSignalArea(xSigPoints, ySigPoints, offset, 1);
-            extendSignalArea(xVirPoints, yVirPoints, offset, 1);
-            PolygonRoi sigProi = new PolygonRoi(xSigPoints, ySigPoints, xSigPoints.length, Roi.POLYLINE);
-            PolygonRoi virProi = new PolygonRoi(xVirPoints, yVirPoints, xVirPoints.length, Roi.POLYLINE);
+            xSigArray = new float[xSigPoints.size() + 1];
+            ySigArray = new float[ySigPoints.size() + 1];
+            xVirArray = new float[xVirPoints.size() + 1];
+            yVirArray = new float[yVirPoints.size() + 1];
+            for (int j = 1; j <= xSigPoints.size(); j++) {
+                xSigArray[j] = xSigPoints.get(j - 1);
+                ySigArray[j] = ySigPoints.get(j - 1);
+                xVirArray[j] = xVirPoints.get(j - 1);
+                yVirArray[j] = yVirPoints.get(j - 1);
+            }
+            extendSignalArea(xSigArray, ySigArray, offset, 1);
+            extendSignalArea(xVirArray, yVirArray, offset, 1);
+            PolygonRoi sigProi = new PolygonRoi(xSigArray, ySigArray, xSigArray.length, Roi.POLYLINE);
+            PolygonRoi virProi = new PolygonRoi(xVirArray, yVirArray, xVirArray.length, Roi.POLYLINE);
             Straightener straightener = new Straightener();
             ImagePlus sigImp = new ImagePlus("", stacks[1].getProcessor(sigStartP.getTimePoint() + 1));
             ImagePlus virImp = new ImagePlus("", stacks[0].getProcessor(sigStartP.getTimePoint() + 1));
             sigImp.setRoi(sigProi);
             virImp.setRoi(virProi);
-            virImp.show();
             sigTemps[iterations - 1 - i] = straightener.straighten(sigImp, sigProi, signalWidth);
             virTemps[iterations - 1 - i] = straightener.straighten(virImp, virProi, signalWidth);
+            if (virTemps[iterations - 1 - i] != null) {
+                virTemps[iterations - 1 - i].putPixelValue(0, 0, sigStartP.getTimePoint());
+            }
 //            IJ.saveAs((new ImagePlus("", virTemps[i])), "TIF", "c:\\users\\barry05\\desktop\\virTemps_" + i);
 //            System.out.println("virTemp: " + virTemps[i].getWidth() + "virProi: " + virProi.getLength());
             sigStartP = sigStartP.getLink();
+//            System.out.println(i + " " + xSigArray.length + " " + sigTemps[iterations - 1 - i].getWidth());
         }
         int xc = (int) Math.ceil(TRACK_OFFSET * offset);
         int yc = (signalWidth - 1) / 2;
@@ -970,22 +990,24 @@ public class Analyse_ implements PlugIn {
                 virStack.addSlice(virTemps[j]);
                 ParticleArray particles = findParticles(0.0, false, 0, 0, UserVariables.getCurveFitTol(), virStack, null, true, SIG_EST_RED, SIG_EST_GREEN);
                 if (!particles.getLevel(0).isEmpty()) {
+                    String timepoint = Float.toString(virTemps[j].getPixelValue(0, 0));
+                    Particle p = particles.getLevel(0).get(0);
                     virTemps[j].setInterpolate(true);
                     virTemps[j].setInterpolationMethod(ImageProcessor.BICUBIC);
                     sigTemps[j].setInterpolate(true);
                     sigTemps[j].setInterpolationMethod(ImageProcessor.BICUBIC);
-                    double xinc = particles.getLevel(0).get(0).getC1Gaussian().getX() / UserVariables.getSpatialRes() - xc;
-                    double yinc = particles.getLevel(0).get(0).getC1Gaussian().getY() / UserVariables.getSpatialRes() - yc;
+                    double xinc = p.getC1Gaussian().getX() / UserVariables.getSpatialRes() - xc;
+                    double yinc = p.getC1Gaussian().getY() / UserVariables.getSpatialRes() - yc;
                     virTemps[j].translate(-xinc, -yinc);
                     sigTemps[j].translate(-xinc, -yinc);
                     FloatProcessor sigSlice = new FloatProcessor(outputWidth, signalWidth);
                     FloatBlitter sigBlitter = new FloatBlitter(sigSlice);
                     sigBlitter.copyBits(sigTemps[j], 0, 0, Blitter.COPY);
-                    output[1].addSlice(sigSlice);
+                    output[1].addSlice(timepoint, sigSlice);
                     FloatProcessor virSlice = new FloatProcessor(outputWidth, signalWidth);
                     FloatBlitter virBlitter = new FloatBlitter(virSlice);
                     virBlitter.copyBits(virTemps[j], 0, 0, Blitter.COPY);
-                    output[0].addSlice(virSlice);
+                    output[0].addSlice(timepoint, virSlice);
                 }
             }
         }
@@ -994,6 +1016,11 @@ public class Analyse_ implements PlugIn {
 
     void extendSignalArea(float[] xpoints, float[] ypoints, float dist, int window) {
         float xdiff = 0.0f, ydiff = 0.0f;
+        xpoints[0] = xpoints[1];
+        ypoints[0] = ypoints[1];
+        if (xpoints.length - 1 <= window || ypoints.length - 1 <= window) {
+            return;
+        }
         for (int i = 1; i <= window; i++) {
             xdiff += xpoints[i] - xpoints[i + 1];
             ydiff += ypoints[i] - ypoints[i + 1];
@@ -1011,15 +1038,11 @@ public class Analyse_ implements PlugIn {
             xpoints[0] = xpoints[1] - newX;
         } else if (xdiff > 0.0) {
             xpoints[0] = xpoints[1] + newX;
-        } else {
-            xpoints[0] = xpoints[1];
         }
         if (ydiff < 0.0) {
             ypoints[0] = ypoints[1] - newY;
         } else if (ydiff > 0.0) {
             ypoints[0] = ypoints[1] + newY;
-        } else {
-            ypoints[0] = ypoints[1];
         }
     }
 
