@@ -45,7 +45,7 @@ public class UserInterface extends javax.swing.JDialog {
     private static final String colocalToggleText = "Co-Localised Only";
     private static final String preprocessToggleText = "Pre-Process Images";
     private static final String gpuToggleText = "Use GPU";
-    private static final String trackLengthText = "Track Length";
+    private static final String trackLengthText = "Track Length (" + IJ.micronSymbol + "m):";
 
     /**
      * Creates new form UserInterface
@@ -112,6 +112,7 @@ public class UserInterface extends javax.swing.JDialog {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle(title);
+        setPreferredSize(new java.awt.Dimension(480, 640));
         getContentPane().setLayout(new java.awt.GridBagLayout());
 
         jPanel1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
@@ -332,6 +333,7 @@ public class UserInterface extends javax.swing.JDialog {
         jPanel1.add(curveFitTolTextField, gridBagConstraints);
 
         nMaxTextField.setText(String.valueOf(UserVariables.getnMax()));
+        nMaxTextField.setEnabled(false);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 12;
@@ -343,6 +345,7 @@ public class UserInterface extends javax.swing.JDialog {
         jPanel1.add(nMaxTextField, gridBagConstraints);
 
         nMaxLabel.setText(nMaxLabelText);
+        nMaxLabel.setEnabled(false);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 12;
@@ -354,6 +357,7 @@ public class UserInterface extends javax.swing.JDialog {
         jPanel1.add(nMaxLabel, gridBagConstraints);
 
         gpuToggleButton.setText(gpuToggleText);
+        gpuToggleButton.setEnabled(false);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 15;
@@ -722,6 +726,10 @@ public class UserInterface extends javax.swing.JDialog {
 
     public static String getTrackLengthText() {
         return trackLengthText;
+    }
+
+    public static String getMinTrajDistLabelText() {
+        return minTrajDistLabelText;
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

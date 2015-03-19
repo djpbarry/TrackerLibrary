@@ -1122,6 +1122,7 @@ public class Analyse_ implements PlugIn {
         paramStream.println(UserInterface.getSpatResLabelText() + "," + UserVariables.getSpatialRes());
         paramStream.println(UserInterface.getFpsLabelText() + "," + UserVariables.getTimeRes());
         paramStream.println(UserInterface.getMinTrajLengthLabelText() + "," + UserVariables.getMinTrajLength());
+        paramStream.println(UserInterface.getMinTrajDistLabelText() + "," + UserVariables.getMinTrajDist());
         paramStream.println(UserInterface.getMaxLinkDistLabelText() + "," + UserVariables.getTrajMaxStep());
         paramStream.println(UserInterface.getTrackLengthText() + "," + UserVariables.getTrackLength());
         paramStream.println(UserInterface.getChan1MaxThreshLabelText() + "," + UserVariables.getChan1MaxThresh());
