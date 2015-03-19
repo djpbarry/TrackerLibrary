@@ -77,9 +77,7 @@ public class UserInterface extends javax.swing.JDialog {
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         c1Label = new javax.swing.JLabel();
-        c2Label = new javax.swing.JLabel();
         c1ComboBox = new javax.swing.JComboBox();
-        c2ComboBox = new javax.swing.JComboBox();
         spatResLabel = new javax.swing.JLabel();
         timeResLabel = new javax.swing.JLabel();
         minTrajLengthLabel = new javax.swing.JLabel();
@@ -142,17 +140,6 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
         jPanel1.add(c1Label, gridBagConstraints);
 
-        c2Label.setText(channel2LabelText);
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 2;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_START;
-        gridBagConstraints.weightx = 0.5;
-        gridBagConstraints.weighty = 0.0625;
-        gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
-        jPanel1.add(c2Label, gridBagConstraints);
-
         c1ComboBox.setModel(new javax.swing.DefaultComboBoxModel(UserVariables.channels));
         c1ComboBox.setSelectedIndex(UserVariables.getC1Index());
         gridBagConstraints = new java.awt.GridBagConstraints();
@@ -164,19 +151,6 @@ public class UserInterface extends javax.swing.JDialog {
         gridBagConstraints.weighty = 0.0625;
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 10);
         jPanel1.add(c1ComboBox, gridBagConstraints);
-
-        c2ComboBox.setModel(new javax.swing.DefaultComboBoxModel(UserVariables.channels));
-        c2ComboBox.setSelectedIndex(UserVariables.getC2Index());
-        c2ComboBox.setEnabled(!monoChrome);
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 2;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_END;
-        gridBagConstraints.weightx = 0.5;
-        gridBagConstraints.weighty = 0.0625;
-        gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 10);
-        jPanel1.add(c2ComboBox, gridBagConstraints);
 
         spatResLabel.setText(spatResLabelText);
         gridBagConstraints = new java.awt.GridBagConstraints();
@@ -590,7 +564,7 @@ public class UserInterface extends javax.swing.JDialog {
             UserVariables.setColocal(colocaliseToggleButton.isSelected());
             UserVariables.setPreProcess(preprocessToggleButton.isSelected());
             UserVariables.setC1Index(c1ComboBox.getSelectedIndex());
-            UserVariables.setC2Index(c2ComboBox.getSelectedIndex());
+//            UserVariables.setC2Index(c2ComboBox.getSelectedIndex());
             UserVariables.setnMax(Integer.parseInt(nMaxTextField.getText()));
             UserVariables.setGpu(gpuToggleButton.isSelected());
             UserVariables.setTrackLength(Double.parseDouble(trackLengthTextField.getText()));
@@ -626,7 +600,7 @@ public class UserInterface extends javax.swing.JDialog {
     public void viewDetections() {
         analyser.calcParticleRadius(UserVariables.getSpatialRes());
         ImageStack stacks[] = analyser.getStacks();
-        ParticleArray detections=null;
+        ParticleArray detections = null;
         if (UserVariables.isGpu()) {
             detections = analyser.cudaFindParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stacks[0], stacks[1], monoChrome);
         } else {
@@ -641,7 +615,7 @@ public class UserInterface extends javax.swing.JDialog {
             IsoGaussian c1, c2;
             ArrayList<Particle> particles = detections.getLevel(0);
             Color c1Color = !monoChrome ? analyser.getDrawColor(c1ComboBox.getSelectedIndex()) : Color.white;
-            Color c2Color = !monoChrome ? analyser.getDrawColor(c2ComboBox.getSelectedIndex()) : Color.white;
+            Color c2Color = !monoChrome ? analyser.getDrawColor(1 - c1ComboBox.getSelectedIndex()) : Color.white;
             output.setLineWidth(1);
             for (Particle particle : particles) {
                 c1 = particle.getC1Gaussian();
@@ -753,8 +727,6 @@ public class UserInterface extends javax.swing.JDialog {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox c1ComboBox;
     private javax.swing.JLabel c1Label;
-    private javax.swing.JComboBox c2ComboBox;
-    private javax.swing.JLabel c2Label;
     private javax.swing.JButton cancelButton;
     private java.awt.Canvas canvas1;
     private javax.swing.JLabel chan1MaxThreshLabel;

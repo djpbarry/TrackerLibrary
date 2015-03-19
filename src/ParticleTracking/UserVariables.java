@@ -23,7 +23,7 @@ public class UserVariables {
     private static double trackLength = 5.0;
     private static int nMax = 1;
     private static boolean colocal = true, preProcess = true, gpu = false;
-    public static final String[] channels = {"Red", "Green", "Blue"};
+    public static final String[] channels = {"Red", "Green"};
     private static int c1Index = RED;
     private static int c2Index = GREEN;
     public static final int FOREGROUND = 255; //Integer value of foreground pixels

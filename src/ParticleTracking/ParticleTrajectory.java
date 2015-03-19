@@ -167,7 +167,7 @@ public class ParticleTrajectory {
             duration += (current.getTimePoint() - (current.getLink()).getTimePoint());
             current = current.getLink();
         }
-        return duration * timeRes;
+        return duration / timeRes;
     }
 
     /**
