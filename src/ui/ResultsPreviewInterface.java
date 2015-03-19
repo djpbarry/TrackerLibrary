@@ -120,7 +120,7 @@ public class ResultsPreviewInterface extends javax.swing.JDialog {
         gridBagConstraints.insets = new java.awt.Insets(10, 10, 10, 10);
         getContentPane().add(trajTextField, gridBagConstraints);
 
-        removeButton.setText("Remove");
+        removeButton.setText("Keep");
         removeButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 removeButtonActionPerformed(evt);

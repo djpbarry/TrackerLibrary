@@ -216,11 +216,14 @@ public class Analyse_ implements PlugIn {
                 }
             }
             if (prevRes) {
-                ArrayList<Integer> excludeList = previewResults();
-                if (excludeList != null) {
-                    for (Integer e : excludeList) {
-                        trajectories.set(e, null);
+                ArrayList<Integer> includeList = previewResults();
+                if (includeList != null) {
+                    ArrayList<ParticleTrajectory> temps = new ArrayList();
+                    for (Integer e : includeList) {
+                        temps.add(trajectories.get(e));
                     }
+                    trajectories = new ArrayList();
+                    trajectories.addAll(temps);
                 }
             }
             n = trajectories.size();
