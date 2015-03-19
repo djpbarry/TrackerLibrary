@@ -454,18 +454,18 @@ public class ParticleTrajectory {
      * @param particleNumber the trajectory index.
      * @return the directionality of the specified trajectory.
      */
-    public boolean calcDirectionality() {
-        if (smoothXPoints == null) {
+    public boolean calcDirectionality(double[] xPoints, double[] yPoints) {
+        if (xPoints == null) {
             return false;
         }
-        int length = smoothXPoints.length;
+        int length = xPoints.length;
         double xSum = 0, ySum = 0;
         for (int i = 0; i < length; i++) {
-            xSum += smoothXPoints[i];
-            ySum += smoothYPoints[i];
+            xSum += xPoints[i];
+            ySum += yPoints[i];
         }
         double[] eigenvalues = Utils.calcEigenvalues(
-                Utils.covarianceMatrix(smoothXPoints, smoothYPoints, xSum, ySum));
+                Utils.covarianceMatrix(xPoints, yPoints, xSum, ySum));
         if (Math.abs(eigenvalues[0]) > Math.abs(eigenvalues[1])) {
             directionality = 1.0d / (1.0d + 1.0d / Math.sqrt(Math.abs(eigenvalues[0] / eigenvalues[1])));
         } else {
@@ -486,13 +486,13 @@ public class ParticleTrajectory {
      * @param showPlot set to true to display a plot of MSD versus time-step,
      * false otherwise.
      */
-    public boolean calcMSD(int label, int seg, boolean showPlot) {
+    public boolean calcMSD(int label, int seg, boolean showPlot, double[] xPoints, double[] yPoints) {
         int i, j, maxLength, maxStepSize;
         double xval, yval;
-        if (smoothXPoints == null) {
+        if (xPoints == null) {
             return false;
         }
-        int length = smoothXPoints.length;
+        int length = xPoints.length;
         if (seg > 0) {
             maxLength = seg;
         } else {
@@ -507,8 +507,8 @@ public class ParticleTrajectory {
         double msd[] = new double[maxStepSize];
         for (i = 0; i < maxStepSize; i++) {
             for (j = 0, msd[i] = 0.0; i + j < maxLength; j++) {
-                xval = Math.pow(smoothXPoints[i + j] - smoothXPoints[j], 2.0) / (maxLength + 1.0);
-                yval = Math.pow(smoothYPoints[i + j] - smoothYPoints[j], 2.0) / (maxLength + 1.0);
+                xval = Math.pow(xPoints[i + j] - xPoints[j], 2.0) / (maxLength + 1.0);
+                yval = Math.pow(yPoints[i + j] - yPoints[j], 2.0) / (maxLength + 1.0);
                 msd[i] += xval + yval;
             }
             timesteps[i] = i * timeRes;

@@ -646,10 +646,11 @@ public class Analyse_ implements PlugIn {
             return false;
         }
 //        traj.smooth();
-        traj.calcMSD(label, -1, msdPlot);
-        traj.calcAngleSpread();
-        traj.calcStepSpread();
-        traj.calcDirectionality();
+        double points[][] = traj.getPoints();
+        traj.calcMSD(label, -1, msdPlot, points[0], points[1]);
+//        traj.calcAngleSpread();
+//        traj.calcStepSpread();
+        traj.calcDirectionality(points[0], points[1]);
         double displacement = traj.getDisplacement(traj.getEnd(), traj.getSize());
         double duration = traj.getDuration();
         int type = traj.getType(colocalThresh);

@@ -264,10 +264,10 @@ public class VolumeAnalysis extends Analyse_ {
             return false;
         }
         traj.smooth();
-        traj.calcMSD(label, -1, msdPlot);
+        traj.calcMSD(label, -1, msdPlot, traj.getPoints()[0], traj.getPoints()[1]);
         traj.calcAngleSpread();
         traj.calcStepSpread();
-        traj.calcDirectionality();
+        traj.calcDirectionality(traj.getPoints()[0], traj.getPoints()[1]);
         traj.calcFluorSpread();
         double fluorMaj = Math.max(traj.getxFluorSpread(), traj.getyFluorSpread());
         double fluorMin = Math.min(traj.getxFluorSpread(), traj.getyFluorSpread());
