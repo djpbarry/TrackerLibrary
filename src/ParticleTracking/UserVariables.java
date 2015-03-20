@@ -22,7 +22,7 @@ public class UserVariables {
     private static double curveFitTol = 0.95d;
     private static double trackLength = 5.0;
     private static int nMax = 1;
-    private static boolean colocal = true, preProcess = true, gpu = false;
+    private static boolean colocal = true, preProcess = true, gpu = false, prevRes = false;
     public static final String[] channels = {"Red", "Green"};
     private static int c1Index = RED;
     private static int c2Index = GREEN;
@@ -146,6 +146,14 @@ public class UserVariables {
 
     public static void setTrackLength(double trackLength) {
         UserVariables.trackLength = trackLength;
+    }
+
+    public static boolean isPrevRes() {
+        return prevRes;
+    }
+
+    public static void setPrevRes(boolean prevRes) {
+        UserVariables.prevRes = prevRes;
     }
 
 }
