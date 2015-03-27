@@ -15,8 +15,8 @@ public class UserVariables {
     private static double spatialRes = 0.133333;
     private static double timeRes = 1.0;
     private static double trajMaxStep = 2.5;
-    private static double minTrajLength = 10.0;
-    private static double minTrajDist = 2.0;
+    private static double minTrajLength = 60.0;
+    private static double minTrajDist = 10.0;
     private static double chan1MaxThresh = 0.99;
     private static double chan2MaxThresh = 0.99;
     private static double curveFitTol = 0.95d;
