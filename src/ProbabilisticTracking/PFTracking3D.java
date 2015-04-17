@@ -724,7 +724,7 @@ public abstract class PFTracking3D implements PlugInFilter {
      * The plugin can draw on the canvas.
      *
      * @param aG: The graphics object to draw on.
-     * @param aMaginification: The magnification factor used by the user.
+     * @param aMagnification: The magnification factor used by the user.
      * @param aActiveFrame: The frame currently selected by the user.
      */
     protected abstract void paintOnCanvas(Graphics aG, double aMagnification, int aActiveFrame);
@@ -1175,7 +1175,7 @@ public abstract class PFTracking3D implements PlugInFilter {
 
     /**
      * Copies a
-     * <code>Vector&lt;float[]&gt</code> data structure. Used to copy the state
+     * <code>Vector&lt;float[]&gt;</code> data structure. Used to copy the state
      * vector here.
      *
      * @param aOrig

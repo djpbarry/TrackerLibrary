@@ -1,7 +1,18 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/* 
+ * Copyright (C) 2014 David Barry <david.barry at cancer.org.uk>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package ui;
 
@@ -21,10 +32,6 @@ import java.awt.Color;
 import java.util.ArrayList;
 import javax.swing.DefaultBoundedRangeModel;
 
-/**
- *
- * @author David Barry <david.barry at cancer.org.uk>
- */
 public class UserInterface extends javax.swing.JDialog {
 
     private final Analyse_ analyser;
@@ -359,6 +366,7 @@ public class UserInterface extends javax.swing.JDialog {
         jPanel1.add(nMaxLabel, gridBagConstraints);
 
         gpuToggleButton.setText(gpuToggleText);
+        gpuToggleButton.setEnabled(analyser.isGpuEnabled());
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 15;
@@ -619,11 +627,7 @@ public class UserInterface extends javax.swing.JDialog {
         analyser.calcParticleRadius(UserVariables.getSpatialRes());
         ImageStack stacks[] = analyser.getStacks();
         ParticleArray detections = null;
-        if (UserVariables.isGpu()) {
-            detections = analyser.cudaFindParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stacks[0], stacks[1], monoChrome);
-        } else {
-            detections = analyser.findParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stacks[0], stacks[1], false);
-        }
+        detections = analyser.findParticles(1.0, true, previewScrollBar.getValue() - 1, previewScrollBar.getValue() - 1, 0.0, stacks[0], stacks[1], false);
         if (detections != null) {
             ImageProcessor output = Utils.updateImage(stacks[0], stacks[1], previewScrollBar.getValue());
             double mag = 1.0 / UIMethods.getMagnification(output, canvas1);
