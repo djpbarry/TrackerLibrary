@@ -352,32 +352,20 @@ public class TailFitter extends IsoGaussianFitter {
         return Math.exp(a) * (c * Math.exp(-b2) - d * Erf.erfc(b));
     }
 
-    double findEMGRoot(int Nmax, double a, double b, double tol, double[] p) {
+    double findPeak(int Nmax, double a, double b, double tol, double[] p) {
         int N = 1;
         while (N < Nmax) {
-            double fa = evaluate1DEMGDerivative(p, a);
-//            double fb = evaluate1DEMGFirstDerivative(p, b);
             double c = (a + b) / 2;
-            double fc = evaluate1DEMGDerivative(p, c);
-            if (fc == 0.0 || (b - a) / 2 < tol) {
-                return c;
-            }
-            N++;
-            if (fa * fc > 0.0) {
-                a = c;
+            double fa, fc;
+            if (eqChoice == TailFitter.EMG) {
+                fa = evaluate1DEMGDerivative(p, a);
+                fc = evaluate1DEMGDerivative(p, c);
+            } else if (eqChoice == TailFitter.EMG_PLUS_GAUSSIAN) {
+                fa = evaluate1DGaussianPlusEMG1stDerivative(p, a);
+                fc = evaluate1DGaussianPlusEMG1stDerivative(p, c);
             } else {
-                b = c;
+                return Double.NaN;
             }
-        }
-        return Double.NaN;
-    }
-
-    double findGaussianPlusEMGRoot(int Nmax, double a, double b, double tol, double[] p) {
-        int N = 1;
-        while (N < Nmax) {
-            double fa = evaluate1DGaussianPlusEMG1stDerivative(p, a);
-            double c = (a + b) / 2;
-            double fc = evaluate1DGaussianPlusEMG1stDerivative(p, c);
             if (fc == 0.0 || (b - a) / 2 < tol) {
                 return c;
             }
@@ -472,17 +460,9 @@ public class TailFitter extends IsoGaussianFitter {
         for (int i = 0; i < numParams; i++) {
             System.out.print("p[" + String.valueOf(i) + "]:," + params[i] + ",");
         }
-        switch (eqChoice) {
-            case (TailFitter.EMG_PLUS_GAUSSIAN):
-                System.out.print("Peak:,x=," + findGaussianPlusEMGRoot(10000, params[1] - 2.0 * params[2],
-                        params[1] + 2.0 * params[2], 1.0E-10, params) + ",");
-                break;
-            case (TailFitter.EMG):
-                System.out.print("Peak:,x=," + findEMGRoot(10000, params[1] - 2.0 * params[2],
-                        params[1] + 2.0 * params[2], 1.0E-10, params) + ",");
-                break;
-            case (TailFitter.GAUSSIAN):
-                break;
+        if (eqChoice != TailFitter.GAUSSIAN) {
+            System.out.print("Peak:,x=," + findPeak(10000, params[1] - 2.0 * params[2],
+                    params[1] + 2.0 * params[2], 1.0E-10, params) + ",");
         }
         System.out.println();
     }
