@@ -48,66 +48,68 @@ public class TailFitter extends IsoGaussianFitter {
     private static final int GAUSSIAN = 0, EMG = 1, EMG_PLUS_GAUSSIAN = 2, C1 = 0, C2 = 1;
     private static String protein = "WIP";
     private boolean randomize = true, cellByCell = true;
-    private final String channelLabels[] = {"Channel 1", "Channel 2"};
+    private final String channelLabels[] = {"C0_Output", "C1_Output"};
     private final String eqLabels[] = {"Gaussian", "EMG", "Gaussian Plus EMG"};
     private final String checkBoxLabels[] = {"Randomize", "Cell by Cell"};
     private boolean checks[] = {randomize, cellByCell};
-    private int chanChoice, eqChoice;
+    private int chanChoice, eqChoice, iterations;
 
     public static void main(String args[]) {
         TailFitter tf = new TailFitter();
         tf.showDialog();
-        tf.runNonCellByCell();
+        tf.runCellByCell();
         System.exit(0);
     }
 
-//    public static void main(String args[]) {
-//        String key = "WIP";
-//        String channel = "C1_Output";
-//        String chan = channel.substring(0, 2);
-//        File parentDir = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\SuperRes Actin Tails"), "Select input folder", true);
-//        ArrayList<File> subDirs = new ArrayList();
-//        listSubDirs(parentDir, subDirs, key);
-//        ArrayList<File> selectedSubDirs = new ArrayList();
-//        selectSubDirs(subDirs, selectedSubDirs, channel);
-//        ImagePlus temp = IJ.openImage(selectedSubDirs.get(0).listFiles()[0].getAbsolutePath());
-//        ImageProcessor tempIP = temp.getProcessor();
-//        int stackwidth = tempIP.getWidth();
-//        int stackheight = tempIP.getHeight();
-//        temp.close();
-//        ImageProcessor overallAverage = (new TailFitter()).buildStackAverage(stackwidth, stackheight, selectedSubDirs, chan, false);
-//        IJ.saveAs((new ImagePlus("", overallAverage)), "text image", parentDir + "/" + key + "_" + chan + "_" + "Average.txt");
-//        for (int i = 0; i < 100; i++) {
-//            System.out.print(i + ",");
-//            TailFitter tf = new TailFitter();
-//            ImageProcessor stackAverage = tf.buildStackAverage(stackwidth, stackheight, selectedSubDirs, chan, true);
-//            Rectangle cropRoi = new Rectangle(0, 15, stackAverage.getWidth() - 2, 1);
-//            stackAverage.setRoi(cropRoi);
-//            stackAverage = stackAverage.crop();
-//            ImageStatistics stats = stackAverage.getStatistics();
-//            double max = stats.max;
-//            double min = stats.min;
-//            stackAverage.subtract(min);
-//            stackAverage.multiply(1.0 / (max - min));
-//            int width = stackAverage.getWidth();
-//            int height = stackAverage.getHeight();
-//            double xVals[] = new double[width];
-//            double yVals[] = new double[height];
-//            double zVals[][] = new double[width][height];
-//            for (int y = 0; y < height; y++) {
-//                yVals[y] = y * spatialRes;
-//                for (int x = 0; x < width; x++) {
-//                    xVals[x] = x * spatialRes;
-//                    zVals[x][y] = stackAverage.getPixelValue(x, y);
-//                }
-//            }
-//            tf.loadData(xVals, yVals, zVals);
-//            tf.doFit(TailFitter.sigmaEst);
-//            tf.printParams();
-//        }
-//        System.exit(0);
-//    }
-    static void listSubDirs(File directory, ArrayList<File> subDirs, String key) {
+    public void runCellByCell() {
+        File parentDir = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\SuperRes Actin Tails"), "Select input folder", true);
+        String channel = channelLabels[chanChoice];
+        String chan = channel.substring(0, 2);
+        ArrayList<File> subDirs = new ArrayList();
+        listSubDirs(parentDir, subDirs, protein);
+        ArrayList<File> selectedSubDirs = new ArrayList();
+        selectSubDirs(subDirs, selectedSubDirs, channelLabels[chanChoice]);
+        ImagePlus temp = IJ.openImage(selectedSubDirs.get(0).listFiles()[0].getAbsolutePath());
+        ImageProcessor tempIP = temp.getProcessor();
+        int stackWidth = tempIP.getWidth();
+        int stackHeight = tempIP.getHeight();
+        temp.close();
+        for (int i = 0; i < iterations; i++) {
+            System.out.print(i + ",");
+            ImageProcessor stackAverage;
+            if (cellByCell) {
+                stackAverage = buildStackAverageTailByTail(stackWidth, stackHeight, selectedSubDirs, chan, randomize);
+            } else {
+                stackAverage = projectStack(buildStackAverageOverall(stackWidth, stackHeight, selectedSubDirs, chan, randomize));
+            }
+            Rectangle cropRoi = new Rectangle(0, 15, stackAverage.getWidth() - 2, 1);
+            stackAverage.setRoi(cropRoi);
+            stackAverage = stackAverage.crop();
+            ImageStatistics stats = stackAverage.getStatistics();
+            double max = stats.max;
+            double min = stats.min;
+            stackAverage.subtract(min);
+            stackAverage.multiply(1.0 / (max - min));
+            int width = stackAverage.getWidth();
+            int height = stackAverage.getHeight();
+            double xVals[] = new double[width];
+            double yVals[] = new double[height];
+            double zVals[][] = new double[width][height];
+            for (int y = 0; y < height; y++) {
+                yVals[y] = y * spatialRes;
+                for (int x = 0; x < width; x++) {
+                    xVals[x] = x * spatialRes;
+                    zVals[x][y] = stackAverage.getPixelValue(x, y);
+                }
+            }
+            loadData(xVals, yVals, zVals);
+            doFit(TailFitter.sigmaEst);
+            printParams();
+        }
+        generateImages(selectedSubDirs, chan, parentDir, stackWidth, stackHeight);
+    }
+
+    void listSubDirs(File directory, ArrayList<File> subDirs, String key) {
         File files[] = directory.listFiles();
         for (File file : files) {
             if (file.isDirectory()) {
@@ -119,7 +121,7 @@ public class TailFitter extends IsoGaussianFitter {
         }
     }
 
-    static ArrayList<File> selectSubDirs(ArrayList<File> subDirs, ArrayList<File> selectedSubDirs, String key) {
+    ArrayList<File> selectSubDirs(ArrayList<File> subDirs, ArrayList<File> selectedSubDirs, String key) {
         GenericDialog gd = new GenericDialog("Select subdirectories");
         for (File subDir : subDirs) {
             gd.addCheckbox(subDir.getAbsolutePath(), false);
@@ -150,7 +152,7 @@ public class TailFitter extends IsoGaussianFitter {
         return selectedSubDirs;
     }
 
-    ImageProcessor buildStackAverage(int stackwidth, int stackheight, ArrayList<File> subDirs, String channel, boolean randomize) {
+    ImageProcessor buildStackAverageTailByTail(int stackwidth, int stackheight, ArrayList<File> subDirs, String channel, boolean randomize) {
         ImageStack overallStack = new ImageStack(stackwidth, stackheight);
         int nDirs = subDirs.size();
         Random r = new Random();
@@ -164,12 +166,7 @@ public class TailFitter extends IsoGaussianFitter {
                 int m = theseFiles.size();
                 ImageStack tailStack = new ImageStack(stackwidth, stackheight);
                 for (int l = 0; l < m; l++) {
-                    int fileindex;
-                    if (randomize) {
-                        fileindex = r.nextInt(m);
-                    } else {
-                        fileindex = l;
-                    }
+                    int fileindex = randomize ? r.nextInt(m) : l;
                     ImagePlus imp = IJ.openImage(theseFiles.get(fileindex).getAbsolutePath());
                     tailStack.addSlice(imp.getProcessor());
                     imp.close();
@@ -187,6 +184,30 @@ public class TailFitter extends IsoGaussianFitter {
         } else {
             return null;
         }
+    }
+
+    ImageStack buildStackAverageOverall(int stackwidth, int stackheight, ArrayList<File> subDirs, String channel, boolean randomize) {
+        ImageStack output = new ImageStack(stackwidth, stackheight);
+        int nDirs = subDirs.size();
+        Random r = new Random();
+        for (int j = 0; j < nDirs; j++) {
+            int dirIndex = randomize ? r.nextInt(nDirs) : j;
+            File files[] = subDirs.get(dirIndex).listFiles();
+            ArrayList<ArrayList> sortedFiles = sortFiles(files, channel);
+            int n = sortedFiles.size();
+            for (int i = 0; i < n; i++) {
+                int sortedFileIndex = randomize ? r.nextInt(n) : i;
+                ArrayList<File> theseFiles = sortedFiles.get(sortedFileIndex);
+                int m = theseFiles.size();
+                for (int l = 0; l < m; l++) {
+                    int fileIndex = randomize ? r.nextInt(m) : l;
+                    ImagePlus imp = IJ.openImage(theseFiles.get(fileIndex).getAbsolutePath());
+                    output.addSlice(imp.getProcessor());
+                    imp.close();
+                }
+            }
+        }
+        return output;
     }
 
     ImageProcessor projectStack(ImageStack stack) {
@@ -214,32 +235,17 @@ public class TailFitter extends IsoGaussianFitter {
         return files;
     }
 
-    public void runNonCellByCell() {
-        File directory = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\SuperRes Actin Tails"), "Select input folder", true);
-        File files[] = directory.listFiles();
-        int dirSize = files.length;
-        ImagePlus temp = IJ.openImage(files[0].getAbsolutePath());
-        ImageProcessor tempIP = temp.getProcessor();
-        int stackwidth = tempIP.getWidth();
-        int stackheight = tempIP.getHeight();
-        temp.close();
-        System.out.println(directory);
-        ImageStack stack = new ImageStack(stackwidth, stackheight);
-        for (int j = 0; j < dirSize; j++) {
-            ImagePlus imp = IJ.openImage(files[j].getAbsolutePath());
-            ImageProcessor slice = imp.getProcessor().duplicate();
-            slice.setInterpolationMethod(ImageProcessor.BICUBIC);
-            stack.addSlice(slice.resize(stackwidth, stackheight));
-            imp.close();
-        }
+    public void generateImages(ArrayList<File> selectedSubDirs, String chan, File directory, int stackWidth, int stackHeight) {
+        ImageStack stack = buildStackAverageOverall(stackWidth, stackHeight, selectedSubDirs, chan, false);
         ZProjector zproj = new ZProjector(new ImagePlus("", stack));
         zproj.setMethod(ZProjector.AVG_METHOD);
         zproj.doProjection();
         ImageProcessor stackAverage = zproj.getProjection().getProcessor();
-        IJ.saveAs((new ImagePlus("", stackAverage)), "text image", directory.getParent() + "/" + directory.getName() + "_Average.txt");
+        String fileBaseName = directory + "/" + protein + "_" + channelLabels[chanChoice] + "_";
+        IJ.saveAs((new ImagePlus("", stackAverage)), "text image", fileBaseName + "Average.txt");
         zproj.setMethod(ZProjector.SD_METHOD);
         zproj.doProjection();
-        IJ.saveAs((new ImagePlus("", zproj.getProjection().getProcessor())), "text image", directory.getParent() + "/" + directory.getName() + "_SD.txt");
+        IJ.saveAs((new ImagePlus("", zproj.getProjection().getProcessor())), "text image", fileBaseName + "SD.txt");
         Rectangle cropRoi = new Rectangle(0, 15, stackAverage.getWidth() - 2, 1);
         stackAverage.setRoi(cropRoi);
         stackAverage = stackAverage.crop();
@@ -248,23 +254,8 @@ public class TailFitter extends IsoGaussianFitter {
         double min = stats.min;
         stackAverage.subtract(min);
         stackAverage.multiply(1.0 / (max - min));
-        int width = stackAverage.getWidth();
-        int height = stackAverage.getHeight();
-        double xVals[] = new double[width];
-        double yVals[] = new double[height];
-        double zVals[][] = new double[width][height];
-        for (int y = 0; y < height; y++) {
-            yVals[y] = y * spatialRes;
-            for (int x = 0; x < width; x++) {
-                xVals[x] = x * spatialRes;
-                zVals[x][y] = stackAverage.getPixelValue(x, y);
-            }
-        }
-        loadData(xVals, yVals, zVals);
-        doFit(TailFitter.sigmaEst);
-        printParams();
-        printImage(directory);
-        IJ.saveAs((new ImagePlus("", stackAverage)), "text image", directory.getParent() + "/" + directory.getName() + "_NormAverage.txt");
+        printImage(directory, fileBaseName);
+        IJ.saveAs((new ImagePlus("", stackAverage)), "text image", fileBaseName + "NormAverage.txt");
     }
 
     public TailFitter() {
@@ -467,7 +458,7 @@ public class TailFitter extends IsoGaussianFitter {
         System.out.println();
     }
 
-    void printImage(File directory) {
+    void printImage(File directory, String filename) {
         FloatProcessor deconvolved = new FloatProcessor(xData.length, yData.length);
         FloatProcessor convolved = new FloatProcessor(xData.length, yData.length);
         FloatProcessor derivative = new FloatProcessor(xData.length, yData.length);
@@ -490,10 +481,10 @@ public class TailFitter extends IsoGaussianFitter {
                 }
             }
         }
-        IJ.saveAs((new ImagePlus("", convolved)), "text image", directory.getParent() + "/" + directory.getName() + "_Convolved.txt");
-        IJ.saveAs((new ImagePlus("", deconvolved)), "text image", directory.getParent() + "/" + directory.getName() + "_Deconvolved.txt");
+        IJ.saveAs((new ImagePlus("", convolved)), "text image", filename + "Convolved.txt");
+        IJ.saveAs((new ImagePlus("", deconvolved)), "text image", filename + "Deconvolved.txt");
         if (eqChoice != TailFitter.GAUSSIAN) {
-            IJ.saveAs((new ImagePlus("", derivative)), "text image", directory.getParent() + "/" + directory.getName() + "_Derivative.txt");
+            IJ.saveAs((new ImagePlus("", derivative)), "text image", filename + "Derivative.txt");
         }
     }
 
@@ -503,6 +494,7 @@ public class TailFitter extends IsoGaussianFitter {
         gd.addRadioButtonGroup("Select Channel:", channelLabels, 1, 2, channelLabels[1]);
         gd.addChoice("Select Equation to Fit:", eqLabels, eqLabels[0]);
         gd.addCheckboxGroup(1, 2, checkBoxLabels, checks);
+        gd.addNumericField("Iterations: ", iterations, 0);
         gd.showDialog();
         if (!gd.wasOKed()) {
             return false;
@@ -512,6 +504,7 @@ public class TailFitter extends IsoGaussianFitter {
         eqChoice = gd.getNextChoiceIndex();
         randomize = gd.getNextBoolean();
         cellByCell = gd.getNextBoolean();
+        iterations = (int) Math.round(gd.getNextNumber());
         return true;
     }
 }
