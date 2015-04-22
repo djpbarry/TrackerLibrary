@@ -47,12 +47,13 @@ public class TailFitter extends IsoGaussianFitter {
     int minSlices = 20;
     private static final int GAUSSIAN = 0, EMG = 1, EMG_PLUS_GAUSSIAN = 2, C1 = 0, C2 = 1;
     private static String protein = "WIP";
-    private boolean randomize = true, cellByCell = true;
+    private static boolean randomize = true, cellByCell = true;
     private final String channelLabels[] = {"C0_Output", "C1_Output"};
     private final String eqLabels[] = {"Gaussian", "EMG", "Gaussian Plus EMG"};
     private final String checkBoxLabels[] = {"Randomize", "Cell by Cell"};
     private boolean checks[] = {randomize, cellByCell};
-    private int chanChoice, eqChoice, iterations;
+    private static int chanChoice, eqChoice, iterations = 100;
+    double minVersion = 4.112;
 
     public static void main(String args[]) {
         TailFitter tf = new TailFitter();
@@ -137,12 +138,19 @@ public class TailFitter extends IsoGaussianFitter {
                     if (subSubDir.isDirectory() && subSubDir.getName().contains("Capture")) {
                         File[] resultsDirs = subSubDir.listFiles();
                         for (File resultsDir : resultsDirs) {
-//                            if (resultsDir.isDirectory()
-//                                    && (resultsDir.getName().contains("v4.108") || resultsDir.getName().contains("v4.109"))) {
                             if (resultsDir.isDirectory()
-                                    && (resultsDir.getName().contains("v4.112"))) {
-                                selectedSubDirs.add(new File(resultsDir.getAbsolutePath() + "/" + key));
-                                System.out.println(selectedSubDirs.get(selectedSubDirs.size() - 1).getAbsolutePath());
+                                    && (resultsDir.getName().contains("Particle Tracker"))) {
+                                Scanner scanner = (new Scanner(resultsDir.getName())).useDelimiter("[_v]");
+                                double version = 0;
+                                while (scanner.hasNext()) {
+                                    if (scanner.hasNextDouble()) {
+                                        version = scanner.nextDouble();
+                                    } else scanner.next();
+                                }
+                                if (version >= minVersion) {
+                                    selectedSubDirs.add(new File(resultsDir.getAbsolutePath() + "/" + key));
+                                    System.out.println(selectedSubDirs.get(selectedSubDirs.size() - 1).getAbsolutePath());
+                                }
                             }
                         }
                     }
@@ -495,6 +503,7 @@ public class TailFitter extends IsoGaussianFitter {
         gd.addChoice("Select Equation to Fit:", eqLabels, eqLabels[0]);
         gd.addCheckboxGroup(1, 2, checkBoxLabels, checks);
         gd.addNumericField("Iterations: ", iterations, 0);
+        gd.addNumericField("Min Version: ", minVersion, 3);
         gd.showDialog();
         if (!gd.wasOKed()) {
             return false;
@@ -505,6 +514,7 @@ public class TailFitter extends IsoGaussianFitter {
         randomize = gd.getNextBoolean();
         cellByCell = gd.getNextBoolean();
         iterations = (int) Math.round(gd.getNextNumber());
+        minVersion = gd.getNextNumber();
         return true;
     }
 }
