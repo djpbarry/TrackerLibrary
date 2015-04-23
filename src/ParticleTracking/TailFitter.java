@@ -55,12 +55,12 @@ public class TailFitter extends IsoGaussianFitter {
     private static int chanChoice, eqChoice, iterations = 100;
     double minVersion = 4.112;
 
-    public static void main(String args[]) {
-        TailFitter tf = new TailFitter();
-        tf.showDialog();
-        tf.runCellByCell();
-        System.exit(0);
-    }
+//    public static void main(String args[]) {
+//        TailFitter tf = new TailFitter();
+//        tf.showDialog();
+//        tf.runCellByCell();
+//        System.exit(0);
+//    }
 
     public void runCellByCell() {
         File parentDir = Utilities.getFolder(new File("C:\\Users\\barry05\\Desktop\\SuperRes Actin Tails"), "Select input folder", true);

@@ -45,7 +45,7 @@ import ui.UserInterface;
  * @author David J Barry
  * @version 2.0, FEB 2011
  */
-public class Analyse_ implements PlugIn {
+public class Analyse implements PlugIn {
 
 //    protected static double hystDiff = 1.25;
     protected final double SIG_EST_RED = 0.158, SIG_EST_GREEN = 0.168;
@@ -87,7 +87,7 @@ public class Analyse_ implements PlugIn {
 ////        }
 //        System.exit(0);
 //    }
-    public Analyse_(double spatialRes, double timeRes, double trajMaxStep, double chan1MaxThresh, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
+    public Analyse(double spatialRes, double timeRes, double trajMaxStep, double chan1MaxThresh, boolean monoChrome, ImagePlus imp, double scale, double minTrajLength) {
         UserVariables.setSpatialRes(spatialRes);
         UserVariables.setTimeRes(timeRes);
         UserVariables.setTrajMaxStep(trajMaxStep);
@@ -99,14 +99,14 @@ public class Analyse_ implements PlugIn {
 //        this.stacks = imp.getStack();
     }
 
-    public Analyse_() {
+    public Analyse() {
     }
 
-    public Analyse_(ImageStack[] stacks) {
+    public Analyse(ImageStack[] stacks) {
         this.stacks = stacks;
     }
 
-    public Analyse_(ImagePlus imp, String ext) {
+    public Analyse(ImagePlus imp, String ext) {
 //        this.imp = imp;
 //        this.stacks = imp.getImageStack();
         this.ext = ext;

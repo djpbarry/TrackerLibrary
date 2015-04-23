@@ -17,7 +17,7 @@
 package ui;
 
 import ParticleTracking.ParticleTrajectory;
-import ParticleTracking.Analyse_;
+import ParticleTracking.Analyse;
 import ParticleTracking.UserVariables;
 import UIClasses.UIMethods;
 import ij.ImagePlus;
@@ -34,7 +34,7 @@ import javax.swing.JTextField;
 public class ResultsPreviewInterface extends javax.swing.JDialog {
 
     private final String title;
-    private final Analyse_ analyser;
+    private final Analyse analyser;
     private final ImagePlus imp;
     private ImageStack stack;
     private final ArrayList<ParticleTrajectory> trajectories;
@@ -44,7 +44,7 @@ public class ResultsPreviewInterface extends javax.swing.JDialog {
     /**
      * Creates new form ResultsPreviewer
      */
-    public ResultsPreviewInterface(java.awt.Frame parent, boolean modal, String title, Analyse_ analyser) {
+    public ResultsPreviewInterface(java.awt.Frame parent, boolean modal, String title, Analyse analyser) {
         super(parent, modal);
         this.title = title;
         this.analyser = analyser;

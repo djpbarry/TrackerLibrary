@@ -30,7 +30,7 @@ import java.util.ArrayList;
  *
  * @author David Barry <david.barry at cancer.org.uk>
  */
-public class GPU_Analyse extends Analyse_ {
+public class GPUAnalyse extends Analyse {
 
     private final String delimiter = GenUtils.getDelimiter();
 
@@ -46,7 +46,7 @@ public class GPU_Analyse extends Analyse_ {
 //        System.exit(0);
 //    }
 
-    public GPU_Analyse() {
+    public GPUAnalyse() {
         super();
         gpuEnabled = true;
     }

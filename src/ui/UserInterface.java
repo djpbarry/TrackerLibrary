@@ -20,7 +20,7 @@ import IAClasses.IsoGaussian;
 import IAClasses.Utils;
 import ParticleTracking.Particle;
 import ParticleTracking.ParticleArray;
-import ParticleTracking.Analyse_;
+import ParticleTracking.Analyse;
 import ParticleTracking.UserVariables;
 import UIClasses.UIMethods;
 import ij.IJ;
@@ -34,7 +34,7 @@ import javax.swing.DefaultBoundedRangeModel;
 
 public class UserInterface extends javax.swing.JDialog {
 
-    private final Analyse_ analyser;
+    private final Analyse analyser;
     private final ImagePlus imp;
     private final String title;
     private boolean wasOKed = false, monoChrome;
@@ -58,7 +58,7 @@ public class UserInterface extends javax.swing.JDialog {
     /**
      * Creates new form UserInterface
      */
-    public UserInterface(java.awt.Frame parent, boolean modal, String title, Analyse_ analyser) {
+    public UserInterface(java.awt.Frame parent, boolean modal, String title, Analyse analyser) {
         super(parent, modal);
         this.title = title;
         this.analyser = analyser;

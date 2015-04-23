@@ -21,7 +21,7 @@ import java.awt.Toolkit;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
-public class Colocalisation_Analysis extends Analyse_ implements PlugIn {
+public class ColocalisationAnalysis extends Analyse implements PlugIn {
 
     protected ImagePlus imp;
 //    protected ImageStack[] stacks = new ImageStack[2];
@@ -44,10 +44,10 @@ public class Colocalisation_Analysis extends Analyse_ implements PlugIn {
 //        (new Colocalisation_Analysis(inputs)).run(null);
 //    }
 
-    public Colocalisation_Analysis() {
+    public ColocalisationAnalysis() {
     }
 
-    public Colocalisation_Analysis(ImagePlus[] inputs) {
+    public ColocalisationAnalysis(ImagePlus[] inputs) {
         ImageStack tempStacks[] = new ImageStack[2];
         tempStacks[0] = inputs[0].getImageStack();
         tempStacks[1] = inputs[1].getImageStack();
@@ -55,7 +55,7 @@ public class Colocalisation_Analysis extends Analyse_ implements PlugIn {
         this.stacks = tempStacks;
     }
 
-    public Colocalisation_Analysis(ImagePlus imp) {
+    public ColocalisationAnalysis(ImagePlus imp) {
         this.imp = imp;
         ImagePlus tempImps[] = ChannelSplitter.split(imp);
         stacks[0] = tempImps[0].getImageStack();
@@ -64,7 +64,7 @@ public class Colocalisation_Analysis extends Analyse_ implements PlugIn {
 
     @Override
     public void run(String arg) {
-        title = title + "_v" + Analyse_.VERSION + "." + intFormat.format(Revision.Revision.revisionNumber);
+        title = title + "_v" + Analyse.VERSION + "." + intFormat.format(Revision.Revision.revisionNumber);
         labels[0] = "Channel 1";
         labels[1] = "Channel 2";
         if (IJ.getInstance() != null) {
@@ -77,7 +77,7 @@ public class Colocalisation_Analysis extends Analyse_ implements PlugIn {
         }
         if (showDialog()) {
             UserVariables.setPreProcess(true);
-            Analyse_ analyser = new Analyse_(stacks);
+            Analyse analyser = new Analyse(stacks);
             analyser.calcParticleRadius(UserVariables.getSpatialRes(), SIG_EST_RED);
             UserVariables.setnMax(1);
             (buildOutput(analyser)).show();
@@ -145,12 +145,12 @@ public class Colocalisation_Analysis extends Analyse_ implements PlugIn {
         }
     }
 
-    ImagePlus buildOutput(Analyse_ analyser) {
+    ImagePlus buildOutput(Analyse analyser) {
         if (stacks == null) {
             return null;
         }
         if (analyser == null) {
-            analyser = new Analyse_(stacks);
+            analyser = new Analyse(stacks);
         }
 //        double displaymax = 0.0;
         int colocalisation, count;

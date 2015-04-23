@@ -24,7 +24,7 @@ import java.util.ArrayList;
  *
  * @author barry05
  */
-public class PSFEstimator extends Analyse_ {
+public class PSFEstimator extends Analyse {
 
     private TextWindow results;
     private String psfTitle = "PSF Estimator v1.0";
