@@ -222,7 +222,7 @@ public class ParticleTrajectory {
                 xsig = ysig = theta = Double.NaN;
             }
             output.append(formatter.format(current.getX()) + "\t" + formatter.format(current.getY())
-                    + "\t" + formatter.format(current.getTimePoint() * timeRes) + "\t"
+                    + "\t" + formatter.format(current.getTimePoint() / timeRes) + "\t"
                     + formatter.format(current.getC1Intensity()) + "\t"
                     + formatter.format(current.getC2Intensity()) + "\t"
                     + formatter.format(xsig) + "\t"

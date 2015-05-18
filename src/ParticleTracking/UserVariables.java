@@ -19,7 +19,8 @@ public class UserVariables {
     private static double minTrajDist = 10.0;
     private static double chan1MaxThresh = 0.99;
     private static double chan2MaxThresh = 0.99;
-    private static double curveFitTol = 0.95d;
+    private static double c1CurveFitTol = 0.95d;
+    private static double c2CurveFitTol = 0.95d;
     private static double trackLength = 5.0;
     private static int nMax = 1;
     private static boolean colocal = true, preProcess = true, gpu = false, prevRes = false;
@@ -109,11 +110,19 @@ public class UserVariables {
     }
 
     public static double getCurveFitTol() {
-        return curveFitTol;
+        return c1CurveFitTol;
     }
 
     public static void setCurveFitTol(double curveFitTol) {
-        UserVariables.curveFitTol = curveFitTol;
+        UserVariables.c1CurveFitTol = curveFitTol;
+    }
+
+    public static double getC2CurveFitTol() {
+        return c2CurveFitTol;
+    }
+
+    public static void setC2CurveFitTol(double c2CurveFitTol) {
+        UserVariables.c2CurveFitTol = c2CurveFitTol;
     }
 
     public static int getnMax() {
