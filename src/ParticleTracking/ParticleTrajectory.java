@@ -210,7 +210,7 @@ public class ParticleTrajectory {
         Particle current = end;
         while (current != null) {
             double xsig, ysig, theta;
-            if (current.getC2Gaussian() != null && current.getC2Gaussian().getFit() > UserVariables.getCurveFitTol()) {
+            if (current.getC2Gaussian() != null && current.getC2Gaussian().getFit() > UserVariables.getC1CurveFitTol()) {
                 xsig = current.getC2Gaussian().getXSigma();
                 ysig = current.getC2Gaussian().getYSigma();
                 if (current.getC2Gaussian() instanceof NonIsoGaussian) {

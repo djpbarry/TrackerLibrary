@@ -155,7 +155,7 @@ public class MultiGaussFitter extends Fitter {
                 sumZ += M[x][y];
             }
         }
-        double mean = sumZ / FIT_SIZE;
+        double mean = sumZ / (FIT_SIZE * FIT_SIZE);
         double sumMeanDiffSqr = 0.0;
         for (int y = y0 - FIT_RADIUS; y <= y0 + FIT_RADIUS; y++) {
             for (int x = x0 - FIT_RADIUS; x <= x0 + FIT_RADIUS; x++) {

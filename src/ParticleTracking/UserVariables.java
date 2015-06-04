@@ -16,11 +16,11 @@ public class UserVariables {
     private static double timeRes = 1.0;
     private static double trajMaxStep = 2.5;
     private static double minTrajLength = 60.0;
-    private static double minTrajDist = 10.0;
+    private static double minTrajDist = 0.0;
     private static double chan1MaxThresh = 0.99;
     private static double chan2MaxThresh = 0.99;
     private static double c1CurveFitTol = 0.95d;
-    private static double c2CurveFitTol = 0.95d;
+    private static double c2CurveFitTol = 0.5d;
     private static double trackLength = 5.0;
     private static int nMax = 1;
     private static boolean colocal = true, preProcess = true, gpu = false, prevRes = false;
@@ -109,7 +109,7 @@ public class UserVariables {
         UserVariables.c2Index = c2Index;
     }
 
-    public static double getCurveFitTol() {
+    public static double getC1CurveFitTol() {
         return c1CurveFitTol;
     }
 
