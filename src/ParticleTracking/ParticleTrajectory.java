@@ -200,7 +200,7 @@ public class ParticleTrajectory {
         if (output == null) {
             output = new TextWindow(title + " Results",
                     "X\tY\tFrame\tChannel 1\tChannel 2\tChannel 2 " + '\u03C3'
-                    + "x\tChannel 2 " + '\u03C3' + "y\t" + '\u03B8',new String(), 1000, 500);
+                    + "x\tChannel 2 " + '\u03C3' + "y\t" + '\u03B8', new String(), 1000, 500);
             output.setVisible(true);
         }
         if (formatter == null) {
@@ -445,11 +445,11 @@ public class ParticleTrajectory {
      * Calculates the directionality of the trajectory specified by
      * <code>particleNumber</code>, where directionality ( <code>D</code>) is
      * calculated according to: <br> <br>
-     * <code>D = 1 / (1 + &lambda<sub>1</sub> &lambda<sub>2</sub><sup>-1</sup>)</code>
+     * <code>D = 1 / (1 + &lambda<sub>1</sub>
+     * &lambda<sub>2</sub><sup>-1</sup>)</code>
      * <br> <br> where <code>&lambda<sub>1</sub></code> and
      * <code>&lambda<sub>2</sub></code> are the eigenvalues of the trajectory
-     * data and      <code>&lambda<sub>1</sub> <
-     * &lambda<sub>2</sub></code>.
+     * data and      <code>&lambda<sub>1</sub> < &lambda<sub>2</sub></code>.
      *
      * @param particleNumber the trajectory index.
      * @return the directionality of the specified trajectory.
@@ -486,9 +486,11 @@ public class ParticleTrajectory {
      * @param showPlot set to true to display a plot of MSD versus time-step,
      * false otherwise.
      */
-    public boolean calcMSD(int label, int seg, boolean showPlot, double[] xPoints, double[] yPoints) {
+    public boolean calcMSD(int seg) {
         int i, j, maxLength, maxStepSize;
         double xval, yval;
+        double points[][] = getPoints();
+        double xPoints[] = points[0], yPoints[] = points[1];
         if (xPoints == null) {
             return false;
         }
@@ -513,15 +515,15 @@ public class ParticleTrajectory {
             }
             timesteps[i] = i * timeRes;
         }
-        if (showPlot) {
-            Plot plot = new Plot("Particle " + label + " Mean Square Displacement",
-                    "Time (s)", "Mean Square Displacement (" + IJ.micronSymbol + "m^2)", timesteps, msd,
-                    (Plot.X_TICKS + Plot.Y_TICKS + Plot.X_NUMBERS + Plot.Y_NUMBERS));
-            plot.setLineWidth(2);
-            plot.setColor(Color.BLUE);
-            plot.draw();
-            plot.show();
-        }
+//        if (showPlot) {
+//            Plot plot = new Plot("Particle " + label + " Mean Square Displacement",
+//                    "Time (s)", "Mean Square Displacement (" + IJ.micronSymbol + "m^2)", timesteps, msd,
+//                    (Plot.X_TICKS + Plot.Y_TICKS + Plot.X_NUMBERS + Plot.Y_NUMBERS));
+//            plot.setLineWidth(2);
+//            plot.setColor(Color.BLUE);
+//            plot.draw();
+//            plot.show();
+//        }
         CurveFitter fitter = new CurveFitter(timesteps, msd);
         fitter.doFit(CurveFitter.STRAIGHT_LINE);
         diffCoeff = (fitter.getParams())[1] / 4.0;

@@ -22,6 +22,7 @@ public class UserVariables {
     private static double c1CurveFitTol = 0.5d;
     private static double c2CurveFitTol = 0.0d;
     private static double trackLength = 5.0;
+    private static double msdThresh = 0.01;
     private static int nMax = 1;
     private static boolean colocal = false, preProcess = true, gpu = true, prevRes = true,useCals = true, extractsigs = true;
     public static final String[] channels = {"Red", "Green"};
@@ -179,6 +180,14 @@ public class UserVariables {
 
     public static void setExtractsigs(boolean extractsigs) {
         UserVariables.extractsigs = extractsigs;
+    }
+
+    public static double getMsdThresh() {
+        return msdThresh;
+    }
+
+    public static void setMsdThresh(double msdThresh) {
+        UserVariables.msdThresh = msdThresh;
     }
 
 }
