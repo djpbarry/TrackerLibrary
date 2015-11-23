@@ -16,15 +16,15 @@ public class UserVariables {
     private static double timeRes = 1.0;
     private static double trajMaxStep = 2.5;
     private static double minTrajLength = 30.0;
-    private static double minTrajDist = 5.0;
+    private static double minTrajDist = 0.0;
     private static double chan1MaxThresh = 0.99;
     private static double chan2MaxThresh = 0.99;
     private static double c1CurveFitTol = 0.5d;
     private static double c2CurveFitTol = 0.0d;
     private static double trackLength = 5.0;
-    private static double msdThresh = 0.01;
+    private static double msdThresh = 0.0;
     private static int nMax = 1;
-    private static boolean colocal = false, preProcess = true, gpu = true, prevRes = true,useCals = true, extractsigs = true;
+    private static boolean colocal = true, preProcess = true, gpu = true, prevRes = true,useCals = true, extractsigs = true;
     public static final String[] channels = {"Red", "Green"};
     private static int c1Index = RED;
     private static int c2Index = GREEN;

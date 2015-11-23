@@ -94,12 +94,12 @@ public class ParticleTrajectory {
         return true;
     }
 
-    public boolean checkDetections(Particle particle, double c1tol, double c2tol) {
+    public boolean checkDetections(Particle particle, double tol) {
         if (particle == null) {
             return false;
         }
-        boolean c1 = (particle.getC1Gaussian().getFit() >= c1tol);
-        boolean c2 = (particle.getC2Gaussian() != null) ? (particle.getC2Gaussian().getFit() >= c2tol) : false;
+        boolean c1 = (particle.getC1Gaussian().getFit() >= tol);
+        boolean c2 = particle.getC2Gaussian() != null;
         if (c1 && c2) {
             dualScore++;
         }

@@ -123,7 +123,7 @@ public class TrajectoryBuilder {
                     int row = traj.getTempRow();
                     int col = traj.getTempColumn();
                     if (col <= m + 1) {
-                        traj.checkDetections(temp, 0.0, 0.0);
+                        traj.checkDetections(temp, 0.0);
                         objects.nullifyDetection(col, row);
                     }
                 }
