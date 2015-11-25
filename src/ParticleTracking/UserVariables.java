@@ -24,6 +24,7 @@ public class UserVariables {
     private static double trackLength = 5.0;
     private static double msdThresh = 0.0;
     private static int nMax = 1;
+    private static double colocalThresh = 0.25;
     private static boolean colocal = true, preProcess = true, gpu = true, prevRes = true,useCals = true, extractsigs = true;
     public static final String[] channels = {"Red", "Green"};
     private static int c1Index = RED;
@@ -188,6 +189,14 @@ public class UserVariables {
 
     public static void setMsdThresh(double msdThresh) {
         UserVariables.msdThresh = msdThresh;
+    }
+
+    public static double getColocalThresh() {
+        return colocalThresh;
+    }
+
+    public static void setColocalThresh(double colocalThresh) {
+        UserVariables.colocalThresh = colocalThresh;
     }
 
 }

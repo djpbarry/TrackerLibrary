@@ -4,11 +4,8 @@ import IAClasses.IsoGaussian;
 import IAClasses.Utils;
 import IAClasses.DSPProcessor;
 import IAClasses.DataStatistics;
-import ij.IJ;
-import ij.gui.Plot;
 import ij.measure.CurveFitter;
 import ij.text.TextWindow;
-import java.awt.Color;
 import java.awt.Rectangle;
 import java.text.DecimalFormat;
 
@@ -243,7 +240,7 @@ public class ParticleTrajectory {
             return NON_COLOCAL;
         }
     }
-
+    
     void updateVelocity() {
         if (size < segment) {
             xVelocity = yVelocity = 0.0;
