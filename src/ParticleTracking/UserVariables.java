@@ -19,13 +19,13 @@ public class UserVariables {
     private static double minTrajDist = 0.0;
     private static double chan1MaxThresh = 0.99;
     private static double chan2MaxThresh = 0.99;
-    private static double c1CurveFitTol = 0.5d;
-    private static double c2CurveFitTol = 0.0d;
+    private static double curveFitTol = 0.5d;
+//    private static double c2CurveFitTol = 0.0d;
     private static double trackLength = 5.0;
     private static double msdThresh = 0.0;
     private static int nMax = 1;
     private static double colocalThresh = 0.25;
-    private static boolean colocal = true, preProcess = true, gpu = true, prevRes = true,useCals = true, extractsigs = true;
+    private static boolean colocal = true, preProcess = true, gpu = true, prevRes = true, useCals = true, extractsigs = true;
 //    public static final String[] channels = {"Red", "Green"};
 //    private static int c1Index = RED;
 //    private static int c2Index = GREEN;
@@ -104,7 +104,6 @@ public class UserVariables {
 //    public static void setC1Index(int c1Index) {
 //        UserVariables.c1Index = c1Index;
 //    }
-
 //    public static int getC2Index() {
 //        return c2Index;
 //    }
@@ -112,23 +111,20 @@ public class UserVariables {
 //    public static void setC2Index(int c2Index) {
 //        UserVariables.c2Index = c2Index;
 //    }
-
-    public static double getC1CurveFitTol() {
-        return c1CurveFitTol;
+    public static double getCurveFitTol() {
+        return curveFitTol;
     }
 
     public static void setCurveFitTol(double curveFitTol) {
-        UserVariables.c1CurveFitTol = curveFitTol;
+        UserVariables.curveFitTol = curveFitTol;
     }
 
-    public static double getC2CurveFitTol() {
-        return c2CurveFitTol;
-    }
-
-    public static void setC2CurveFitTol(double c2CurveFitTol) {
-        UserVariables.c2CurveFitTol = c2CurveFitTol;
-    }
-
+//    public static double getC2CurveFitTol() {
+//        return c2CurveFitTol;
+//    }
+//    public static void setC2CurveFitTol(double c2CurveFitTol) {
+//        UserVariables.c2CurveFitTol = c2CurveFitTol;
+//    }
     public static int getnMax() {
         return nMax;
     }
