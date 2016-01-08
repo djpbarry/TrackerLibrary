@@ -26,10 +26,12 @@ public class UserVariables {
     private static int nMax = 1;
     private static double colocalThresh = 0.25;
     private static boolean colocal = true, preProcess = true, gpu = true, prevRes = true,useCals = true, extractsigs = true;
-    public static final String[] channels = {"Red", "Green"};
-    private static int c1Index = RED;
-    private static int c2Index = GREEN;
+//    public static final String[] channels = {"Red", "Green"};
+//    private static int c1Index = RED;
+//    private static int c2Index = GREEN;
     public static final int FOREGROUND = 255; //Integer value of foreground pixels
+    private static double sigEstGreen = 0.126;
+    private static double sigEstRed = 0.128;
 
     public static double getSpatialRes() {
         return spatialRes;
@@ -95,21 +97,21 @@ public class UserVariables {
         UserVariables.preProcess = preProcess;
     }
 
-    public static int getC1Index() {
-        return c1Index;
-    }
+//    public static int getC1Index() {
+//        return c1Index;
+//    }
+//
+//    public static void setC1Index(int c1Index) {
+//        UserVariables.c1Index = c1Index;
+//    }
 
-    public static void setC1Index(int c1Index) {
-        UserVariables.c1Index = c1Index;
-    }
-
-    public static int getC2Index() {
-        return c2Index;
-    }
-
-    public static void setC2Index(int c2Index) {
-        UserVariables.c2Index = c2Index;
-    }
+//    public static int getC2Index() {
+//        return c2Index;
+//    }
+//
+//    public static void setC2Index(int c2Index) {
+//        UserVariables.c2Index = c2Index;
+//    }
 
     public static double getC1CurveFitTol() {
         return c1CurveFitTol;
@@ -197,6 +199,22 @@ public class UserVariables {
 
     public static void setColocalThresh(double colocalThresh) {
         UserVariables.colocalThresh = colocalThresh;
+    }
+
+    public static double getSigEstGreen() {
+        return sigEstGreen;
+    }
+
+    public static void setSigEstGreen(double sigEstGreen) {
+        UserVariables.sigEstGreen = sigEstGreen;
+    }
+
+    public static double getSigEstRed() {
+        return sigEstRed;
+    }
+
+    public static void setSigEstRed(double sigEstRed) {
+        UserVariables.sigEstRed = sigEstRed;
     }
 
 }
