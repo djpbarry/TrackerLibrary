@@ -196,8 +196,8 @@ public class ParticleTrajectory {
     public void printTrajectory(int number, TextWindow output, DecimalFormat formatter, String title) {
         if (output == null) {
             output = new TextWindow(title + " Results",
-                    "X\tY\tFrame\tChannel 1\tChannel 2\tChannel 2 " + '\u03C3'
-                    + "x\tChannel 2 " + '\u03C3' + "y\t" + '\u03B8', new String(), 1000, 500);
+                    "X\tY\tFrame\tChannel 1\tChannel 2\tChannel 1 " + '\u03C3'
+                    + "\tChannel 2 " + '\u03C3', new String(), 1000, 500);
             output.setVisible(true);
         }
         if (formatter == null) {
@@ -206,25 +206,19 @@ public class ParticleTrajectory {
         output.append("Particle " + number + "\n");
         Particle current = end;
         while (current != null) {
-            double xsig, ysig, theta;
-            if (current.getC2Gaussian() != null && current.getC2Gaussian().getFit() > UserVariables.getCurveFitTol()) {
-                xsig = current.getC2Gaussian().getXSigma();
-                ysig = current.getC2Gaussian().getYSigma();
-                if (current.getC2Gaussian() instanceof NonIsoGaussian) {
-                    theta = ((NonIsoGaussian) current.getC2Gaussian()).getTheta();
-                } else {
-                    theta = Double.NaN;
-                }
-            } else {
-                xsig = ysig = theta = Double.NaN;
+            IsoGaussian c1g = current.getC1Gaussian();
+            IsoGaussian c2g = current.getC2Gaussian();
+            double c2m = Double.NaN, c2s = Double.NaN;
+            if (c2g != null) {
+                c2m = c2g.getMagnitude();
+                c2s = c2g.getXSigma();
             }
-            output.append(formatter.format(current.getX()) + "\t" + formatter.format(current.getY())
+            output.append(formatter.format(c1g.getX()) + "\t" + formatter.format(c1g.getY())
                     + "\t" + formatter.format(current.getTimePoint() / timeRes) + "\t"
-                    + formatter.format(current.getC1Intensity()) + "\t"
-                    + formatter.format(current.getC2Intensity()) + "\t"
-                    + formatter.format(xsig) + "\t"
-                    + formatter.format(ysig) + "\t"
-                    + formatter.format(theta));
+                    + formatter.format(c1g.getMagnitude()) + "\t"
+                    + formatter.format(c2m) + "\t"
+                    + formatter.format(c1g.getXSigma()) + "\t"
+                    + formatter.format(c2s));
             current = current.getLink();
         }
         output.append("\n");
@@ -240,7 +234,7 @@ public class ParticleTrajectory {
             return NON_COLOCAL;
         }
     }
-    
+
     void updateVelocity() {
         if (size < segment) {
             xVelocity = yVelocity = 0.0;
