@@ -30,8 +30,9 @@ public class UserVariables {
 //    private static int c1Index = RED;
 //    private static int c2Index = GREEN;
     public static final int FOREGROUND = 255; //Integer value of foreground pixels
-    private static double sigEstGreen = 0.126;
-    private static double sigEstRed = 0.128;
+    private static double sigEstGreen = 0.137;
+    private static double sigEstRed = 0.135;
+    private static double medianThresh = 1.5;
 
     public static double getSpatialRes() {
         return spatialRes;
@@ -211,6 +212,14 @@ public class UserVariables {
 
     public static void setSigEstRed(double sigEstRed) {
         UserVariables.sigEstRed = sigEstRed;
+    }
+
+    public static double getMedianThresh() {
+        return medianThresh;
+    }
+
+    public static void setMedianThresh(double medianThresh) {
+        UserVariables.medianThresh = medianThresh;
     }
 
 }
