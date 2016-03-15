@@ -16,13 +16,13 @@ public class UserVariables {
     private static double timeRes = 1.0;
     private static double trajMaxStep = 2.5;
     private static double minTrajLength = 30.0;
-    private static double minTrajDist = 0.0;
+    private static double minTrajDist = 2.0;
     private static double chan1MaxThresh = 0.99;
     private static double chan2MaxThresh = 0.99;
     private static double curveFitTol = 0.5d;
 //    private static double c2CurveFitTol = 0.0d;
     private static double trackLength = 5.0;
-    private static double msdThresh = 0.0;
+    private static double msdThresh = 0.001;
     private static int nMax = 1;
     private static double colocalThresh = 0.25;
     private static boolean colocal = true, preProcess = true, gpu = true, prevRes = true, useCals = true, extractsigs = true;
@@ -30,9 +30,9 @@ public class UserVariables {
 //    private static int c1Index = RED;
 //    private static int c2Index = GREEN;
     public static final int FOREGROUND = 255; //Integer value of foreground pixels
-    private static double sigEstGreen = 0.137;
-    private static double sigEstRed = 0.135;
-    private static double medianThresh = 1.5;
+    private static double sigEstGreen = 0.115;
+    private static double sigEstRed = 0.128;
+    private static double medianThresh = 1.05;
 
     public static double getSpatialRes() {
         return spatialRes;

@@ -130,7 +130,8 @@ public class TailTracer {
 
     public boolean trace() {
         im = (new TypeConverter(im, true)).convertToFloat(null);
-        (new GaussianBlur()).blur(im, 2.0);
+//        (new GaussianBlur()).blur(im, 2.0);
+        (new GaussianBlur()).blurGaussian(im, 2.0);
         int ne = 10 * nlines;
         ArrayList<Double[][]> hc = new ArrayList<Double[][]>();
         for (int i = 0; i < nlines * 2 - 1; i++) {
