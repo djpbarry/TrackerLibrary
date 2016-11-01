@@ -12,11 +12,8 @@ import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import java.awt.Color;
 import java.awt.Graphics;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Vector;
-import ProbabilisticTracking.LinearMovementFPTracker3D;
-import ProbabilisticTracking.PFTracking3D;
 import ProbabilisticTracking.PFTracking3D.Point3D;
 
 /**
@@ -177,7 +174,7 @@ public class ProbabilisticTracker extends PFTracking3D {
     protected void calcFromHereButtonPressed() {
         ImagePlus imp = getMOriginalImagePlus();
         ImageProcessor proc = imp.getImageStack().getProcessor(1);
-        ArrayList<int[]> maxima = Utils.findLocalMaxima(3, 3, proc, 200.0, true, true);
+        ArrayList<int[]> maxima = Utils.findLocalMaxima(3, proc, 200.0, true, true);
         int size = maxima.size();
         for (int i = 0; i < size; i++) {
             int[] thismax = maxima.get(i);
