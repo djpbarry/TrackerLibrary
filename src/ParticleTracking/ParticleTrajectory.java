@@ -4,10 +4,14 @@ import IAClasses.IsoGaussian;
 import IAClasses.Utils;
 import IAClasses.DSPProcessor;
 import IAClasses.DataStatistics;
+import ij.IJ;
+import ij.gui.Plot;
 import ij.measure.CurveFitter;
 import ij.text.TextWindow;
+import java.awt.Color;
 import java.awt.Rectangle;
 import java.text.DecimalFormat;
+import java.util.Random;
 
 /**
  * Represents a the trajectory followed by a particle through a series of
@@ -33,6 +37,10 @@ public class ParticleTrajectory {
     private static final int segment = 5;
     private double xFluorSpread, yFluorSpread;
     private int startTimeIndex;
+    private static Plot msdPlot;
+    private static String plotLegend = "";
+    private final int MIN_POINTS_TO_AVERAGE = 10;
+    private final float D_SCALING = 4.0f;
 
     public ParticleTrajectory() {
     }
@@ -477,7 +485,7 @@ public class ParticleTrajectory {
      * @param showPlot set to true to display a plot of MSD versus time-step,
      * false otherwise.
      */
-    public boolean calcMSD(int seg) {
+    public boolean calcMSD(int seg, int label) {
         int i, j, maxLength, maxStepSize;
         double xval, yval;
         double points[][] = getPoints();
@@ -491,11 +499,11 @@ public class ParticleTrajectory {
         } else {
             maxLength = length;
         }
-        if (maxLength < 2) {
+        if (maxLength < 2 * MIN_POINTS_TO_AVERAGE) {
             diffCoeff = 0.0;
             return false;
         }
-        maxStepSize = maxLength / 2;
+        maxStepSize = maxLength / MIN_POINTS_TO_AVERAGE;
         double timesteps[] = new double[maxStepSize];
         double msd[] = new double[maxStepSize];
         for (i = 0; i < maxStepSize; i++) {
@@ -504,22 +512,30 @@ public class ParticleTrajectory {
                 yval = Math.pow(yPoints[i + j] - yPoints[j], 2.0) / (maxLength + 1.0);
                 msd[i] += xval + yval;
             }
-            timesteps[i] = i * timeRes;
+            timesteps[i] = i / timeRes;
         }
-//        if (showPlot) {
-//            Plot plot = new Plot("Particle " + label + " Mean Square Displacement",
-//                    "Time (s)", "Mean Square Displacement (" + IJ.micronSymbol + "m^2)", timesteps, msd,
-//                    (Plot.X_TICKS + Plot.Y_TICKS + Plot.X_NUMBERS + Plot.Y_NUMBERS));
-//            plot.setLineWidth(2);
-//            plot.setColor(Color.BLUE);
-//            plot.draw();
-//            plot.show();
-//        }
+        if (msdPlot == null) {
+            msdPlot = new Plot("Mean Square Displacement",
+                    "Time (s)", "Mean Square Displacement (" + IJ.micronSymbol + "m^2)");
+            msdPlot.setLineWidth(5);
+        }
+        Random r = new Random();
+        msdPlot.setColor(new Color(r.nextFloat(),r.nextFloat(),r.nextFloat()));
+        msdPlot.addPoints(timesteps, msd, Plot.DOT);
+        msdPlot.setLimitsToFit(false);
+        plotLegend = ((plotLegend.concat("Particle ")).concat(String.valueOf(label))).concat("\n");
+        msdPlot.addLegend(plotLegend);
+        msdPlot.draw();
+        msdPlot.show();
         CurveFitter fitter = new CurveFitter(timesteps, msd);
         fitter.doFit(CurveFitter.STRAIGHT_LINE);
-        diffCoeff = (fitter.getParams())[1] / 4.0;
+        diffCoeff = (fitter.getParams())[1] / D_SCALING;
 
         return true;
+    }
+
+    public static Plot getMsdPlot() {
+        return msdPlot;
     }
 
     public boolean calcAngleSpread() {
