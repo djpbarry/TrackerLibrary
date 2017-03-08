@@ -520,7 +520,7 @@ public class ParticleTrajectory {
             msdPlot.setLineWidth(5);
         }
         Random r = new Random();
-        msdPlot.setColor(new Color(r.nextFloat(),r.nextFloat(),r.nextFloat()));
+        msdPlot.setColor(new Color(r.nextFloat(), r.nextFloat(), r.nextFloat()));
         msdPlot.addPoints(timesteps, msd, Plot.DOT);
         msdPlot.setLimitsToFit(false);
         plotLegend = ((plotLegend.concat("Particle ")).concat(String.valueOf(label))).concat("\n");
@@ -536,6 +536,10 @@ public class ParticleTrajectory {
 
     public static Plot getMsdPlot() {
         return msdPlot;
+    }
+
+    public static void resetMSDPlot() {
+        msdPlot = null;
     }
 
     public boolean calcAngleSpread() {
