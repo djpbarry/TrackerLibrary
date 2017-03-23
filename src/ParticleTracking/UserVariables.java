@@ -15,7 +15,7 @@ public class UserVariables {
     private static double spatialRes = 0.0664;
     private static double timeRes = 0.2;
     private static double trajMaxStep = 5.0;
-    private static double minTrajLength = 25.0;
+    private static double minTrajLength = 150.0;
     private static double minTrajDist = 0.5;
     private static double chan1MaxThresh = 0.999;
     private static double chan2MaxThresh = 0.99;
@@ -33,6 +33,7 @@ public class UserVariables {
     private static double sigEstGreen = 0.115;
     private static double sigEstRed = 0.128;
     private static double medianThresh = 1.05;
+    private static int minMSDPoints = 10;
 
     public static double getSpatialRes() {
         return spatialRes;
@@ -220,6 +221,14 @@ public class UserVariables {
 
     public static void setMedianThresh(double medianThresh) {
         UserVariables.medianThresh = medianThresh;
+    }
+
+    public static int getMinMSDPoints() {
+        return minMSDPoints;
+    }
+
+    public static void setMinMSDPoints(int minMSDPoints) {
+        UserVariables.minMSDPoints = minMSDPoints;
     }
 
 }

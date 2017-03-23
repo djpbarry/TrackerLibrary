@@ -11,7 +11,9 @@ import ij.text.TextWindow;
 import java.awt.Color;
 import java.awt.Rectangle;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Random;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 /**
  * Represents a the trajectory followed by a particle through a series of
@@ -41,6 +43,7 @@ public class ParticleTrajectory {
     private static String plotLegend = "";
     private final int MIN_POINTS_TO_AVERAGE = 10;
     private final float D_SCALING = 4.0f;
+    private static ArrayList<DescriptiveStatistics> globalMSD = new ArrayList();
 
     public ParticleTrajectory() {
     }
@@ -486,7 +489,7 @@ public class ParticleTrajectory {
      * false otherwise.
      */
     public boolean calcMSD(int seg, int label) {
-        int i, j, maxLength, maxStepSize;
+        int maxLength;
         double xval, yval;
         double points[][] = getPoints();
         double xPoints[] = points[0], yPoints[] = points[1];
@@ -499,39 +502,73 @@ public class ParticleTrajectory {
         } else {
             maxLength = length;
         }
-        if (maxLength < 2 * MIN_POINTS_TO_AVERAGE) {
-            diffCoeff = 0.0;
-            return false;
-        }
-        maxStepSize = maxLength / MIN_POINTS_TO_AVERAGE;
-        double timesteps[] = new double[maxStepSize];
-        double msd[] = new double[maxStepSize];
-        for (i = 0; i < maxStepSize; i++) {
-            for (j = 0, msd[i] = 0.0; i + j < maxLength; j++) {
-                xval = Math.pow(xPoints[i + j] - xPoints[j], 2.0) / (maxLength + 1.0);
-                yval = Math.pow(yPoints[i + j] - yPoints[j], 2.0) / (maxLength + 1.0);
-                msd[i] += xval + yval;
+        ArrayList<Double> timesteps = new ArrayList();
+        ArrayList<Double> msd = new ArrayList();
+        for (int i = 0; i < maxLength; i++) {
+            DescriptiveStatistics thisMSD = new DescriptiveStatistics();
+            for (int j = 0; i + j < maxLength; j++) {
+                xval = Math.pow(xPoints[i + j] - xPoints[j], 2.0);
+                yval = Math.pow(yPoints[i + j] - yPoints[j], 2.0);
+                thisMSD.addValue(xval + yval);
             }
-            timesteps[i] = i / timeRes;
+            long N = thisMSD.getN();
+            if (N >= MIN_POINTS_TO_AVERAGE) {
+                timesteps.add(i / timeRes);
+                msd.add(thisMSD.getMean());
+            }
         }
         if (msdPlot == null) {
             msdPlot = new Plot("Mean Square Displacement",
                     "Time (s)", "Mean Square Displacement (" + IJ.micronSymbol + "m^2)");
-            msdPlot.setLineWidth(5);
+            msdPlot.setLineWidth(3);
+        }
+        double[] tsA = new double[timesteps.size()];
+        double[] msdA = new double[msd.size()];
+        for (int i = 0; i < timesteps.size(); i++) {
+            tsA[i] = timesteps.get(i);
+        }
+        for (int i = 0; i < msd.size(); i++) {
+            msdA[i] = msd.get(i);
+            if (globalMSD.size() <= i) {
+                globalMSD.add(new DescriptiveStatistics());
+            }
+            globalMSD.get(i).addValue(msd.get(i));
         }
         Random r = new Random();
         msdPlot.setColor(new Color(r.nextFloat(), r.nextFloat(), r.nextFloat()));
-        msdPlot.addPoints(timesteps, msd, Plot.DOT);
+        msdPlot.addPoints(timesteps, msd, Plot.CONNECTED_CIRCLES);
         msdPlot.setLimitsToFit(false);
         plotLegend = ((plotLegend.concat("Particle ")).concat(String.valueOf(label))).concat("\n");
         msdPlot.addLegend(plotLegend);
         msdPlot.draw();
         msdPlot.show();
-        CurveFitter fitter = new CurveFitter(timesteps, msd);
+        CurveFitter fitter = new CurveFitter(tsA, msdA);
         fitter.doFit(CurveFitter.STRAIGHT_LINE);
         diffCoeff = (fitter.getParams())[1] / D_SCALING;
 
         return true;
+    }
+
+    public static void drawGlobalMSDPlot() {
+        Plot globalMsdPlot = new Plot("Population Mean Square Displacement",
+                "Time (s)", "Mean Square Displacement (" + IJ.micronSymbol + "m^2)");
+        globalMsdPlot.setLineWidth(3);
+        globalMsdPlot.setColor(Color.red);
+        int N = globalMSD.size();
+        double[] tsA = new double[N];
+        double[] msdA = new double[N];
+        double[] msdErrorA = new double[N];
+        for (int i = 0; i < N; i++) {
+            DescriptiveStatistics ds = globalMSD.get(i);
+            msdErrorA[i] = ds.getStandardDeviation() / Math.sqrt(ds.getN());
+            tsA[i] = i / UserVariables.getTimeRes();
+            msdA[i] = ds.getMean();
+        }
+        globalMsdPlot.addPoints(tsA, msdA, Plot.CONNECTED_CIRCLES);
+        globalMsdPlot.addErrorBars(msdErrorA);
+        globalMsdPlot.setLimitsToFit(false);
+        globalMsdPlot.draw();
+        globalMsdPlot.show();
     }
 
     public static Plot getMsdPlot() {
