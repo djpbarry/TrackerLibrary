@@ -60,11 +60,6 @@ public class ParticleTrajectory {
     /**
      * Add a new {@link Particle} to this trajectory.
      *
-     * @param t the particle's z-position in a stack or image sequence.
-     * @param c1Gaussian {@link IsoGaussian} representation of particle in red
-     * channel
-     * @param c2Gaussian {@link IsoGaussian} representation of particle in green
-     * channel
      */
     public boolean addPoint(Particle particle) {
         if (particle == null) {
@@ -118,13 +113,6 @@ public class ParticleTrajectory {
      * Add a new temporary {@link Particle}, which may or may not belong to this
      * trajectory.
      *
-     * @param t the particle's z-position in a stack or image sequence.
-     * @param redGaussian the detected {@link IsoGaussian} in the red channel
-     * representing this object.
-     * @param c2Gaussian the detected {@link IsoGaussian} in the green channel
-     * representing this object.
-     * @param score a measure of the likelihood that this particle belongs to
-     * the current trajectory. Lower values indicate greater likelihood.
      */
     public boolean addTempPoint(Particle particle, double score, int row, int column) {
         particle.setLink(end);
@@ -447,13 +435,12 @@ public class ParticleTrajectory {
      * Calculates the directionality of the trajectory specified by
      * <code>particleNumber</code>, where directionality ( <code>D</code>) is
      * calculated according to: <br> <br>
-     * <code>D = 1 / (1 + &lambda<sub>1</sub>
-     * &lambda<sub>2</sub><sup>-1</sup>)</code>
-     * <br> <br> where <code>&lambda<sub>1</sub></code> and
-     * <code>&lambda<sub>2</sub></code> are the eigenvalues of the trajectory
-     * data and      <code>&lambda<sub>1</sub> < &lambda<sub>2</sub></code>.
+     * <code>D = 1 / (1 + &lambda;<sub>1</sub>
+     * &lambda;<sub>2</sub><sup>-1</sup>)</code>
+     * <br> <br> where <code>&lambda;<sub>1</sub></code> and
+     * <code>&lambda;<sub>2</sub></code> are the eigenvalues of the trajectory
+     * data and      <code>&lambda;<sub>1</sub> &lambda;<sub>2</sub></code>.
      *
-     * @param particleNumber the trajectory index.
      * @return the directionality of the specified trajectory.
      */
     public boolean calcDirectionality(double[] xPoints, double[] yPoints) {
@@ -479,14 +466,7 @@ public class ParticleTrajectory {
     /**
      * Calculates the Mean Square Displacement (MSD) of the given
      * {@link ParticleTrajectory}. The result can be accessed via the
-     * <code>getDiffCoeff()</code> method of <ParticleTrajectory</code>.
-     *
-     * @param traj the trajectory to be analysed.
-     * @param label the particle number label to displayed on plots.
-     * @param seg the number of time-steps the calculation should be limited to.
-     * Set to -1 to include all trajectory points.
-     * @param showPlot set to true to display a plot of MSD versus time-step,
-     * false otherwise.
+     * <code>getDiffCoeff()</code> method of <code>ParticleTrajectory</code>.
      */
     public boolean calcMSD(int seg, int label) {
         int maxLength;

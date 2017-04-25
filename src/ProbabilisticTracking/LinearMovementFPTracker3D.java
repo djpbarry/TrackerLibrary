@@ -16,7 +16,7 @@ import java.util.Vector;
  * acceleration is modelled as Gaussian noise.  
  * @author Janick Cardinale, ETH Zurich
  * @version 1.0, January 08
- * @see PFTracking3D, PFTracking3D, BackgroundSubtractor
+ * see PFTracking3D, PFTracking3D, BackgroundSubtractor
  * 
  * <p><b>Disclaimer</b>
  * <br>IN NO EVENT SHALL THE ETH BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, 

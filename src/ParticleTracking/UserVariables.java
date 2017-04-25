@@ -5,19 +5,15 @@
  */
 package ParticleTracking;
 
-/**
- *
- * @author David Barry <david.barry at cancer.org.uk>
- */
 public class UserVariables {
 
     public static final int RED = 0, GREEN = 1, BLUE = 2;
-    private static double spatialRes = 0.0664;
+    private static double spatialRes = 0.2;
     private static double timeRes = 0.2;
     private static double trajMaxStep = 5.0;
     private static double minTrajLength = 150.0;
     private static double minTrajDist = 0.5;
-    private static double chan1MaxThresh = 0.999;
+    private static double chan1MaxThresh = 0.995;
     private static double chan2MaxThresh = 0.99;
     private static double curveFitTol = 0.5d;
 //    private static double c2CurveFitTol = 0.0d;
@@ -30,8 +26,8 @@ public class UserVariables {
 //    private static int c1Index = RED;
 //    private static int c2Index = GREEN;
     public static final int FOREGROUND = 255; //Integer value of foreground pixels
-    private static double sigEstGreen = 0.115;
-    private static double sigEstRed = 0.128;
+    private static double sigEstGreen = 0.2;
+    private static double sigEstRed = 0.2;
     private static double medianThresh = 1.05;
     private static int minMSDPoints = 10;
 

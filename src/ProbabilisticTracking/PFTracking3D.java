@@ -78,8 +78,8 @@ import java.awt.event.MouseListener;
  * MODIFICATIONS.<p>
  *
  * @version 1.0. January, 2008 (requires: Java 5 or higher)
- * @author Janick Cardinale - Master student at the <a
- * href="http://www.cbl.ethz.ch/">Computational Biophysics Lab<a>, ETH Zurich
+ * @author Janick Cardinale - Master student at the
+ * <a href="http://www.cbl.ethz.ch/">Computational Biophysics Lab</a>, ETH Zurich
  */
 public abstract class PFTracking3D implements PlugInFilter {
 
@@ -1294,8 +1294,8 @@ public abstract class PFTracking3D implements PlugInFilter {
      * Rerurns a copy of a substack (i.e.frames)
      *
      * @param aImageStack: the stack to crop
-     * @param aStartPos: 1 <= aStartPos <= aImageStack.size()
-     * @param aEndPos: 1 <= aStartPos <= aEndPos <= aImageStack.size()
+     * @param aStartPos: 1 &le; aStartPos &le; aImageStack.size()
+     * @param aEndPos: 1 &le; aStartPos &le; aEndPos &le; aImageStack.size()
      * @return a Copy of the supstack
      */
     public static ImageStack getSubStackFloatCopy(ImageStack aImageStack, int aStartPos, int aEndPos) {
@@ -1311,8 +1311,8 @@ public abstract class PFTracking3D implements PlugInFilter {
     /**
      *
      * @param aImageStack: the stack to crop
-     * @param aStartPos: 1 <= aStartPos <= aImageStack.size()
-     * @param aEndPos: 1 <= aStartPos <= aEndPos <= aImageStack.size()
+     * @param aStartPos: 1 &le; aStartPos &le; aImageStack.size()
+     * @param aEndPos: 1 &le; aStartPos &le; aEndPos &le; aImageStack.size()
      * @return
      */
     public static ImageStack getSubStackFloat(ImageStack aImageStack, int aStartPos, int aEndPos) {
@@ -1462,7 +1462,6 @@ public abstract class PFTracking3D implements PlugInFilter {
      * Method to override optionally. The body of the method in the base class
      * is empty.
      *
-     * @param aEvent
      */
     protected void mousePressed(int aX, int aY) {
     }
@@ -1471,7 +1470,6 @@ public abstract class PFTracking3D implements PlugInFilter {
      * Method to override optionally. The body of the method in the base class
      * is empty.
      *
-     * @param aEvent
      */
     protected void mouseClicked(int aX, int aY) {
     }
@@ -1498,7 +1496,6 @@ public abstract class PFTracking3D implements PlugInFilter {
      * Method to override optionally. The body of the method in the base class
      * is empty.
      *
-     * @param aEvent
      */
     protected void mouseReleased(int aX, int aY) {
     }

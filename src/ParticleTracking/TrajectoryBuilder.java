@@ -22,10 +22,6 @@ import IAClasses.ProgressDialog;
 import IAClasses.Utils;
 import java.util.ArrayList;
 
-/**
- *
- * @author David Barry <david.barry at cancer.org.uk>
- */
 public class TrajectoryBuilder {
 
     public static void updateTrajectories(ParticleArray objects, double timeRes, double trajMaxStep, double spatialRes, boolean projectPos, double magNormFactor, ArrayList<ParticleTrajectory> trajectories) {

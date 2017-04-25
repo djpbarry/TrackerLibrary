@@ -17,10 +17,6 @@
  */
 package ParticleTracking;
 
-/**
- *
- * @author David Barry <david.barry at cancer.org.uk>
- */
 public abstract class Fitter {
     
 }

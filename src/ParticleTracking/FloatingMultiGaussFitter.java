@@ -21,10 +21,6 @@ import IAClasses.IsoGaussian;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-/**
- *
- * @author David Barry <david.barry at cancer.org.uk>
- */
 public class FloatingMultiGaussFitter extends MultiGaussFitter {
 
     double sigmaStepSize;
