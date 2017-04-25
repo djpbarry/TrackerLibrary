@@ -1,5 +1,6 @@
 package ParticleTracking;
 
+import Particle.Particle;
 import IAClasses.IsoGaussian;
 import IAClasses.Utils;
 import IAClasses.DSPProcessor;
