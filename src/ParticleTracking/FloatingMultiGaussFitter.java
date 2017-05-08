@@ -17,7 +17,7 @@
  */
 package ParticleTracking;
 
-import IAClasses.IsoGaussian;
+import Particle.IsoGaussian;
 import java.util.ArrayList;
 import java.util.Arrays;
 

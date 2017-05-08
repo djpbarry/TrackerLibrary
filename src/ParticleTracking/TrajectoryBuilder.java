@@ -19,7 +19,7 @@ package ParticleTracking;
 
 import Particle.Particle;
 import Particle.ParticleArray;
-import IAClasses.IsoGaussian;
+import Particle.IsoGaussian;
 import IAClasses.ProgressDialog;
 import IAClasses.Utils;
 import java.util.ArrayList;
