@@ -19,7 +19,6 @@ package ParticleTracking;
 
 import Particle.Particle;
 import Particle.ParticleArray;
-import Particle.IsoGaussian;
 import IAClasses.ProgressDialog;
 import IAClasses.Utils;
 import java.util.ArrayList;
@@ -46,7 +45,6 @@ public class TrajectoryBuilder {
                 for (int j = 0; j < detections.size(); j++) {
                     Particle currentParticle = detections.get(j);
                     if (currentParticle != null) {
-                        IsoGaussian ch1G = currentParticle.getC1Gaussian();
                         /*
                          * If no trajectories have yet been built, start a new
                          * one:
@@ -57,7 +55,7 @@ public class TrajectoryBuilder {
                              * Particles need to be cloned as they are set to
                              * null once inserted into trajectories.
                              */
-                            traj.addPoint((Particle) currentParticle.clone());
+                            traj.addPoint(currentParticle.makeCopy());
                             trajectories.add(traj);
                             /*
                              * Otherwise, determine whether the current particle
@@ -81,10 +79,10 @@ public class TrajectoryBuilder {
                                      * differences in respective intensity
                                      * levels:
                                      */
-                                    x = ch1G.getX();
-                                    y = ch1G.getY();
-                                    double[] vector1 = {x, y, currentParticle.getTimePoint(), ch1G.getMagnitude() / magNormFactor};
-                                    double[] vector2 = {last.getX(), last.getY(), last.getTimePoint(), last.getC1Intensity() / magNormFactor};
+                                    x = currentParticle.getX();
+                                    y = currentParticle.getY();
+                                    double[] vector1 = {x, y, currentParticle.getTimePoint(), currentParticle.getMagnitude() / magNormFactor};
+                                    double[] vector2 = {last.getX(), last.getY(), last.getTimePoint(), last.getMagnitude() / magNormFactor};
                                     score = Utils.calcEuclidDist(vector1, vector2);
                                     if (projectPos) {
                                         double[] vector3 = {x, y};
@@ -107,7 +105,7 @@ public class TrajectoryBuilder {
                                     traj = (ParticleTrajectory) trajectories.get(minScoreIndex);
                                 }
                                 if ((minScore < trajMaxStep) && (minScore < traj.getTempScore())) {
-                                    traj.addTempPoint((Particle) currentParticle.clone(), minScore, j, k);
+                                    traj.addTempPoint(currentParticle.makeCopy(), minScore, j, k);
                                 }
                             }
                         }

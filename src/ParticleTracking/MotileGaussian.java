@@ -32,8 +32,8 @@ public class MotileGaussian extends IsoGaussian {
     }
 
     public void updatePosition() {
-        this.x0 += rad * Math.cos(theta);
-        this.y0 += rad * Math.sin(theta);
+        this.x += rad * Math.cos(theta);
+        this.y += rad * Math.sin(theta);
     }
 
     public void updateVelocity() {
@@ -63,13 +63,13 @@ public class MotileGaussian extends IsoGaussian {
     public double[] projectPosition(boolean positive, double dist) {
         double projectedPos[] = new double[2];
         int pos = positive ? 1 : -1;
-        projectedPos[0] = this.x0 + dist * Math.cos(theta) * pos;
-        projectedPos[1] = this.y0 + dist * Math.sin(theta) * pos;
+        projectedPos[0] = this.x + dist * Math.cos(theta) * pos;
+        projectedPos[1] = this.y + dist * Math.sin(theta) * pos;
         return projectedPos;
     }
 
     public Object clone() {
-        return new MotileGaussian(this.x0, this.y0, this.magnitude, this.xSigma, this.ySigma,
+        return new MotileGaussian(this.x, this.y, this.magnitude, this.xSigma, this.ySigma,
                 this.fit, this.sens, this.persistent, this.changeState);
     }
 }

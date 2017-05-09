@@ -91,8 +91,8 @@ public class ParticleTrajectory {
         if (size > segment) {
             updateVelocity();
         }
-        if (particle.getC1Gaussian().getMagnitude() > peakIntens) {
-            peakIntens = particle.getC1Gaussian().getMagnitude();
+        if (particle.getMagnitude() > peakIntens) {
+            peakIntens = particle.getMagnitude();
             peakTime = particle.getTimePoint() * timeRes;
         }
         return true;
@@ -102,8 +102,11 @@ public class ParticleTrajectory {
         if (particle == null) {
             return false;
         }
-        boolean c1 = (particle.getC1Gaussian().getFit() >= tol);
-        boolean c2 = particle.getC2Gaussian() != null;
+        boolean c1 = true;
+        if (particle instanceof IsoGaussian) {
+            c1 = ((IsoGaussian) particle).getFit() >= tol;
+        }
+        boolean c2 = particle.getColocalisedParticle() != null;
         if (c1 && c2) {
             dualScore++;
         }
@@ -206,19 +209,15 @@ public class ParticleTrajectory {
         output.append("Particle " + number + "\n");
         Particle current = end;
         while (current != null) {
-            IsoGaussian c1g = current.getC1Gaussian();
-            IsoGaussian c2g = current.getC2Gaussian();
-            double c2m = Double.NaN, c2s = Double.NaN;
-            if (c2g != null) {
-                c2m = c2g.getMagnitude();
-                c2s = c2g.getXSigma();
+            Particle current2 = current.getColocalisedParticle();
+            double c2m = Double.NaN;
+            if (current2 != null) {
+                c2m = current2.getMagnitude();
             }
-            output.append(formatter.format(c1g.getX()) + "\t" + formatter.format(c1g.getY())
+            output.append(formatter.format(current.getX()) + "\t" + formatter.format(current.getY())
                     + "\t" + formatter.format(current.getTimePoint() / timeRes) + "\t"
-                    + formatter.format(c1g.getMagnitude()) + "\t"
-                    + formatter.format(c2m) + "\t"
-                    + formatter.format(c1g.getXSigma()) + "\t"
-                    + formatter.format(c2s));
+                    + formatter.format(current.getMagnitude()) + "\t"
+                    + formatter.format(c2m));
             current = current.getLink();
         }
         output.append("\n");
@@ -286,12 +285,12 @@ public class ParticleTrajectory {
         int points = 0;
 
         while (current != null) {
-            if (current.getC2Gaussian() == null) {
+            if (current.getColocalisedParticle() == null) {
                 c2 = 0.0;
             } else {
-                c2 = (current.getC2Gaussian()).getMagnitude();
+                c2 = current.getMagnitude();
             }
-            c1 = (current.getC1Gaussian()).getMagnitude();
+            c1 = current.getMagnitude();
             ratio += c2 / c1;
             points++;
             current = current.getLink();
@@ -597,26 +596,6 @@ public class ParticleTrajectory {
 
     public double getDirectionality() {
         return directionality;
-    }
-
-    public void calcFluorSpread() {
-        Particle current = end;
-        double xspread = 0.0, yspread = 0.0;
-        int points = 0;
-        while (current != null) {
-            if (current.getC2Gaussian() != null) {
-                xspread += current.getC2Gaussian().getXSigma();
-                yspread += current.getC2Gaussian().getYSigma();
-                points++;
-            }
-            current = current.getLink();
-        }
-        if (points >= 10) {
-            xFluorSpread = xspread / points;
-            yFluorSpread = yspread / points;
-        } else {
-            xFluorSpread = yFluorSpread = Double.NaN;
-        }
     }
 
     public double getxFluorSpread() {

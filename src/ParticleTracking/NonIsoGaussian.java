@@ -16,8 +16,8 @@ public class NonIsoGaussian extends IsoGaussian {
     private double theta, a, b, c;
 
     public NonIsoGaussian(double x0, double y0, double a, double xsig, double ysig, double theta, double fit) {
-        this.x0 = x0;
-        this.y0 = y0;
+        this.x = x0;
+        this.y = y0;
         this.magnitude = a;
         this.xSigma = xsig;
         this.ySigma = ysig;
@@ -37,8 +37,8 @@ public class NonIsoGaussian extends IsoGaussian {
         this.xSigma = p[1];
         this.ySigma = p[2];
         this.magnitude = p[3];
-        this.x0 = p[4];
-        this.y0 = p[5];
+        this.x = p[4];
+        this.y = p[5];
         this.a = Math.pow(Math.cos(p[0]), 2.0) / (2.0 * Math.pow(p[1], 2.0))
                 + Math.pow(Math.sin(p[0]), 2.0) / (2.0 * Math.pow(p[2], 2.0));
         this.b = -Math.sin(2.0 * p[0]) / (4.0 * Math.pow(p[1], 2.0))
@@ -48,8 +48,8 @@ public class NonIsoGaussian extends IsoGaussian {
     }
 
     public double evaluate(double x, double y) {
-        return magnitude * Math.exp(-(a * Math.pow(x - x0, 2.0) + 2 * b * (x - x0)
-                * (y - y0) + c * Math.pow(y - y0, 2.0)));
+        return magnitude * Math.exp(-(a * Math.pow(x - this.x, 2.0) + 2 * b * (x - this.x)
+                * (y - this.y) + c * Math.pow(y - this.y, 2.0)));
     }
 
     public double getTheta() {
@@ -57,7 +57,7 @@ public class NonIsoGaussian extends IsoGaussian {
     }
 
     public double getX0() {
-        return x0;
+        return x;
     }
 
     public double getxSigma() {
@@ -65,7 +65,7 @@ public class NonIsoGaussian extends IsoGaussian {
     }
 
     public double getY0() {
-        return y0;
+        return y;
     }
 
     public double getySigma() {
