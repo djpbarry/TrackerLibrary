@@ -556,6 +556,7 @@ public class ParticleTrajectory {
     }
 
     public static void resetMSDPlot() {
+        globalMSD = null;
         msdPlot = null;
     }
 
