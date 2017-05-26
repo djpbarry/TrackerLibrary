@@ -497,6 +497,9 @@ public class ParticleTrajectory {
                 msd.add(thisMSD.getMean());
             }
         }
+        if (!(msd.size() > 0)) {
+            return false;
+        }
         if (msdPlot == null) {
             msdPlot = new Plot("Mean Square Displacement",
                     "Time (s)", "Mean Square Displacement (" + IJ.micronSymbol + "m^2)");
@@ -535,6 +538,9 @@ public class ParticleTrajectory {
         globalMsdPlot.setLineWidth(3);
         globalMsdPlot.setColor(Color.red);
         int N = globalMSD.size();
+        if (!(N > 0)) {
+            return;
+        }
         double[] tsA = new double[N];
         double[] msdA = new double[N];
         double[] msdErrorA = new double[N];
@@ -556,7 +562,7 @@ public class ParticleTrajectory {
     }
 
     public static void resetMSDPlot() {
-        globalMSD = null;
+        globalMSD = new ArrayList();
         msdPlot = null;
     }
 
