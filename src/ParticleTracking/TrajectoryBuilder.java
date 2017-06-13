@@ -20,12 +20,16 @@ package ParticleTracking;
 import Particle.Particle;
 import Particle.ParticleArray;
 import IAClasses.ProgressDialog;
-import IAClasses.Utils;
+import IAClasses.Region;
 import java.util.ArrayList;
+import org.apache.commons.math3.linear.ArrayRealVector;
 
 public class TrajectoryBuilder {
 
-    public static void updateTrajectories(ParticleArray objects, double timeRes, double trajMaxStep, double spatialRes, boolean projectPos, double magNormFactor, ArrayList<ParticleTrajectory> trajectories) {
+    private final static double mw = 0.5, vw = 1.0, pw = 1.0;
+    private final static int TRAJ_MAX_STEP = 2;
+
+    public static void updateTrajectories(ParticleArray objects, double timeRes, double minStepTol, double spatialRes, boolean projectPos, double magNormFactor, ArrayList<ParticleTrajectory> trajectories) {
         if (objects == null) {
             return;
         }
@@ -33,13 +37,12 @@ public class TrajectoryBuilder {
         ParticleTrajectory traj = null;
         double x;
         double y;
-        double score;
-        double minScore;
+        double maxScore;
         ProgressDialog progress = new ProgressDialog(null, "Building Trajectories...", false, "Trajectory Builder", false);
         progress.setVisible(true);
         for (int m = 0; m < depth; m++) {
             progress.updateProgress(m, depth);
-            for (int k = m; (k < depth) && (((k - m)) < trajMaxStep); k++) {
+            for (int k = m; (k < depth) && (((k - m)) < TRAJ_MAX_STEP); k++) {
                 int size = trajectories.size();
                 ArrayList<Particle> detections = objects.getLevel(k);
                 for (int j = 0; j < detections.size(); j++) {
@@ -64,33 +67,29 @@ public class TrajectoryBuilder {
                         } else {
                             int i;
                             int minScoreIndex;
-                            for (minScoreIndex = -1, minScore = Double.MAX_VALUE, i = 0; i < size; i++) {
+                            for (minScoreIndex = -1, maxScore = -Double.MAX_VALUE, i = 0; i < size; i++) {
                                 traj = (ParticleTrajectory) trajectories.get(i);
                                 Particle last = traj.getEnd();
                                 if ((last != null) && (last.getTimePoint() == m) && k != m) {
-                                    /*
-                                     * Evaluate the probability that the current
-                                     * particle belongs to the current
-                                     * trajectory, based on the particle's
-                                     * distance from last point on the current
-                                     * trajectory and the number of frames
-                                     * between the current particle, the last
-                                     * point of the current trajectory and
-                                     * differences in respective intensity
-                                     * levels:
-                                     */
+                                    Region currentRegion = currentParticle.getRegion();
+                                    Region lastRegion = last.getRegion();
+                                    ArrayRealVector morphvector1 = currentRegion.getMorphMeasures();
+                                    ArrayRealVector morphvector2 = lastRegion.getMorphMeasures();
+                                    double morphScore = 1.0 - morphvector1.getDistance(morphvector2) / morphvector1.getL1Norm();
                                     x = currentParticle.getX();
                                     y = currentParticle.getY();
-                                    double[] vector1 = {x, y, currentParticle.getTimePoint(), currentParticle.getMagnitude() / magNormFactor};
-                                    double[] vector2 = {last.getX(), last.getY(), last.getTimePoint(), last.getMagnitude() / magNormFactor};
-                                    score = Utils.calcEuclidDist(vector1, vector2);
+                                    ArrayRealVector vector1 = new ArrayRealVector(new double[]{x, y});
+                                    ArrayRealVector vector2 = new ArrayRealVector(new double[]{last.getX(), last.getY()});
+                                    double posScore = 1.0 - vector1.getDistance(vector2) / vector1.getL1Norm();
+                                    double projScore = 1.0;
                                     if (projectPos) {
-                                        double[] vector3 = {x, y};
-                                        double[] vector4 = {last.getX() + traj.getXVelocity(), last.getY() + traj.getYVelocity()};
-                                        score += Utils.calcEuclidDist(vector3, vector4);
+                                        ArrayRealVector vector3 = new ArrayRealVector(new double[]{x, y});
+                                        ArrayRealVector vector4 = new ArrayRealVector(new double[]{last.getX() + traj.getXVelocity(), last.getY() + traj.getYVelocity()});
+                                        projScore = 1.0 - vector3.getDistance(vector4) / vector3.getL1Norm();
                                     }
-                                    if (score < minScore) {
-                                        minScore = score;
+                                    double totScore = (mw * morphScore + vw * projScore + pw * posScore) / (mw + vw + pw);
+                                    if (totScore > maxScore) {
+                                        maxScore = totScore;
                                         minScoreIndex = i;
                                     }
                                 }
@@ -104,8 +103,8 @@ public class TrajectoryBuilder {
                                 if (minScoreIndex > -1) {
                                     traj = (ParticleTrajectory) trajectories.get(minScoreIndex);
                                 }
-                                if ((minScore < trajMaxStep) && (minScore < traj.getTempScore())) {
-                                    traj.addTempPoint(currentParticle.makeCopy(), minScore, j, k);
+                                if ((maxScore > minStepTol) && (maxScore > traj.getTempScore())) {
+                                    traj.addTempPoint(currentParticle.makeCopy(), maxScore, j, k);
                                 }
                             }
                         }
@@ -127,5 +126,5 @@ public class TrajectoryBuilder {
         }
         progress.dispose();
     }
-    
+
 }

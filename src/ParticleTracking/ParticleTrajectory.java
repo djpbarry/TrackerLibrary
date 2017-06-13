@@ -29,7 +29,7 @@ public class ParticleTrajectory {
     protected Particle end = null, temp = null;
     private int size = 0, dualScore = 0, tempRow = -1, tempColumn = -1;
     public final static int NON_COLOCAL = 0, UNKNOWN = 1, COLOCAL = 2; //Flags
-    protected double tempScore = Double.MAX_VALUE, xVelocity = 0.0, yVelocity = 0.0, projectXVel,
+    protected double tempScore = -Double.MAX_VALUE, xVelocity = 0.0, yVelocity = 0.0, projectXVel,
             projectYVel, diffCoeff, boxCountFD = 0.0, angleSpread = 0.0,
             stepSpread, timeRes, specFD, meanKappa, logDC, directionality,
             peakIntens, peakTime;
@@ -86,7 +86,7 @@ public class ParticleTrajectory {
         }
         size++;
         temp = null;
-        tempScore = Double.MAX_VALUE;
+        tempScore = -Double.MAX_VALUE;
         tempRow = tempColumn = -1;
         if (size > segment) {
             updateVelocity();

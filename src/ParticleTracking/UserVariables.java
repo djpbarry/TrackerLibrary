@@ -8,11 +8,11 @@ package ParticleTracking;
 public class UserVariables {
 
     public static final int RED = 0, GREEN = 1, BLUE = 2;
-    private static double spatialRes = 0.2;
-    private static double timeRes = 0.2;
-    private static double trajMaxStep = 2.0;
-    private static double minTrajLength = 50.0;
-    private static double minTrajDist = 0.5;
+    private static double spatialRes = 1.0;
+    private static double timeRes = 1.0;
+    private static double trajMaxStep = 0.8;
+    private static double minTrajLength = 2.0;
+    private static double minTrajDist = 0;
     private static double chan1MaxThresh = 0.999;
     private static double chan2MaxThresh = 0.99;
     private static double curveFitTol = 0.5d;
@@ -27,10 +27,10 @@ public class UserVariables {
 //    private static int c2Index = GREEN;
     public static final int FOREGROUND = 255; //Integer value of foreground pixels
     private static double sigEstGreen = 0.13;
-    private static double sigEstRed = 0.13;
-    private static double medianThresh = 1.05;
+    private static double sigEstRed = 5.0;
+//    private static double medianThresh = 1.05;
     private static int minMSDPoints = 10;
-    private static boolean blobs = false;
+    private static boolean blobs = true, fitC2 = true, trackRegions = true;
 
     public static double getSpatialRes() {
         return spatialRes;
@@ -212,14 +212,13 @@ public class UserVariables {
         UserVariables.sigEstRed = sigEstRed;
     }
 
-    public static double getMedianThresh() {
-        return medianThresh;
-    }
-
-    public static void setMedianThresh(double medianThresh) {
-        UserVariables.medianThresh = medianThresh;
-    }
-
+//    public static double getMedianThresh() {
+//        return medianThresh;
+//    }
+//
+//    public static void setMedianThresh(double medianThresh) {
+//        UserVariables.medianThresh = medianThresh;
+//    }
     public static int getMinMSDPoints() {
         return minMSDPoints;
     }
@@ -230,6 +229,14 @@ public class UserVariables {
 
     public static boolean isBlobs() {
         return blobs;
+    }
+
+    public static boolean isFitC2() {
+        return fitC2;
+    }
+
+    public static boolean isTrackRegions() {
+        return trackRegions;
     }
 
 }
