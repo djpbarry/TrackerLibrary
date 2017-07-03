@@ -29,7 +29,7 @@ public class TrajectoryBuilder {
     private final static double mw = 0.5, vw = 1.0, pw = 1.0;
     private final static int TRAJ_MAX_STEP = 2;
 
-    public static void updateTrajectories(ParticleArray objects, double timeRes, double minStepTol, double spatialRes, boolean projectPos, double magNormFactor, ArrayList<ParticleTrajectory> trajectories) {
+    public static void updateTrajectories(ParticleArray objects, double timeRes, double minStepTol, double spatialRes, boolean projectPos, double magNormFactor, ArrayList<ParticleTrajectory> trajectories, boolean morph) {
         if (objects == null) {
             return;
         }
@@ -73,9 +73,12 @@ public class TrajectoryBuilder {
                                 if ((last != null) && (last.getTimePoint() == m) && k != m) {
                                     Region currentRegion = currentParticle.getRegion();
                                     Region lastRegion = last.getRegion();
-                                    ArrayRealVector morphvector1 = currentRegion.getMorphMeasures();
-                                    ArrayRealVector morphvector2 = lastRegion.getMorphMeasures();
-                                    double morphScore = 1.0 - morphvector1.getDistance(morphvector2) / morphvector1.getL1Norm();
+                                    double morphScore = 0.0;
+                                    if (morph) {
+                                        ArrayRealVector morphvector1 = currentRegion.getMorphMeasures();
+                                        ArrayRealVector morphvector2 = lastRegion.getMorphMeasures();
+                                        morphScore = 1.0 - morphvector1.getDistance(morphvector2) / morphvector1.getL1Norm();
+                                    }
                                     x = currentParticle.getX();
                                     y = currentParticle.getY();
                                     ArrayRealVector vector1 = new ArrayRealVector(new double[]{x, y});

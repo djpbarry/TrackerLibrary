@@ -8,14 +8,14 @@ package ParticleTracking;
 public class UserVariables {
 
     public static final int RED = 0, GREEN = 1, BLUE = 2;
-    private static double spatialRes = 1.0;
+    private static double spatialRes = 0.0664000;
     private static double timeRes = 1.0;
     private static double trajMaxStep = 0.8;
     private static double minTrajLength = 2.0;
     private static double minTrajDist = 0;
-    private static double chan1MaxThresh = 0.999;
+    private static double chan1MaxThresh = 0.99;
     private static double chan2MaxThresh = 0.99;
-    private static double curveFitTol = 0.5d;
+    private static double curveFitTol = 0.8d;
 //    private static double c2CurveFitTol = 0.0d;
     private static double trackLength = 5.0;
     private static double msdThresh = 0.0;
@@ -27,10 +27,10 @@ public class UserVariables {
 //    private static int c2Index = GREEN;
     public static final int FOREGROUND = 255; //Integer value of foreground pixels
     private static double sigEstGreen = 0.13;
-    private static double sigEstRed = 5.0;
+    private static double sigEstRed = 0.13;
 //    private static double medianThresh = 1.05;
     private static int minMSDPoints = 10;
-    private static boolean blobs = true, fitC2 = true, trackRegions = true;
+    private static boolean blobs = false, fitC2 = false, trackRegions = false;
 
     public static double getSpatialRes() {
         return spatialRes;
