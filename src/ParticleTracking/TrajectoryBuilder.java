@@ -26,7 +26,7 @@ import org.apache.commons.math3.linear.ArrayRealVector;
 
 public class TrajectoryBuilder {
 
-    private final static double mw = 0.5, vw = 1.0, pw = 1.0;
+    private final static double mw = 0.0, vw = 1.0, pw = 1.0;
     private final static int TRAJ_MAX_STEP = 2;
 
     public static void updateTrajectories(ParticleArray objects, double timeRes, double minStepTol, double spatialRes, boolean projectPos, double magNormFactor, ArrayList<ParticleTrajectory> trajectories, boolean morph) {
