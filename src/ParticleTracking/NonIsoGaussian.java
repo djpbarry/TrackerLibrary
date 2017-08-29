@@ -4,6 +4,7 @@
  */
 package ParticleTracking;
 
+import Optimisation.NonIsoGaussianFitter;
 import Particle.IsoGaussian;
 import ij.process.FloatProcessor;
 
