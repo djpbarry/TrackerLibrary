@@ -8,6 +8,7 @@ package ParticleTracking;
 public class UserVariables {
 
     public static final int RED = 0, GREEN = 1, BLUE = 2;
+    public static final int MAXIMA = 3, GAUSS = 4, BLOBS = 5;
     private static double spatialRes = 0.0664000;
     private static double timeRes = 1.0;
     private static double trajMaxStep = 0.8;
@@ -30,7 +31,8 @@ public class UserVariables {
     private static double sigEstRed = 0.13;
 //    private static double medianThresh = 1.05;
     private static int minMSDPoints = 10;
-    private static boolean blobs = false, fitC2 = false, trackRegions = false;
+    private static boolean fitC2 = false, trackRegions = false;
+    private static int detectionMode = GAUSS;
 
     public static double getSpatialRes() {
         return spatialRes;
@@ -227,8 +229,12 @@ public class UserVariables {
         UserVariables.minMSDPoints = minMSDPoints;
     }
 
-    public static boolean isBlobs() {
-        return blobs;
+    public static int getDetectionMode() {
+        return detectionMode;
+    }
+
+    public static void setDetectionMode(int detectionMode) {
+        UserVariables.detectionMode = detectionMode;
     }
 
     public static boolean isFitC2() {
