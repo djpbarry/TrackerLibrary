@@ -8,7 +8,7 @@ package ParticleTracking;
 public class UserVariables {
 
     public static final int RED = 0, GREEN = 1, BLUE = 2;
-    public static final int MAXIMA = 3, GAUSS = 4, BLOBS = 5;
+    public static final int MAXIMA = 3, BLOBS = 4, GAUSS = 5;
     private static double spatialRes = 0.0664000;
     private static double timeRes = 1.0;
     private static double trajMaxStep = 0.8;
@@ -17,6 +17,7 @@ public class UserVariables {
     private static double chan1MaxThresh = 0.99;
     private static double chan2MaxThresh = 0.99;
     private static double curveFitTol = 0.8d;
+    private static double blobSize = 0.5;
 //    private static double c2CurveFitTol = 0.0d;
     private static double trackLength = 5.0;
     private static double msdThresh = 0.0;
@@ -33,6 +34,7 @@ public class UserVariables {
     private static int minMSDPoints = 10;
     private static boolean fitC2 = false, trackRegions = false;
     private static int detectionMode = GAUSS;
+    private static double filterRadius = sigEstRed;
 
     public static double getSpatialRes() {
         return spatialRes;
@@ -243,6 +245,22 @@ public class UserVariables {
 
     public static boolean isTrackRegions() {
         return trackRegions;
+    }
+
+    public static double getBlobSize() {
+        return blobSize;
+    }
+
+    public static void setBlobSize(double blobSize) {
+        UserVariables.blobSize = blobSize;
+    }
+
+    public static double getFilterRadius() {
+        return filterRadius;
+    }
+
+    public static void setFilterRadius(double filterRadius) {
+        UserVariables.filterRadius = filterRadius;
     }
 
 }
