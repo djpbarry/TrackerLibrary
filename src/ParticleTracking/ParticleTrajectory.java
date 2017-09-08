@@ -44,7 +44,7 @@ public class ParticleTrajectory {
     private static String plotLegend = "";
     private final int MIN_POINTS_TO_AVERAGE = 10;
     private final float D_SCALING = 4.0f;
-    private static ArrayList<DescriptiveStatistics> globalMSD = new ArrayList();
+    private static ArrayList<DescriptiveStatistics> globalMSD = new ArrayList<>();
 
     public ParticleTrajectory() {
     }
@@ -482,8 +482,8 @@ public class ParticleTrajectory {
         } else {
             maxLength = length;
         }
-        ArrayList<Double> timesteps = new ArrayList();
-        ArrayList<Double> msd = new ArrayList();
+        ArrayList<Double> timesteps = new ArrayList<>();
+        ArrayList<Double> msd = new ArrayList<>();
         for (int i = 0; i < maxLength; i++) {
             DescriptiveStatistics thisMSD = new DescriptiveStatistics();
             for (int j = 0; i + j < maxLength; j++) {
@@ -562,7 +562,7 @@ public class ParticleTrajectory {
     }
 
     public static void resetMSDPlot() {
-        globalMSD = new ArrayList();
+        globalMSD = new ArrayList<>();
         msdPlot = null;
     }
 
