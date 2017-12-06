@@ -71,7 +71,7 @@ public class ParticleTrajectory {
         int newX = (int) Math.round(scale * end.getX());
         int newY = (int) Math.round(scale * end.getY());
         if (size < 1) {
-            startTimeIndex = particle.getTimePoint();
+            startTimeIndex = particle.getFrameNumber();
             bounds = new Rectangle(newX, newY, 0, 0);
         }
         if (newX < bounds.x) {
@@ -93,7 +93,7 @@ public class ParticleTrajectory {
         }
         if (particle.getMagnitude() > peakIntens) {
             peakIntens = particle.getMagnitude();
-            peakTime = particle.getTimePoint() * timeRes;
+            peakTime = particle.getFrameNumber() * timeRes;
         }
         return true;
     }
@@ -164,7 +164,7 @@ public class ParticleTrajectory {
             return 0.0;
         }
         while (current.getLink() != null) {
-            duration += (current.getTimePoint() - (current.getLink()).getTimePoint());
+            duration += (current.getFrameNumber() - (current.getLink()).getFrameNumber());
             current = current.getLink();
         }
         return duration / timeRes;
@@ -215,7 +215,7 @@ public class ParticleTrajectory {
                 c2m = current2.getMagnitude();
             }
             output.append(formatter.format(current.getX()) + "\t" + formatter.format(current.getY())
-                    + "\t" + formatter.format(current.getTimePoint() / timeRes) + "\t"
+                    + "\t" + formatter.format(current.getFrameNumber() / timeRes) + "\t"
                     + formatter.format(current.getMagnitude()) + "\t"
                     + formatter.format(c2m));
             current = current.getLink();

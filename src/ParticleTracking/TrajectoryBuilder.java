@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 David Barry <david.barry at cancer.org.uk>
+ * Copyright (C) 2017 David Barry <david.barry at crick.ac.uk>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -26,17 +26,24 @@ import org.apache.commons.math3.linear.ArrayRealVector;
 
 public class TrajectoryBuilder {
 
-    private final static double mw = 0.0, vw = 1.0, pw = 1.0;
-    private final static int TRAJ_MAX_STEP = 2;
+    private final static int TRAJ_MAX_STEP = 3;
 
-    public static void updateTrajectories(ParticleArray objects, double timeRes, double minStepTol, double spatialRes, boolean projectPos, double magNormFactor, ArrayList<ParticleTrajectory> trajectories, boolean morph) {
+    public static void updateTrajectories(ParticleArray objects, double timeRes, double minStepTol, double spatialRes, double magNormFactor, ArrayList<ParticleTrajectory> trajectories, boolean morph) {
+        double mw, vw, pw;
+        if (UserVariables.getMotionModel() == UserVariables.RANDOM) {
+            mw = 0.0;
+            vw = 0.0;
+            pw = 1.0;
+        } else {
+            mw = 0.0;
+            vw = 1.0;
+            pw = 1.0;
+        }
         if (objects == null) {
             return;
         }
         int depth = objects.getDepth();
         ParticleTrajectory traj = null;
-        double x;
-        double y;
         double maxScore;
         ProgressDialog progress = new ProgressDialog(null, "Building Trajectories...", false, "Trajectory Builder", false);
         progress.setVisible(true);
@@ -70,7 +77,7 @@ public class TrajectoryBuilder {
                             for (minScoreIndex = -1, maxScore = -Double.MAX_VALUE, i = 0; i < size; i++) {
                                 traj = (ParticleTrajectory) trajectories.get(i);
                                 Particle last = traj.getEnd();
-                                if ((last != null) && (last.getTimePoint() == m) && k != m) {
+                                if ((last != null) && (last.getFrameNumber() == m) && k != m) {
                                     Region currentRegion = currentParticle.getRegion();
                                     Region lastRegion = last.getRegion();
                                     double morphScore = 0.0;
@@ -79,15 +86,16 @@ public class TrajectoryBuilder {
                                         ArrayRealVector morphvector2 = lastRegion.getMorphMeasures();
                                         morphScore = 1.0 - morphvector1.getDistance(morphvector2) / morphvector1.getL1Norm();
                                     }
-                                    x = currentParticle.getX();
-                                    y = currentParticle.getY();
+                                    double x = currentParticle.getX();
+                                    double y = currentParticle.getY();
                                     ArrayRealVector vector1 = new ArrayRealVector(new double[]{x, y});
                                     ArrayRealVector vector2 = new ArrayRealVector(new double[]{last.getX(), last.getY()});
                                     double posScore = 1.0 - vector1.getDistance(vector2) / vector1.getL1Norm();
                                     double projScore = 1.0;
-                                    if (projectPos) {
+                                    if (UserVariables.getMotionModel() != UserVariables.RANDOM) {
+                                        double deltaT = currentParticle.getFrameNumber() * UserVariables.getTimeRes() - last.getFrameNumber() * UserVariables.getTimeRes();
                                         ArrayRealVector vector3 = new ArrayRealVector(new double[]{x, y});
-                                        ArrayRealVector vector4 = new ArrayRealVector(new double[]{last.getX() + traj.getXVelocity(), last.getY() + traj.getYVelocity()});
+                                        ArrayRealVector vector4 = new ArrayRealVector(new double[]{last.getX() + traj.getXVelocity() * deltaT, last.getY() + traj.getYVelocity() * deltaT});
                                         projScore = 1.0 - vector3.getDistance(vector4) / vector3.getL1Norm();
                                     }
                                     double totScore = (mw * morphScore + vw * projScore + pw * posScore) / (mw + vw + pw);

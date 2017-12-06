@@ -9,6 +9,7 @@ public class UserVariables {
 
     public static final int RED = 0, GREEN = 1, BLUE = 2;
     public static final int MAXIMA = 3, BLOBS = 4, GAUSS = 5;
+    public static final int RANDOM = 6, DIRECTED = 7;
     private static double spatialRes = 0.0664000;
     private static double timeRes = 1.0;
     private static double trajMaxStep = 0.8;
@@ -35,6 +36,7 @@ public class UserVariables {
     private static boolean fitC2 = false, trackRegions = false;
     private static int detectionMode = GAUSS;
     private static double filterRadius = sigEstRed;
+    private static int motionModel = RANDOM;
 
     public static double getSpatialRes() {
         return spatialRes;
@@ -263,4 +265,12 @@ public class UserVariables {
         UserVariables.filterRadius = filterRadius;
     }
 
+    public static int getMotionModel() {
+        return motionModel;
+    }
+
+    public static void setMotionModel(int motionModel) {
+        UserVariables.motionModel = motionModel;
+    }
+    
 }
