@@ -6,6 +6,7 @@ package ParticleTracking;
 
 import Particle.IsoGaussian;
 import java.util.Random;
+import org.apache.commons.math3.distribution.NormalDistribution;
 
 /**
  *
@@ -17,9 +18,9 @@ public class MotileGaussian extends IsoGaussian {
     protected double rad, theta;
     private double sens, scale = 1.0, initvel = 0.5;
     Random r = new Random();
+    private final double D;
 
-    public MotileGaussian(double x0, double y0, double a, double xsig, double ysig,
-            double fit, double sens, boolean persistent, boolean changeState) {
+    public MotileGaussian(double x0, double y0, double a, double xsig, double ysig, double fit, double sens, boolean persistent, boolean changeState, double D) {
         super(x0, y0, a, xsig, ysig, fit);
         this.sens = sens;
         this.persistent = persistent;
@@ -30,23 +31,26 @@ public class MotileGaussian extends IsoGaussian {
         if (!persistent) {
             rad *= scale;
         }
+        this.D = D;
     }
 
     public void updatePosition() {
-        this.x += rad * Math.cos(theta);
-        this.y += rad * Math.sin(theta);
+        if (persistent) {
+            this.x += rad * Math.cos(theta);
+            this.y += rad * Math.sin(theta);
+        } else {
+            updateBrownianCoords();
+        }
+    }
+
+    void updateBrownianCoords() {
+        NormalDistribution nd = new NormalDistribution(0.0, Math.sqrt(4.0 * D));
+        this.x += nd.sample();
+        this.y += nd.sample();
     }
 
     public void updateVelocity() {
         double inc = r.nextGaussian() * sens;
-//        if (r.nextBoolean()) {
-//            inc *= -1.0;
-//        }
-//        if (persistent) {
-//            rad += inc;
-//        } else {
-//            rad += inc * scale;
-//        }
         inc = r.nextGaussian() * Math.PI * 2.0;
         if (r.nextBoolean()) {
             inc *= -1.0;
@@ -71,6 +75,6 @@ public class MotileGaussian extends IsoGaussian {
 
     public Object clone() {
         return new MotileGaussian(this.x, this.y, this.magnitude, this.xSigma, this.ySigma,
-                this.fit, this.sens, this.persistent, this.changeState);
+                this.fit, this.sens, this.persistent, this.changeState, 0.001);
     }
 }
