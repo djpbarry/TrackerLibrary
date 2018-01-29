@@ -620,4 +620,28 @@ public class ParticleTrajectory {
     public int getStartTimeIndex() {
         return startTimeIndex;
     }
+
+    public Particle getStart() {
+        Particle current = end;
+        if (current == null) {
+            return null;
+        }
+        while (current.getLink() != null) {
+            current = current.getLink();
+        }
+        return current;
+    }
+
+    public void addTrajectory(ParticleTrajectory traj) {
+        Particle[] points = new Particle[traj.getSize()];
+        Particle current = traj.getEnd();
+        int i = points.length - 1;
+        while (current != null) {
+            points[i--] = current;
+            current = current.getLink();
+        }
+        for (Particle p : points) {
+            this.addPoint(p);
+        }
+    }
 }
