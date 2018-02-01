@@ -78,6 +78,7 @@ public class TrajectoryBridger {
                 ParticleTrajectory traj = (ParticleTrajectory) trajectories.get(minIndex);
                 if (minScore < UserVariables.getTrajMaxStep()) {
                     traj1.addTrajectory(traj);
+                    trajectories.remove(minIndex);
                     size--;
                 }
             }

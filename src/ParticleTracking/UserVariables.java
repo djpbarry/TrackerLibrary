@@ -11,13 +11,13 @@ public class UserVariables {
     public static final int MAXIMA = 3, BLOBS = 4, GAUSS = 5;
     public static final int RANDOM = 6, DIRECTED = 7;
     private static double spatialRes = 0.133;
-    private static double timeRes = 1.0;
+    private static double timeRes = 50.0;
     private static double trajMaxStep = 0.5;
-    private static double minTrajLength = 10.0;
+    private static double minTrajLength = 0.0;
     private static double minTrajDist = 0;
     private static double chan1MaxThresh = 0.99;
     private static double chan2MaxThresh = 0.99;
-    private static double curveFitTol = 0.8d;
+    private static double curveFitTol = 0.5d;
     private static double blobSize = 0.25;
 //    private static double c2CurveFitTol = 0.0d;
     private static double trackLength = 5.0;
