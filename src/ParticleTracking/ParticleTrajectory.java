@@ -157,17 +157,17 @@ public class ParticleTrajectory {
         return displacement;
     }
 
-    public double getDuration() {
+    public int getNumberOfFrames() {
         int duration = 0;
         Particle current = end;
         if (current == null) {
-            return 0.0;
+            return 0;
         }
         while (current.getLink() != null) {
             duration += (current.getFrameNumber() - (current.getLink()).getFrameNumber());
             current = current.getLink();
         }
-        return duration / timeRes;
+        return duration;
     }
 
     /**
@@ -352,15 +352,24 @@ public class ParticleTrajectory {
     }
 
     public double[][] getPoints() {
-        if (size < 1) {
+        int length = getNumberOfFrames();
+        if (length < 1) {
             return null;
         }
-        double points[][] = new double[2][size];
+        double points[][] = new double[2][length];
         Particle current = end;
-        for (int i = size - 1; i >= 0; i--) {
+        int lastFrameNumber;
+        int interpolate = 1;
+        for (int i = length - 1; i >= 0; i--) {
             points[0][i] = current.getX();
             points[1][i] = current.getY();
-            current = current.getLink();
+            lastFrameNumber = current.getFrameNumber();
+            if (current.getLink() != null && current.getLink().getFrameNumber() - lastFrameNumber > interpolate) {
+                interpolate++;
+            } else {
+                interpolate = 1;
+                current = current.getLink();
+            }
         }
         return points;
     }
