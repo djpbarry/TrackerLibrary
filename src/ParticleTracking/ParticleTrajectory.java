@@ -158,16 +158,11 @@ public class ParticleTrajectory {
     }
 
     public int getNumberOfFrames() {
-        int duration = 0;
         Particle current = end;
         if (current == null) {
             return 0;
         }
-        while (current.getLink() != null) {
-            duration += (current.getFrameNumber() - (current.getLink()).getFrameNumber());
-            current = current.getLink();
-        }
-        return duration;
+        return current.getFrameNumber() - getStart().getFrameNumber();
     }
 
     /**
@@ -364,7 +359,7 @@ public class ParticleTrajectory {
             points[0][i] = current.getX();
             points[1][i] = current.getY();
             lastFrameNumber = current.getFrameNumber();
-            if (current.getLink() != null && current.getLink().getFrameNumber() - lastFrameNumber > interpolate) {
+            if (current.getLink() != null && lastFrameNumber - current.getLink().getFrameNumber() > interpolate) {
                 interpolate++;
             } else {
                 interpolate = 1;

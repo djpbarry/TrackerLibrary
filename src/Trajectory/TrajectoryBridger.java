@@ -80,6 +80,7 @@ public class TrajectoryBridger {
                     traj1.addTrajectory(traj);
                     trajectories.remove(minIndex);
                     size--;
+                    m--;
                 }
             }
         }
