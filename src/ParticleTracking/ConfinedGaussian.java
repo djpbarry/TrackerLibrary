@@ -33,7 +33,7 @@ public class ConfinedGaussian extends MotileGaussian {
 
     public ConfinedGaussian(double x0, double y0, double a, double xsig, double ysig,
             double fit, double sens, boolean persistent, boolean changeState, double boundsRadius) {
-        super(x0, y0, a, xsig, ysig, fit, sens, persistent, changeState, 0.001);
+        super(x0, y0, a, xsig, ysig, fit, sens, persistent, changeState, 0.001, 0.0);
         this.boundsRadius = boundsRadius;
         this.roi = new Roi(x0 - boundsRadius, y0 - boundsRadius, 2.0 * boundsRadius + 1.0, 2.0 * boundsRadius + 1.0);
         Random r = new Random();

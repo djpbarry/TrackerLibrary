@@ -16,16 +16,17 @@ public class MotileGaussian extends IsoGaussian {
 
     boolean persistent, changeState;
     protected double rad, theta;
-    private double sens, scale = 1.0, initvel = 0.5;
+    private double sens, scale = 1.0, initvel = 0.25;
     Random r = new Random();
     private final double D;
 
-    public MotileGaussian(double x0, double y0, double a, double xsig, double ysig, double fit, double sens, boolean persistent, boolean changeState, double D) {
+    public MotileGaussian(double x0, double y0, double a, double xsig, double ysig, double fit, double sens, boolean persistent, boolean changeState, double D, double initVel) {
         super(x0, y0, a, xsig, ysig, fit);
         this.sens = sens;
         this.persistent = persistent;
         this.changeState = changeState;
 //        rad = initvel + r.nextGaussian() * sens;
+        this.initvel = initVel;
         rad = initvel;
         theta = r.nextDouble() * 2.0 * Math.PI;
         if (!persistent) {
@@ -50,17 +51,19 @@ public class MotileGaussian extends IsoGaussian {
     }
 
     public void updateVelocity() {
-        double inc = r.nextGaussian() * sens;
-        inc = r.nextGaussian() * Math.PI * 2.0;
-        if (r.nextBoolean()) {
-            inc *= -1.0;
-        }
         if (persistent) {
+            double inc = r.nextGaussian() * sens;
+            inc = r.nextGaussian() * Math.PI * 2.0;
+            if (r.nextBoolean()) {
+                inc *= -1.0;
+            }
+//        if (persistent) {
             theta += inc * sens;
-        } else {
-            theta += inc;
         }
-        if (changeState && r.nextDouble() < 0.05) {
+//        } else {
+//            theta += inc;
+//        }
+        if (changeState && r.nextDouble() < 0.2) {
             persistent = !persistent;
         }
     }
@@ -75,6 +78,6 @@ public class MotileGaussian extends IsoGaussian {
 
     public Object clone() {
         return new MotileGaussian(this.x, this.y, this.magnitude, this.xSigma, this.ySigma,
-                this.fit, this.sens, this.persistent, this.changeState, 0.001);
+                this.fit, this.sens, this.persistent, this.changeState, 0.001, initvel);
     }
 }
