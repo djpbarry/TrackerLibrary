@@ -37,6 +37,7 @@ public class UserVariables {
     private static int detectionMode = MAXIMA;
     private static double filterRadius = sigEstRed;
     private static int motionModel = RANDOM;
+    private static int maxFrameGap = 2;
 
     public static double getSpatialRes() {
         return spatialRes;
@@ -271,6 +272,14 @@ public class UserVariables {
 
     public static void setMotionModel(int motionModel) {
         UserVariables.motionModel = motionModel;
+    }
+
+    public static int getMaxFrameGap() {
+        return maxFrameGap;
+    }
+
+    public static void setMaxFrameGap(int maxFrameGap) {
+        UserVariables.maxFrameGap = maxFrameGap;
     }
     
 }
