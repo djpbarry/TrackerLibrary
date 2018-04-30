@@ -351,13 +351,14 @@ public class ParticleTrajectory {
         if (length < 1) {
             return null;
         }
-        double points[][] = new double[2][length];
+        double points[][] = new double[3][length];
         Particle current = end;
         int lastFrameNumber;
         int interpolate = 1;
         for (int i = length - 1; i >= 0; i--) {
             points[0][i] = current.getX();
             points[1][i] = current.getY();
+            points[2][i] = current.getFrameNumber();
             lastFrameNumber = current.getFrameNumber();
             if (current.getLink() != null && lastFrameNumber - current.getLink().getFrameNumber() > interpolate) {
                 interpolate++;
@@ -603,6 +604,10 @@ public class ParticleTrajectory {
         DataStatistics stats = new DataStatistics(0.0, steps, length - 1);
         stepSpread = stats.getStdDev();
         return true;
+    }
+
+    public void setDiffCoeff(double diffCoeff) {
+        this.diffCoeff = diffCoeff;
     }
 
     public double getDirectionality() {

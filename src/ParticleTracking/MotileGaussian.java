@@ -52,8 +52,8 @@ public class MotileGaussian extends IsoGaussian {
 
     public void updateVelocity() {
         if (persistent) {
-            double inc = r.nextGaussian() * sens;
-            inc = r.nextGaussian() * Math.PI * 2.0;
+//            double inc = r.nextGaussian() * sens;
+            double inc = r.nextGaussian() * Math.PI * 2.0;
             if (r.nextBoolean()) {
                 inc *= -1.0;
             }
