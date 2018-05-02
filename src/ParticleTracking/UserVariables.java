@@ -29,7 +29,7 @@ public class UserVariables {
 //    private static int c1Index = RED;
 //    private static int c2Index = GREEN;
     public static final int FOREGROUND = 255; //Integer value of foreground pixels
-    private static double sigEstGreen = 0.13;
+    private static double sigEstGreen = 0.2;
     private static double sigEstRed = 0.2;
 //    private static double medianThresh = 1.05;
     private static int minMSDPoints = 10;

@@ -115,4 +115,8 @@ public class DiffusionAnalyser {
         return msdPlot;
     }
 
+    public void resetMSDPlot() {
+        globalMSD = new ArrayList();
+        msdPlot = null;
+    }
 }
