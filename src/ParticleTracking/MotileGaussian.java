@@ -5,6 +5,7 @@
 package ParticleTracking;
 
 import Particle.IsoGaussian;
+import ij.IJ;
 import java.util.Random;
 import org.apache.commons.math3.distribution.NormalDistribution;
 
@@ -18,7 +19,7 @@ public class MotileGaussian extends IsoGaussian {
     protected double rad, theta;
     private double sens, scale = 1.0, initvel = 0.25;
     Random r = new Random();
-    private final double D;
+    private double D;
 
     public MotileGaussian(double x0, double y0, double a, double xsig, double ysig, double fit, double sens, boolean persistent, boolean changeState, double D, double initVel) {
         super(x0, y0, a, xsig, ysig, fit);
@@ -48,6 +49,8 @@ public class MotileGaussian extends IsoGaussian {
         NormalDistribution nd = new NormalDistribution(0.0, Math.sqrt(4.0 * D));
         this.x += nd.sample();
         this.y += nd.sample();
+        D = D * 1.001;
+        IJ.log(String.valueOf(D));
     }
 
     public void updateVelocity() {

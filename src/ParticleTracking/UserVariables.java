@@ -15,9 +15,9 @@ public class UserVariables {
     private static double trajMaxStep = 0.75;
     private static double minTrajLength = 3.0;
     private static double minTrajDist = 0.5;
-    private static double chan1MaxThresh = 0.6;
+    private static double chan1MaxThresh = 0.99;
     private static double chan2MaxThresh = 0.99;
-    private static double curveFitTol = 0.5d;
+    private static double curveFitTol = 0.2d;
     private static double blobSize = 0.25;
 //    private static double c2CurveFitTol = 0.0d;
     private static double trackLength = 5.0;
@@ -30,14 +30,14 @@ public class UserVariables {
 //    private static int c2Index = GREEN;
     public static final int FOREGROUND = 255; //Integer value of foreground pixels
     private static double sigEstGreen = 0.2;
-    private static double sigEstRed = 0.2;
+    private static double sigEstRed = 0.3;
 //    private static double medianThresh = 1.05;
     private static int minMSDPoints = 10;
     private static boolean fitC2 = false, trackRegions = false;
     private static int detectionMode = GAUSS;
-    private static double filterRadius = sigEstRed;
+    private static double filterRadius = 0.133;
     private static int motionModel = RANDOM;
-    private static int maxFrameGap = 2;
+    private static int maxFrameGap = 3;
 
     public static double getSpatialRes() {
         return spatialRes;

@@ -41,12 +41,12 @@ public class DiffusionAnalyser {
 
     }
 
-    public double calcMSD(int seg, int label, double[][] points, int MIN_POINTS_TO_AVERAGE, double timeRes) {
+    public double[][] calcMSD(int seg, int label, double[][] points, int MIN_POINTS_TO_AVERAGE, double timeRes) {
         int maxLength;
         double xval, yval;
         double[] xPoints = points[0], yPoints = points[1], tPoints = points[2];
         if (xPoints == null) {
-            return Double.NaN;
+            return null;
         }
         int length = xPoints.length;
         if (seg > 0) {
@@ -55,7 +55,7 @@ public class DiffusionAnalyser {
             maxLength = length;
         }
         ArrayList<Double> timesteps = new ArrayList<>();
-        ArrayList<Double> msd = new ArrayList<>();
+        ArrayList<double[]> msd = new ArrayList<>();
         for (int i = 0; i < maxLength; i++) {
             DescriptiveStatistics thisMSD = new DescriptiveStatistics();
             for (int j = 0; i + j < maxLength; j++) {
@@ -64,47 +64,45 @@ public class DiffusionAnalyser {
                     xval = Math.pow(xPoints[i + j] - xPoints[j], 2.0);
                     yval = Math.pow(yPoints[i + j] - yPoints[j], 2.0);
                     thisMSD.addValue(xval + yval);
-                } else {
-                    IJ.wait(0);
                 }
             }
             long N = thisMSD.getN();
             if (N >= MIN_POINTS_TO_AVERAGE) {
                 timesteps.add(i / timeRes);
-                msd.add(thisMSD.getMean());
+                msd.add(new double[]{thisMSD.getMean(), thisMSD.getStandardDeviation(), thisMSD.getN()});
             }
         }
         if (!(msd.size() > 0)) {
-            return Double.NaN;
+            return null;
         }
         if (msdPlot == null) {
             msdPlot = new Plot("Mean Square Displacement",
                     "Time (s)", "Mean Square Displacement (" + IJ.micronSymbol + "m^2)");
             msdPlot.setLineWidth(3);
         }
-        double[] tsA = new double[timesteps.size()];
-        double[] msdA = new double[msd.size()];
-        for (int i = 0; i < timesteps.size(); i++) {
-            tsA[i] = timesteps.get(i);
-        }
+        double[][] msdA = new double[4][msd.size()];
         for (int i = 0; i < msd.size(); i++) {
-            msdA[i] = msd.get(i);
+            msdA[0][i] = timesteps.get(i);
+            msdA[1][i] = msd.get(i)[0];
+            msdA[2][i] = msd.get(i)[1];
+            msdA[3][i] = msd.get(i)[2];
             if (globalMSD.size() <= i) {
                 globalMSD.add(new DescriptiveStatistics());
             }
-            globalMSD.get(i).addValue(msd.get(i));
+            globalMSD.get(i).addValue(msd.get(i)[0]);
         }
         Random r = new Random();
         msdPlot.setColor(new Color(r.nextFloat(), r.nextFloat(), r.nextFloat()));
-        msdPlot.addPoints(timesteps, msd, Plot.CONNECTED_CIRCLES);
+        msdPlot.addPoints(msdA[0], msdA[1], Plot.CONNECTED_CIRCLES);
         msdPlot.setLimitsToFit(false);
         plotLegend = ((plotLegend.concat("Particle ")).concat(String.valueOf(label))).concat("\n");
         msdPlot.addLegend(plotLegend);
         msdPlot.draw();
         msdPlot.show();
-        CurveFitter fitter = new CurveFitter(tsA, msdA);
+        CurveFitter fitter = new CurveFitter(msdA[0], msdA[1]);
         fitter.doFit(CurveFitter.STRAIGHT_LINE);
-        return (fitter.getParams())[1] / D_SCALING;
+        diffCoeff = (fitter.getParams())[1] / D_SCALING;
+        return msdA;
     }
 
     public double getDiffCoeff() {
