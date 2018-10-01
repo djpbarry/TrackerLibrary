@@ -36,9 +36,10 @@ public class DiffusionAnalyser {
     private static String plotLegend = "";
     private double diffCoeff;
     private final float D_SCALING = 4.0f;
+    private final boolean showPlot;
 
-    public DiffusionAnalyser() {
-
+    public DiffusionAnalyser(boolean showPlot) {
+        this.showPlot = showPlot;
     }
 
     public double[][] calcMSD(int seg, int label, double[][] points, int MIN_POINTS_TO_AVERAGE, double timeRes) {
@@ -75,7 +76,7 @@ public class DiffusionAnalyser {
         if (!(msd.size() > 0)) {
             return null;
         }
-        if (msdPlot == null) {
+        if (msdPlot == null && showPlot) {
             msdPlot = new Plot("Mean Square Displacement",
                     "Time (s)", "Mean Square Displacement (" + IJ.micronSymbol + "m^2)");
             msdPlot.setLineWidth(3);
@@ -91,14 +92,16 @@ public class DiffusionAnalyser {
             }
             globalMSD.get(i).addValue(msd.get(i)[0]);
         }
-        Random r = new Random();
-        msdPlot.setColor(new Color(r.nextFloat(), r.nextFloat(), r.nextFloat()));
-        msdPlot.addPoints(msdA[0], msdA[1], Plot.CONNECTED_CIRCLES);
-        msdPlot.setLimitsToFit(false);
-        plotLegend = ((plotLegend.concat("Particle ")).concat(String.valueOf(label))).concat("\n");
-        msdPlot.addLegend(plotLegend);
-        msdPlot.draw();
-        msdPlot.show();
+        if (showPlot) {
+            Random r = new Random();
+            msdPlot.setColor(new Color(r.nextFloat(), r.nextFloat(), r.nextFloat()));
+            msdPlot.addPoints(msdA[0], msdA[1], Plot.CONNECTED_CIRCLES);
+            msdPlot.setLimitsToFit(false);
+            plotLegend = ((plotLegend.concat("Particle ")).concat(String.valueOf(label))).concat("\n");
+            msdPlot.addLegend(plotLegend);
+            msdPlot.draw();
+            msdPlot.show();
+        }
         CurveFitter fitter = new CurveFitter(msdA[0], msdA[1]);
         fitter.doFit(CurveFitter.STRAIGHT_LINE);
         diffCoeff = (fitter.getParams())[1] / D_SCALING;

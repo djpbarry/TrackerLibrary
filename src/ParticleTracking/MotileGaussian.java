@@ -49,8 +49,8 @@ public class MotileGaussian extends IsoGaussian {
         NormalDistribution nd = new NormalDistribution(0.0, Math.sqrt(4.0 * D));
         this.x += nd.sample();
         this.y += nd.sample();
-        D = D * 1.001;
-        IJ.log(String.valueOf(D));
+//        D = D * 1.001;
+//        IJ.log(String.valueOf(D));
     }
 
     public void updateVelocity() {
@@ -66,7 +66,7 @@ public class MotileGaussian extends IsoGaussian {
 //        } else {
 //            theta += inc;
 //        }
-        if (changeState && r.nextDouble() < 0.2) {
+        if (changeState && r.nextDouble() < 0.1) {
             persistent = !persistent;
         }
     }
