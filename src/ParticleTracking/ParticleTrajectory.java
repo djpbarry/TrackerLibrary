@@ -1,10 +1,10 @@
 package ParticleTracking;
 
 import Particle.Particle;
-import Particle.IsoGaussian;
 import IAClasses.Utils;
 import IAClasses.DSPProcessor;
 import IAClasses.DataStatistics;
+import fiji.plugin.trackmate.Spot;
 import ij.IJ;
 import ij.gui.Plot;
 import ij.measure.CurveFitter;
@@ -102,10 +102,7 @@ public class ParticleTrajectory {
         if (particle == null) {
             return false;
         }
-        boolean c1 = true;
-        if (particle instanceof IsoGaussian) {
-            c1 = ((IsoGaussian) particle).getFit() >= tol;
-        }
+        boolean c1 = particle.getFeature(Spot.QUALITY) >= tol;
         boolean c2 = particle.getColocalisedParticle() != null;
         if (c1 && c2) {
             dualScore++;
