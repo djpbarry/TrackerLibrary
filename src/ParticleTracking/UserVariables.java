@@ -11,11 +11,11 @@ public class UserVariables {
     public static final int MAXIMA = 3, BLOBS = 4, GAUSS = 5;
     public static final int RANDOM = 6, DIRECTED = 7;
     private static double spatialRes = 0.133;
-    private static double timeRes = 50.0;
-    private static double trajMaxStep = 0.75;
-    private static double minTrajLength = 3.0;
+    private static double timeRes = 1.0;
+    private static double trajMaxStep = 1.0;
+    private static double minTrajLength = 0.0;
     private static double minTrajDist = 0.5;
-    private static double chan1MaxThresh = 0.99;
+    private static double chan1MaxThresh = 0.999;
     private static double chan2MaxThresh = 0.99;
     private static double curveFitTol = 0.2d;
     private static double blobSize = 0.25;
@@ -24,7 +24,7 @@ public class UserVariables {
     private static double msdThresh = 0.0;
     private static int nMax = 1;
     private static double colocalThresh = 0.25;
-    private static boolean colocal = false, preProcess = true, gpu = false, prevRes = false, useCals = false, extractsigs = false;
+    private static boolean colocal = false, preProcess = true, gpu = false, useCals = false, extractsigs = false;
 //    public static final String[] channels = {"Red", "Green"};
 //    private static int c1Index = RED;
 //    private static int c2Index = GREEN;
@@ -34,10 +34,10 @@ public class UserVariables {
 //    private static double medianThresh = 1.05;
     private static int minMSDPoints = 10;
     private static boolean fitC2 = false, trackRegions = false;
-    private static int detectionMode = GAUSS;
+    private static int detectionMode = MAXIMA;
     private static double filterRadius = 0.133;
     private static int motionModel = RANDOM;
-    private static int maxFrameGap = 3;
+    private static int maxFrameGap = 2;
 
     public static double getSpatialRes() {
         return spatialRes;
@@ -163,13 +163,13 @@ public class UserVariables {
         UserVariables.trackLength = trackLength;
     }
 
-    public static boolean isPrevRes() {
-        return prevRes;
-    }
+//    public static boolean isPrevRes() {
+//        return prevRes;
+//    }
 
-    public static void setPrevRes(boolean prevRes) {
-        UserVariables.prevRes = prevRes;
-    }
+//    public static void setPrevRes(boolean prevRes) {
+//        UserVariables.prevRes = prevRes;
+//    }
 
     public static boolean isUseCals() {
         return useCals;

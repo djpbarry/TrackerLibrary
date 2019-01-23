@@ -17,13 +17,14 @@
  */
 package ParticleTracking;
 
+import Particle.Blob;
+import Particle.IsoGaussian;
 import Particle.Particle;
 import Particle.Point;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.SpotCollection;
 import fiji.plugin.trackmate.TrackModel;
-import fiji.plugin.trackmate.tracking.TrackerKeys;
 import fiji.plugin.trackmate.tracking.sparselap.SparseLAPTracker;
 import fiji.plugin.trackmate.tracking.sparselap.SparseLAPTrackerFactory;
 import ij.IJ;
@@ -69,11 +70,15 @@ public class TrackMateTracker {
             Collections.sort(sorted, comparator);
             for (Spot s : sorted) {
                 Particle p = null;
+                double x = s.getFeature(Spot.POSITION_X);
+                double y = s.getFeature(Spot.POSITION_Y);
+                double t = s.getFeature(Spot.FRAME);
                 if (s instanceof Point) {
-                    double x = s.getFeature(Spot.POSITION_X);
-                    double y = s.getFeature(Spot.POSITION_Y);
-                    double t = s.getFeature(Spot.FRAME);
-                    p = new Point((int)t, x, y, 0.0);
+                    p = new Point((int) t, x, y, 0.0);
+                } else if (s instanceof Blob) {
+                    p = new Blob((int) t, x, y, 0.0);
+                } else if (s instanceof IsoGaussian) {
+                    p = new IsoGaussian((int) t, x, y, 0.0, s.getFeature(Spot.RADIUS), s.getFeature(Spot.RADIUS), s.getFeature(Spot.QUALITY), null, 0, null);
                 }
                 traj.addPoint(p);
             }
