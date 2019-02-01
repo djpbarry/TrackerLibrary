@@ -80,6 +80,7 @@ public class TrackMateTracker {
                 } else if (s instanceof IsoGaussian) {
                     p = new IsoGaussian((int) t, x, y, 0.0, s.getFeature(Spot.RADIUS), s.getFeature(Spot.RADIUS), s.getFeature(Spot.QUALITY), null, 0, null);
                 }
+                p.putFeature(Spot.FRAME, s.getFeature(Spot.FRAME));
                 traj.addPoint(p);
             }
             trajectories.add(traj);

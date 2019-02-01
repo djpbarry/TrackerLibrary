@@ -188,11 +188,10 @@ public class ParticleTrajectory {
     /**
      * Prints the details of this trajectory to the output display.
      */
-    public void printTrajectory(int number, TextWindow output, DecimalFormat formatter, String title) {
+    public void printTrajectory(int number, TextWindow output, DecimalFormat formatter, String title, String headings) {
         if (output == null) {
             output = new TextWindow(title + " Results",
-                    "X\tY\tFrame\tChannel 1\tChannel 2\tChannel 1 " + '\u03C3'
-                    + "\tChannel 2 " + '\u03C3', new String(), 1000, 500);
+                   headings, new String(), 1000, 500);
             output.setVisible(true);
         }
         if (formatter == null) {
@@ -201,15 +200,8 @@ public class ParticleTrajectory {
         output.append("Particle " + number + "\n");
         Particle current = end;
         while (current != null) {
-            Particle current2 = current.getColocalisedParticle();
-            double c2m = Double.NaN;
-            if (current2 != null) {
-                c2m = current2.getMagnitude();
-            }
             output.append(formatter.format(current.getX()) + "\t" + formatter.format(current.getY())
-                    + "\t" + formatter.format(current.getFrameNumber() / timeRes) + "\t"
-                    + formatter.format(current.getMagnitude()) + "\t"
-                    + formatter.format(c2m));
+                    + "\t" + formatter.format(current.getFeature(Spot.FRAME) / UserVariables.getTimeRes()));
             current = current.getLink();
         }
         output.append("\n");
