@@ -6,6 +6,8 @@ import IAClasses.DSPProcessor;
 import IAClasses.DataStatistics;
 import fiji.plugin.trackmate.Spot;
 import ij.IJ;
+import ij.ImagePlus;
+import ij.ImageStack;
 import ij.gui.Plot;
 import ij.measure.CurveFitter;
 import ij.text.TextWindow;
@@ -188,23 +190,41 @@ public class ParticleTrajectory {
     /**
      * Prints the details of this trajectory to the output display.
      */
-    public void printTrajectory(int number, TextWindow output, DecimalFormat formatter, String title, String headings) {
-        if (output == null) {
-            output = new TextWindow(title + " Results",
-                   headings, new String(), 1000, 500);
-            output.setVisible(true);
+    public void printTrajectory(int number, TextWindow output, DecimalFormat formatter, String title, ImagePlus[] inputs) {
+        if (output == null || inputs == null) {
+            return;
         }
         if (formatter == null) {
             formatter = new DecimalFormat("0.000");
         }
-        output.append("Particle " + number + "\n");
+        ImageStack[] stacks = new ImageStack[2];
+        stacks[0] = inputs[0].getImageStack();
+        if (inputs[1] != null) {
+            stacks[1] = inputs[1].getImageStack();
+        } else {
+            stacks[1] = null;
+        }
         Particle current = end;
         while (current != null) {
-            output.append(formatter.format(current.getX()) + "\t" + formatter.format(current.getY())
-                    + "\t" + formatter.format(current.getFeature(Spot.FRAME) / UserVariables.getTimeRes()));
+            int frame = (int) Math.round(current.getFeature(Spot.FRAME));
+            double x = current.getX();
+            double y = current.getY();
+            int xPix = (int) Math.round(x / UserVariables.getSpatialRes());
+            int yPix = (int) Math.round(y / UserVariables.getSpatialRes());
+            double c1Mag = stacks[0].getProcessor(frame + 1).getPixelValue(xPix, yPix);
+            double c2Mag = Double.NaN;
+            if (stacks[1] != null) {
+                c2Mag = stacks[1].getProcessor(frame + 1).getPixelValue(xPix, yPix);
+            }
+            output.append(number
+                    + "\t" + frame
+                    + "\t" + formatter.format(frame / UserVariables.getTimeRes())
+                    + "\t" + formatter.format(x)
+                    + "\t" + formatter.format(y)
+                    + "\t" + formatter.format(c1Mag)
+                    + "\t" + formatter.format(c2Mag));
             current = current.getLink();
         }
-        output.append("\n");
     }
 
     public int getType(double thresh) {

@@ -49,11 +49,11 @@ public class TrackMateTracker {
     }
 
     public void track(SpotCollection spots, Map<String, Object> settings) {
-        SparseLAPTracker tracker = (SparseLAPTracker) (new SparseLAPTrackerFactory()).create(spots, settings);
-        if (!tracker.process()) {
-            IJ.log("Tracking failed.");
-            return;
-        }
+            SparseLAPTracker tracker = (SparseLAPTracker) (new SparseLAPTrackerFactory()).create(spots, settings);
+            if (!tracker.process()) {
+                IJ.log("Tracking failed.");
+                return;
+            }
         SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph = tracker.getResult();
         Model model = new Model();
         model.setTracks(graph, true);
