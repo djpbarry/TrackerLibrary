@@ -5,6 +5,8 @@
  */
 package ParticleTracking;
 
+import ij.process.AutoThresholder;
+
 public class UserVariables {
 
     public static final int RED = 0, GREEN = 1, BLUE = 2;
@@ -15,8 +17,6 @@ public class UserVariables {
     private static double trajMaxStep = 1.0;
     private static double minTrajLength = 10.0;
     private static double minTrajDist = 1.0;
-    private static double chan1MaxThresh = 0.999;
-    private static double chan2MaxThresh = 0.99;
     private static double curveFitTol = 0.2d;
     private static double blobSize = 0.3;
 //    private static double c2CurveFitTol = 0.0d;
@@ -38,6 +38,8 @@ public class UserVariables {
     private static double filterRadius = 0.133;
     private static int motionModel = RANDOM;
     private static int maxFrameGap = 2;
+    private static String c1ThreshMethod = AutoThresholder.Method.Default.toString();
+    private static String c2ThreshMethod = AutoThresholder.Method.Default.toString();
 
     public static double getSpatialRes() {
         return spatialRes;
@@ -71,22 +73,22 @@ public class UserVariables {
         UserVariables.minTrajLength = minTrajLength;
     }
 
-    public static double getChan1MaxThresh() {
-        return chan1MaxThresh;
+    public static String getC1ThreshMethod() {
+        return c1ThreshMethod;
     }
 
-    public static void setChan1MaxThresh(double chan1MaxThresh) {
-        UserVariables.chan1MaxThresh = chan1MaxThresh;
+    public static void setC1ThreshMethod(String c1ThreshMethod) {
+        UserVariables.c1ThreshMethod = c1ThreshMethod;
     }
 
-    public static double getChan2MaxThresh() {
-        return chan2MaxThresh;
+    public static String getC2ThreshMethod() {
+        return c2ThreshMethod;
     }
 
-    public static void setChan2MaxThresh(double chan2MaxThresh) {
-        UserVariables.chan2MaxThresh = chan2MaxThresh;
+    public static void setC2ThreshMethod(String c2ThreshMethod) {
+        UserVariables.c2ThreshMethod = c2ThreshMethod;
     }
-
+    
     public static boolean isColocal() {
         return colocal;
     }
@@ -166,11 +168,9 @@ public class UserVariables {
 //    public static boolean isPrevRes() {
 //        return prevRes;
 //    }
-
 //    public static void setPrevRes(boolean prevRes) {
 //        UserVariables.prevRes = prevRes;
 //    }
-
     public static boolean isUseCals() {
         return useCals;
     }
@@ -281,5 +281,5 @@ public class UserVariables {
     public static void setMaxFrameGap(int maxFrameGap) {
         UserVariables.maxFrameGap = maxFrameGap;
     }
-    
+
 }
