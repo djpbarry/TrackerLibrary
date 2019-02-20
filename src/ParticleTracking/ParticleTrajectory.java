@@ -206,25 +206,28 @@ public class ParticleTrajectory {
         }
         Particle current = end;
         while (current != null) {
-            int frame = (int) Math.round(current.getFeature(Spot.FRAME));
-            double x = current.getX();
-            double y = current.getY();
-            int xPix = (int) Math.round(x / UserVariables.getSpatialRes());
-            int yPix = (int) Math.round(y / UserVariables.getSpatialRes());
-            double c1Mag = stacks[0].getProcessor(frame + 1).getPixelValue(xPix, yPix);
-            double c2Mag = Double.NaN;
-            if (stacks[1] != null) {
-                c2Mag = stacks[1].getProcessor(frame + 1).getPixelValue(xPix, yPix);
+            double[] features = getFeatures(current, stacks);
+            String line = String.valueOf(number);
+            for (double f : features) {
+                line = (line.concat("\t")).concat(formatter.format(f));
             }
-            output.append(number
-                    + "\t" + frame
-                    + "\t" + formatter.format(frame / UserVariables.getTimeRes())
-                    + "\t" + formatter.format(x)
-                    + "\t" + formatter.format(y)
-                    + "\t" + formatter.format(c1Mag)
-                    + "\t" + formatter.format(c2Mag));
+            output.append(line);
             current = current.getLink();
         }
+    }
+
+    public static double[] getFeatures(Particle particle, ImageStack[] stacks) {
+        int frame = (int) Math.round(particle.getFeature(Spot.FRAME));
+        double x = particle.getX();
+        double y = particle.getY();
+        int xPix = (int) Math.round(x / UserVariables.getSpatialRes());
+        int yPix = (int) Math.round(y / UserVariables.getSpatialRes());
+        double c1Mag = stacks[0].getProcessor(frame + 1).getPixelValue(xPix, yPix);
+        double c2Mag = Double.NaN;
+        if (stacks[1] != null) {
+            c2Mag = stacks[1].getProcessor(frame + 1).getPixelValue(xPix, yPix);
+        }
+        return new double[]{frame, frame / UserVariables.getTimeRes(), x, y, c1Mag, c2Mag};
     }
 
     public int getType(double thresh) {
