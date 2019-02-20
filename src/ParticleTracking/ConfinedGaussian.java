@@ -41,7 +41,7 @@ public class ConfinedGaussian extends MotileGaussian {
         roiPosIncY = 0.133 / 10.0;
     }
 
-    public void updatePosition() {
+    public void updatePosition(double weighting) {
         this.x += rad * Math.cos(theta);
         this.y += rad * Math.sin(theta);
         Rectangle2D.Double bounds = roi.getFloatBounds();

@@ -5,7 +5,6 @@
 package ParticleTracking;
 
 import Particle.IsoGaussian;
-import ij.IJ;
 import java.util.Random;
 import org.apache.commons.math3.distribution.NormalDistribution;
 
@@ -36,19 +35,19 @@ public class MotileGaussian extends IsoGaussian {
         this.D = D;
     }
 
-    public void updatePosition() {
+    public void updatePosition(double weighting) {
         if (persistent) {
-            this.x += rad * Math.cos(theta);
-            this.y += rad * Math.sin(theta);
+            this.x += weighting*rad * Math.cos(theta);
+            this.y += weighting*rad * Math.sin(theta);
         } else {
-            updateBrownianCoords();
+            updateBrownianCoords(weighting);
         }
     }
 
-    void updateBrownianCoords() {
+    void updateBrownianCoords(double weighting) {
         NormalDistribution nd = new NormalDistribution(0.0, Math.sqrt(4.0 * D));
-        this.x += nd.sample();
-        this.y += nd.sample();
+        this.x += weighting*nd.sample();
+        this.y += weighting*nd.sample();
 //        D = D * 1.001;
 //        IJ.log(String.valueOf(D));
     }
@@ -62,6 +61,7 @@ public class MotileGaussian extends IsoGaussian {
             }
 //        if (persistent) {
             theta += inc * sens;
+//            rad += r.nextGaussian() * sens;
         }
 //        } else {
 //            theta += inc;

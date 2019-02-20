@@ -12,7 +12,7 @@ public class UserVariables {
     public static final int RED = 0, GREEN = 1, BLUE = 2;
     public static final int MAXIMA = 3, BLOBS = 4, GAUSS = 5;
     public static final int RANDOM = 6, DIRECTED = 7;
-    private static double spatialRes = 0.133;
+    private static double spatialRes = 0.1;
     private static double timeRes = 1.0;
     private static double trajMaxStep = 1.0;
     private static double minTrajLength = 10.0;
