@@ -358,7 +358,7 @@ public class ParticleTrajectory {
         return bounds;
     }
 
-    public double[][] getPoints() {
+    public double[][] getInterpolatedPoints() {
         int length = getNumberOfFrames();
         if (length < 1) {
             return null;
@@ -370,7 +370,11 @@ public class ParticleTrajectory {
         for (int i = length - 1; i >= 0; i--) {
             points[0][i] = current.getX();
             points[1][i] = current.getY();
-            points[2][i] = current.getFrameNumber();
+            if (interpolate > 1) {
+                points[2][i] = current.getFrameNumber() - interpolate + 1;
+            } else {
+                points[2][i] = current.getFrameNumber();
+            }
             lastFrameNumber = current.getFrameNumber();
             if (current.getLink() != null && lastFrameNumber - current.getLink().getFrameNumber() > interpolate) {
                 interpolate++;
@@ -385,7 +389,7 @@ public class ParticleTrajectory {
     public void smooth() {
         double sigma = 2.5 * timeRes;
         int gLength = (int) Math.round(12.5 * timeRes);
-        double input[][] = getPoints();
+        double input[][] = getInterpolatedPoints();
         if (input == null) {
             return;
         }
@@ -488,7 +492,7 @@ public class ParticleTrajectory {
     public boolean calcMSD(int seg, int label) {
         int maxLength;
         double xval, yval;
-        double points[][] = getPoints();
+        double points[][] = getInterpolatedPoints();
         double xPoints[] = points[0], yPoints[] = points[1];
         if (xPoints == null) {
             return false;
