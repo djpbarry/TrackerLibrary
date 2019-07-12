@@ -14,17 +14,17 @@ public class UserVariables {
     public static final int RANDOM = 6, DIRECTED = 7;
     private static double spatialRes = 0.1;
     private static double timeRes = 1.0;
-    private static double trajMaxStep = 1.0;
+    private static double trajMaxStep = 0.75;
     private static double minTrajLength = 10.0;
-    private static double minTrajDist = 1.0;
-    private static double curveFitTol = 0.2d;
-    private static double blobSize = 0.3;
+    private static double minTrajDist = 0.0;
+    private static double curveFitTol = 0.5d;
+    private static double blobSize = 0.5;
 //    private static double c2CurveFitTol = 0.0d;
     private static double trackLength = 5.0;
     private static double msdThresh = 0.0;
     private static int nMax = 1;
     private static double colocalThresh = 0.25;
-    private static boolean colocal = false, preProcess = true, gpu = false, useCals = false, extractsigs = false;
+    private static boolean colocal = true, preProcess = true, gpu = false, useCals = false, extractsigs = false;
 //    public static final String[] channels = {"Red", "Green"};
 //    private static int c1Index = RED;
 //    private static int c2Index = GREEN;
@@ -34,12 +34,12 @@ public class UserVariables {
 //    private static double medianThresh = 1.05;
     private static int minMSDPoints = 10;
     private static boolean fitC2 = false, trackRegions = false;
-    private static int detectionMode = BLOBS;
+    private static int detectionMode = MAXIMA;
     private static double filterRadius = 0.133;
     private static int motionModel = RANDOM;
-    private static int maxFrameGap = 2;
-    private static String c1ThreshMethod = AutoThresholder.Method.Default.toString();
-    private static String c2ThreshMethod = AutoThresholder.Method.Default.toString();
+    private static int maxFrameGap = 3;
+    private static String c1ThreshMethod = AutoThresholder.Method.Li.toString();
+    private static String c2ThreshMethod = AutoThresholder.Method.Li.toString();
 
     public static double getSpatialRes() {
         return spatialRes;
@@ -244,6 +244,10 @@ public class UserVariables {
 
     public static boolean isFitC2() {
         return fitC2;
+    }
+
+    public static void setFitC2(boolean fitC2) {
+        UserVariables.fitC2 = fitC2;
     }
 
     public static boolean isTrackRegions() {

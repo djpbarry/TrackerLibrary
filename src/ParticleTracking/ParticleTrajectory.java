@@ -112,6 +112,21 @@ public class ParticleTrajectory {
         return addPoint(particle);
     }
 
+    private double calcDualScore() {
+        double score = 0.0;
+        Particle current = end;
+        if (current == null) {
+            return 0.0;
+        }
+        while (current.getLink() != null) {
+            if (current.getColocalisedParticle() != null) {
+                score++;
+            }
+            current = current.getLink();
+        }
+        return score;
+    }
+
     /**
      * Add a new temporary {@link Particle}, which may or may not belong to this
      * trajectory.
@@ -234,7 +249,7 @@ public class ParticleTrajectory {
         if (size < 1) {
             return UNKNOWN;
         }
-        if ((double) dualScore / size > thresh) {
+        if ((double) calcDualScore() / size > thresh) {
             return COLOCAL;
         } else {
             return NON_COLOCAL;

@@ -49,11 +49,11 @@ public class TrackMateTracker {
     }
 
     public void track(SpotCollection spots, Map<String, Object> settings) {
-            SparseLAPTracker tracker = (SparseLAPTracker) (new SparseLAPTrackerFactory()).create(spots, settings);
-            if (!tracker.process()) {
-                IJ.log("Tracking failed.");
-                return;
-            }
+        SparseLAPTracker tracker = (SparseLAPTracker) (new SparseLAPTrackerFactory()).create(spots, settings);
+        if (!tracker.process()) {
+            IJ.log("Tracking failed.");
+            return;
+        }
         SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph = tracker.getResult();
         Model model = new Model();
         model.setTracks(graph, true);
@@ -81,6 +81,8 @@ public class TrackMateTracker {
                     p = new IsoGaussian((int) t, x, y, 0.0, s.getFeature(Spot.RADIUS), s.getFeature(Spot.RADIUS), s.getFeature(Spot.QUALITY), null, 0, null);
                 }
                 p.putFeature(Spot.FRAME, s.getFeature(Spot.FRAME));
+                p.putFeature(Particle.COLOCALISED, s.getFeature(Particle.COLOCALISED));
+                p.setColocalisedParticle(((Particle)s).getColocalisedParticle());
                 traj.addPoint(p);
             }
             trajectories.add(traj);
