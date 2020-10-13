@@ -2,10 +2,10 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package ParticleTracking;
+package net.calm.trackerlibrary.ParticleTracking;
 
-import Particle.IsoGaussian;
 import ij.process.ImageProcessor;
+import net.calm.iaclasslibrary.Particle.IsoGaussian;
 
 /**
  *

@@ -2,11 +2,11 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package ParticleTracking;
+package net.calm.trackerlibrary.ParticleTracking;
 
-import Math.Optimisation.NonIsoGaussianFitter;
-import Particle.IsoGaussian;
 import ij.process.FloatProcessor;
+import net.calm.iaclasslibrary.Math.Optimisation.NonIsoGaussianFitter;
+import net.calm.iaclasslibrary.Particle.IsoGaussian;
 
 /**
  *

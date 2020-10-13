@@ -62,11 +62,11 @@ C  [cuda_gauss_tracker.dll+0x7363]  Java_ParticleTracking_Analyse_1Movie_cudaGau
 C  [cuda_gauss_tracker.dll+0x3a3e]  Java_ParticleTracking_Analyse_1Movie_cudaGaussFitter+0x272e
 C  [cuda_gauss_tracker.dll+0x1a37]  Java_ParticleTracking_Analyse_1Movie_cudaGaussFitter+0x727
 C  [cuda_gauss_tracker.dll+0x13a1]  Java_ParticleTracking_Analyse_1Movie_cudaGaussFitter+0x91
-j  ParticleTracking.Analyse_Movie.cudaGaussFitter(Ljava/lang/String;Ljava/lang/String;FFFFII)Z+0
-j  ParticleTracking.Analyse_Movie.cudaFindParticles(DZIIDLij/ImageStack;Lij/ImageStack;Z)LParticleTracking/ParticleArray;+35
-j  ParticleTracking.Analyse_Movie.analyse()V+140
-j  ParticleTracking.Analyse_Movie.run(Ljava/lang/String;)V+218
-j  ParticleTracking.Analyse_Movie.main([Ljava/lang/String;)V+10
+j  net.calm.trackerlibrary.ParticleTracking.Analyse_Movie.cudaGaussFitter(Ljava/lang/String;Ljava/lang/String;FFFFII)Z+0
+j  net.calm.trackerlibrary.ParticleTracking.Analyse_Movie.cudaFindParticles(DZIIDLij/ImageStack;Lij/ImageStack;Z)LParticleTracking/ParticleArray;+35
+j  net.calm.trackerlibrary.ParticleTracking.Analyse_Movie.analyse()V+140
+j  net.calm.trackerlibrary.ParticleTracking.Analyse_Movie.run(Ljava/lang/String;)V+218
+j  net.calm.trackerlibrary.ParticleTracking.Analyse_Movie.main([Ljava/lang/String;)V+10
 v  ~StubRoutines::call_stub
 V  [jvm.dll+0x1296da]
 V  [jvm.dll+0x1d837e]
@@ -81,11 +81,11 @@ C  [ntdll.dll+0x3bf32]  RtlInitializeExceptionChain+0x63
 C  [ntdll.dll+0x3bf05]  RtlInitializeExceptionChain+0x36
 
 Java frames: (J=compiled Java code, j=interpreted, Vv=VM code)
-j  ParticleTracking.Analyse_Movie.cudaGaussFitter(Ljava/lang/String;Ljava/lang/String;FFFFII)Z+0
-j  ParticleTracking.Analyse_Movie.cudaFindParticles(DZIIDLij/ImageStack;Lij/ImageStack;Z)LParticleTracking/ParticleArray;+35
-j  ParticleTracking.Analyse_Movie.analyse()V+140
-j  ParticleTracking.Analyse_Movie.run(Ljava/lang/String;)V+218
-j  ParticleTracking.Analyse_Movie.main([Ljava/lang/String;)V+10
+j  net.calm.trackerlibrary.ParticleTracking.Analyse_Movie.cudaGaussFitter(Ljava/lang/String;Ljava/lang/String;FFFFII)Z+0
+j  net.calm.trackerlibrary.ParticleTracking.Analyse_Movie.cudaFindParticles(DZIIDLij/ImageStack;Lij/ImageStack;Z)LParticleTracking/ParticleArray;+35
+j  net.calm.trackerlibrary.ParticleTracking.Analyse_Movie.analyse()V+140
+j  net.calm.trackerlibrary.ParticleTracking.Analyse_Movie.run(Ljava/lang/String;)V+218
+j  net.calm.trackerlibrary.ParticleTracking.Analyse_Movie.main([Ljava/lang/String;)V+10
 v  ~StubRoutines::call_stub
 
 ---------------  P R O C E S S  ---------------
@@ -392,7 +392,7 @@ Dynamic libraries:
 
 VM Arguments:
 jvm_args: -Dfile.encoding=UTF-8 -Djava.library.path=C:\Users\barry05\Documents\Visual Studio 2010\Projects\bin\win32\Release -Xmx1000m 
-java_command: ParticleTracking.Analyse_Movie
+java_command: net.calm.trackerlibrary.ParticleTracking.Analyse_Movie
 Launcher Type: SUN_STANDARD
 
 Environment Variables:
