@@ -19,6 +19,7 @@ public class UserVariables {
     private static double minTrajDist = 0.0;
     private static double curveFitTol = 0.5d;
     private static double blobSize = 0.5;
+    private static double blobThresh = 0.1;
 //    private static double c2CurveFitTol = 0.0d;
     private static double trackLength = 5.0;
     private static double msdThresh = 0.0;
@@ -284,6 +285,14 @@ public class UserVariables {
 
     public static void setMaxFrameGap(int maxFrameGap) {
         UserVariables.maxFrameGap = maxFrameGap;
+    }
+
+    public static double getBlobThresh() {
+        return blobThresh;
+    }
+
+    public static void setBlobThresh(double blobThresh) {
+        UserVariables.blobThresh = blobThresh;
     }
 
 }
