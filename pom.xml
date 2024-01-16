@@ -13,7 +13,7 @@
 
     <groupId>net.calm</groupId>
     <artifactId>trackerlibrary</artifactId>
-    <version>3.0.7</version>
+    <version>3.0.8</version>
 
     <name>Tracker Library</name>
     <description>Maven implementation of particle tracker library.</description>
@@ -103,7 +103,7 @@
         <dependency>
             <groupId>net.calm</groupId>
             <artifactId>iaclasslibrary</artifactId>
-            <version>1.0.22</version>
+            <version>1.0.28</version>
             <exclusions>
                 <exclusion>
                     <groupId>sc.fiji</groupId>
