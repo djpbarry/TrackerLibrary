@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.scijava</groupId>
         <artifactId>pom-scijava</artifactId>
-        <version>37.0.0</version>
+        <version>35.0.0</version>
         <relativePath/>
     </parent>
 
@@ -89,10 +89,6 @@
             <url>https://maven.scijava.org/content/groups/public</url>
         </repository>
         <repository>
-            <id>github</id>
-            <url>https://maven.pkg.github.com/djpbarry/*</url>
-        </repository>
-        <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
@@ -107,7 +103,7 @@
         <dependency>
             <groupId>com.github.djpbarry</groupId>
             <artifactId>IAClassLibrary</artifactId>
-            <version>07c456c334</version>
+            <version>37a1be016a</version>
             <exclusions>
                 <exclusion>
                     <groupId>sc.fiji</groupId>
@@ -116,13 +112,4 @@
             </exclusions>
         </dependency>
     </dependencies>
-
-    <distributionManagement>
-        <repository>
-            <id>github</id>
-            <name>GitHub djpbarry Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/djpbarry/trackerlibrary</url>
-        </repository>
-    </distributionManagement>
-
 </project>
