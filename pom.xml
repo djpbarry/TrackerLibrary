@@ -13,7 +13,7 @@
 
     <groupId>net.calm</groupId>
     <artifactId>trackerlibrary</artifactId>
-    <version>3.0.9</version>
+    <version>3.0.10</version>
 
     <name>Tracker Library</name>
     <description>Maven implementation of particle tracker library.</description>
@@ -92,6 +92,10 @@
             <id>github</id>
             <url>https://maven.pkg.github.com/djpbarry/*</url>
         </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -101,9 +105,9 @@
             <version>7.10.0</version>
         </dependency>
         <dependency>
-            <groupId>net.calm</groupId>
-            <artifactId>iaclasslibrary</artifactId>
-            <version>1.0.29</version>
+            <groupId>com.github.djpbarry</groupId>
+            <artifactId>IAClassLibrary</artifactId>
+            <version>07c456c334</version>
             <exclusions>
                 <exclusion>
                     <groupId>sc.fiji</groupId>
