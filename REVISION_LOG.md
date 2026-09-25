@@ -64,11 +64,14 @@ authoritative Javadoc at https://djpbarry.github.io/IAClassLibrary/
 
 - **`IAClasses.DataStatistics` and `IAClasses.ProgressDialog` are `@Deprecated`**
   in the current IAClassLibrary API but still used here (`ParticleTrajectory`,
-  `TrajectoryBuilder`, `TrajectoryBridger`). Migration is a prerequisite for the
-  `v2.0.0` re-pin (recorded in `DEVELOPMENT_PLAN.md` B4).
-- **`Particle.getFrameNumber()` Javadoc is wrong** — it reads "This particle's
-  z-position within an image stack" but returns the frame/time index. Flagged for
-  the maintainer to review independently in the IAClassLibrary project.
+  `TrajectoryBuilder`, `TrajectoryBridger`). This deprecation is intentional
+  (IAClassLibrary Decision 4 — legacy `IAClasses` classes marked for removal);
+  migration off them is a prerequisite for the `v2.0.0` re-pin (recorded in
+  `DEVELOPMENT_PLAN.md` B4).
+- **`Particle.getFrameNumber()` Javadoc** originally read "This particle's
+  z-position within an image stack" (wrong — it returns the frame/time index).
+  Flagged to the maintainer; now corrected in the published Javadoc to "This
+  particle's frame (time) index within the image sequence."
 
 ---
 
