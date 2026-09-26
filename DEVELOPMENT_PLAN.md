@@ -24,6 +24,10 @@ maintainable design and preserving a legacy API, prefer the cleaner design.
 
 ## Current state (context for the plan)
 
+> **Status update (M1 landed):** Phases A1–A3 and B1–B3 are **complete** — see
+> "Milestone status" at the end of this file. The bullets below are retained as
+> the *as-found* snapshot from the pre-milestone review.
+
 - `TrackerLibrary` (`net.calm.trackerlibrary`) is a **Java library** (not a
   runnable plugin; `main-class` is `None`) in the ImageJ/Fiji ecosystem. It
   provides two independent particle-tracking approaches — deterministic
@@ -373,3 +377,43 @@ confirmed, not re-derived:
 
 Each milestone is independently shippable. M1 is the immediate next step and
 unblocks the coordinated downstream modernization.
+
+---
+
+## Milestone status
+
+| Milestone | Status | Notes |
+|---|---|---|
+| **M1 — Foundations** | ✅ **Done** | A1 wrapper (Maven 3.9.9, matching IAClassLibrary), A2 CI (JDK 21 + cache + wrapper), A3 `.gitignore`, B1 license → GPL-3.0-or-later, B2 version → `4.0.0-SNAPSHOT`, B3 parent `pom-scijava:45.1.0` + Java 21 + TrackMate parent-managed (resolves 8.0.0). `mvn verify` passes on JDK 21. |
+| M1 — B4 (IAClassLibrary re-pin) | ⏸ **Deferred** | No `v2.0.0` tag on JitPack yet; deprioritised by the maintainer (Javadoc is the compat target, not the pin). Still using `37a1be016a`. Flag if/when the deprecated `DataStatistics`/`ProgressDialog` migration requires the new API. |
+| **M2** — Dead-code removal | ⬜ Pending | |
+| **M3** — Test harness | ⬜ Pending | |
+| **M4** — Refactor core | ⬜ Pending | |
+| **M5** — Static-state + docs | ⬜ Pending | |
+| **M6** — Upstream hand-off | ⬜ Pending | |
+
+### M1 deviations from the original plan
+
+These were discovered during M1 and are worth recording so the sibling projects
+benefit:
+
+1. **`pom-scijava:45.1.0` drops the implicit Maven Central repo.** After the
+   parent bump, JitPack began intercepting `xml-apis-ext` and returned empty
+   (0 B) artifacts, failing the enforcer's `BanDuplicateClasses` rule. Fix:
+   declare `central` (`https://repo.maven.apache.org/maven2`) explicitly in
+   `<repositories>`. *(Keep this in mind for IAClassLibrary/ADAPT if they hit
+   the same on their parent bump.)*
+2. **TrackMate is parent-managed — no pin needed.** The original plan proposed
+   "bump to 8.0.0"; in practice the explicit `7.10.0` pin was simply removed and
+   the parent `pom-scijava:45.1.0` resolves TrackMate to `8.0.0`. Matches
+   IAClassLibrary's approach.
+3. **Maven wrapper pins 3.9.9** (mirroring IAClassLibrary), not the machine's
+   installed 3.9.16. The pin is a reproducibility convenience, not a real
+   version floor — the enforcer's `RequireMavenVersion` is the actual gate.
+4. **`.gitattributes` was added** to force `mvnw` → LF and `mvnw.cmd` → CRLF,
+   otherwise the wrapper shell script would have CRLF endings and fail on Linux
+   CI. *(The plan did not anticipate this.)*
+5. **`mvn_settings.xml` is now unused** by CI (the private GitHub Packages flow
+   was dropped as vestigial — both public deps resolve publicly). Left in place
+   pending an explicit decision to delete it.
+

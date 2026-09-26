@@ -16,35 +16,39 @@ Two independent tracking approaches coexist here:
 
 ## Build
 
-Maven project, JDK 11. Parent POM is `org.scijava:pom-scijava:35.0.0`.
+Maven project, JDK 21 (via `scijava.jvm.version`). Parent POM is
+`org.scijava:pom-scijava:45.1.0`. Build/toolchain is pinned by a committed
+Maven wrapper (`mvnw` / `mvnw.cmd`) at Maven 3.9.9, matching IAClassLibrary.
 
 ```bash
-mvn verify
+./mvnw verify
 ```
 
 The canonical CI command (`.github/workflows/maven.yml`) is:
 
 ```bash
-mvn --batch-mode --update-snapshots \
-    -Dinternal.repo.password="$PAT" \
-    --settings mvn_settings.xml verify
+./mvnw --batch-mode --update-snapshots verify
 ```
 
 Notes:
 
-- `mvn_settings.xml` activates a `github` profile that adds a GitHub Packages
-  repository (`maven.pkg.github.com/djpbarry/*`) authenticated by the
-  `-Dinternal.repo.password` property. Local `mvn verify` works without it for
-  the public dependencies; only run with `--settings` if you actually need the
-  private repo.
-- There is **no test suite** — `src/test/java/` and `src/main/resources/` are
-  empty. `mvn verify` effectively just compiles and packages.
+- CI builds on JDK 21 with Maven dependency caching; the wrapper is used
+  directly. The old private-repo `mvn_settings.xml` / `-Dinternal.repo.password`
+  flow is no longer used (both dependencies — TrackMate via SciJava and
+  IAClassLibrary via JitPack — are public). `mvn_settings.xml` still exists but
+  is not referenced by CI.
+- A `.gitattributes` forces `mvnw` to LF and `mvnw.cmd` to CRLF so the wrapper
+  runs on both Linux CI and Windows.
+- The explicit `central` repository was added to `pom.xml` because
+  `pom-scijava:45.1.0` drops the implicit Maven Central; without it JitPack
+  returned empty artifacts for some transitive deps.
 
 ## Dependencies
 
 Declared in `pom.xml`:
 
-- `sc.fiji:TrackMate:7.10.0` (Fiji's TrackMate)
+- `sc.fiji:TrackMate` (Fiji's TrackMate, version parent-managed; currently
+  resolves to 8.0.0)
 - `com.github.djpbarry:IAClassLibrary:37a1be016a` (from **JitPack**, with
   TrackMate excluded) — a sibling library by the same author providing
   `net.calm.iaclasslibrary` (`Particle.Particle`, `Particle.IsoGaussian`,
@@ -191,9 +195,11 @@ fields/methods.
 
 ### Licensing is inconsistent — verify before relying on it
 
-- `pom.xml` declares **Simplified BSD License**.
+- `pom.xml` declares **GPL-3.0-or-later** (`license.licenseName=gpl_v3`), fixed
+  in M1 (was BSD-2).
 - `LICENSE` file is **GPLv3**.
-- Many source file headers say **GPLv2**.
+- Many source file headers still say **GPLv2** (source-header cleanup is a
+  deferred, non-blocking item — see `DEVELOPMENT_PLAN.md` B1).
 
 If licensing matters, flag this discrepancy rather than asserting a single
 license.

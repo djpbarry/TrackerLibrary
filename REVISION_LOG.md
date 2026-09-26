@@ -19,6 +19,45 @@ dated narrative plus the "what not to do again" notes.
 
 ---
 
+## 2026-09-26 — M1 (Foundations) landed
+
+**Phases A1–A3 and B1–B3 complete.** The build now targets Java 21, the license
+is resolved to GPL-3.0-or-later, and the project is shadowed by a reproducible
+Maven wrapper matching IAClassLibrary. `mvn verify` passes on JDK 21.
+
+| Change | What |
+|---|---|
+| A1 | Added Maven wrapper (`mvnw`, `mvnw.cmd`, `.mvn/wrapper/maven-wrapper.properties`) pinned to Maven **3.9.9** (mirrors IAClassLibrary). |
+| A2 | CI hardened: JDK 21 (Temurin), `checkout@v4` / `setup-java@v4` with Maven caching, now runs `./mvnw verify` instead of a system `mvn`. Dropped the vestigial `PAT` / `mvn_settings.xml` GitHub Packages flow. |
+| A3 | `.gitignore` expanded (`.idea/`, `*.iml`, `.junie/`, `.crush/`); stale `/nbproject/private/` removed. |
+| B1 | `pom.xml` license → `gpl_v3` / "GNU General Public License v3.0 or later". |
+| B2 | Version `3.0.10` → `4.0.0-SNAPSHOT`; added `maven-release-plugin` with `tagNameFormat=v@{project.version}`. |
+| B3 | Parent `pom-scijava:35.0.0` → `45.1.0`; `scijava.jvm.version=21`; removed the explicit `TrackMate:7.10.0` pin (parent resolves 8.0.0). |
+
+### New lessons (see `DEVELOPMENT_PLAN.md` "M1 deviations")
+
+1. **`pom-scijava:45.1.0` drops implicit Maven Central.** JitPack then returned
+   empty `xml-apis-ext` artifacts and broke the `BanDuplicateClasses` enforcer
+   rule. Fix: declare `central` explicitly in `<repositories>`. Flagged for the
+   sibling projects' parent bumps.
+2. **TrackMate is parent-managed**, so "bump to 8.0.0" in practice meant
+   *remove* the pin, not set `8.0.0`.
+3. **`.gitattributes` was required** to keep `mvnw` on LF endings for Linux CI
+   (not anticipated by the plan).
+4. **Wrapper Maven pin is a convenience, not a floor** — the enforcer's
+   `RequireMavenVersion` is the real gate. 3.9.9 was chosen purely for
+   consistency with IAClassLibrary.
+
+### Deferred (not blocking)
+
+- **B4 (IAClassLibrary `v2.0.0` re-pin)** — no `v2.0.0` tag on JitPack yet.
+  Maintainer deprioritised it: the Javadoc at `djpbarry.github.io/IAClassLibrary/`
+  is the compatibility target, not the pinned artifact. Still on `37a1be016a`;
+  re-raise only if the deprecated `DataStatistics` / `ProgressDialog` migration
+  actually needs the new API.
+
+---
+
 ## 2026-09-25 — Review & plan kick-off (pre-M1)
 
 Initial full review of `TrackerLibrary` and creation of the modernization plan.
