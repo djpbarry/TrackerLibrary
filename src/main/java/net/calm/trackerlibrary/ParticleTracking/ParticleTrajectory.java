@@ -293,7 +293,9 @@ public class ParticleTrajectory {
                 xDist += x - current.getX();
                 yDist += y - current.getY();
             } catch (Exception e) {
-                e.toString();
+                // A null link would only arise for a malformed trajectory; the
+                // loop bound (i < size - 1) keeps us off the head, so this is a
+                // defensive guard only. Velocity stays zero for this step.
             }
             x = current.getX();
             y = current.getY();

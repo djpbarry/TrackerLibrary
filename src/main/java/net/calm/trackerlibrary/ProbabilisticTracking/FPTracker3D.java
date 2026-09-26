@@ -54,104 +54,12 @@ public class FPTracker3D extends PFTracking3D {
         }
     }
 
-    /**
-     * Calculates the expected mean of a gaussian fitted to a Ray trough the
-     * imagestack.
-     *
-     * @param aX The x position of the ray
-     * @param aY The y position of the ray
-     * @param aIS The imageStack where the intensities are read out.
-     * @return the expected z position of a Gaussian in [1; aIS.getSize<code></code>]
-     * at position 0 and the maximal intensity at position (ax,ay) in this
-     * stack.
-     */
-    private float[] calculateExpectedZPositionAt(int aX, int aY, ImageStack aIS) {
-        float vMaxInt = 0;
-        int vMaxSlice = 0;
-        for (int vZ = 0; vZ < mNSlices; vZ++) {
-            float vThisInt;
-            if ((vThisInt = aIS.getProcessor(vZ + 1).getf(aX, aY)) > vMaxInt) {
-                vMaxInt = vThisInt;
-                vMaxSlice = vZ;
-            }
-
-        }
-        float vSumOfIntensities = 0f;
-        float vRes = 0f;
-        int vStartSlice = Math.max(0, vMaxSlice - 2);
-        int vStopSlice = Math.min(mNSlices - 1, vMaxSlice + 2);
-        for (int vZ = vStartSlice; vZ <= vStopSlice; vZ++) {
-            vSumOfIntensities += aIS.getProcessor(vZ + 1).getf(aX, aY);
-            vRes += (vZ + 1) * aIS.getProcessor(vZ + 1).getf(aX, aY);
-        }
-        return new float[]{vRes / vSumOfIntensities, vMaxInt};
-    }
-
-    private void addBackgroundToImage(float[][][] aImage, float aBackground) {
-        for (float[][] vSlice : aImage) {
-            for (float[] vRow : vSlice) {
-                for (int vI = 0; vI < vRow.length; vI++) {
-                    vRow[vI] += aBackground;
-                }
-            }
-        }
-    }
-
     @Override
     protected void paintParticleOnCanvas(Graphics ag, float[] particle,
             double magnification) {
         ag.setColor(Color.green);
         ag.drawRect((int) (magnification * particle[0] + .5f), (int) (magnification * particle[1] + .5f),
                 1, 1);
-    }
-
-    private void addFeaturePointTo3DImage(float[][][] aImage, Point3D aPoint, float aIntensity, int aW, int aH, int aS, float aPxWidthInNm, float aPxDepthInNm, float aGhostImage[][]) {
-        float vVarianceXYinPx = mSigmaPSFxy * mSigmaPSFxy / (aPxWidthInNm * aPxWidthInNm);
-        float vVarianceZinPx = mSigmaPSFz * mSigmaPSFz / (aPxDepthInNm * aPxDepthInNm);
-        float vMaxDistancexy = 3 * mSigmaPSFxy / aPxWidthInNm;
-        float vMaxDistancez = 3 * mSigmaPSFz / aPxDepthInNm; //in pixel!
-
-        int vXStart, vXEnd, vYStart, vYEnd, vZStart, vZEnd;//defines a bounding box around the tip
-        if (aPoint.mX + .5f - (vMaxDistancexy + .5f) < 0) {
-            vXStart = 0;
-        } else {
-            vXStart = (int) (aPoint.mX + .5f) - (int) (vMaxDistancexy + .5f);
-        }
-        if (aPoint.mY + .5f - (vMaxDistancexy + .5f) < 0) {
-            vYStart = 0;
-        } else {
-            vYStart = (int) (aPoint.mY + .5f) - (int) (vMaxDistancexy + .5f);
-        }
-        if (aPoint.mZ + .5f - (vMaxDistancez + .5f) < 0) {
-            vZStart = 0;
-        } else {
-            vZStart = (int) (aPoint.mZ + .5f) - (int) (vMaxDistancez + .5f);
-        }
-        if (aPoint.mX + .5f + (vMaxDistancexy + .5f) >= aW) {
-            vXEnd = aW - 1;
-        } else {
-            vXEnd = (int) (aPoint.mX + .5f) + (int) (vMaxDistancexy + .5f);
-        }
-        if (aPoint.mY + .5f + (vMaxDistancexy + .5f) >= aH) {
-            vYEnd = aH - 1;
-        } else {
-            vYEnd = (int) (aPoint.mY + .5f) + (int) (vMaxDistancexy + .5f);
-        }
-        if (aPoint.mZ + .5f + (vMaxDistancez + .5f) >= aS) {
-            vZEnd = aS - 1;
-        } else {
-            vZEnd = (int) (aPoint.mZ + .5f) + (int) (vMaxDistancez + .5f);
-        }
-
-        for (int vZ = vZStart; vZ <= vZEnd; vZ++) {
-            for (int vY = vYStart; vY <= vYEnd; vY++) {
-                for (int vX = vXStart; vX <= vXEnd; vX++) {
-                    aImage[vZ][vY][vX] += (float) (aIntensity
-                            * Math.pow(Math.E, -(Math.pow(vX - aPoint.mX + .5f, 2) + Math.pow(vY - aPoint.mY + .5f, 2)) / (2 * vVarianceXYinPx))
-                            * Math.pow(Math.E, -Math.pow(vZ - aPoint.mZ + .5f, 2) / (2 * vVarianceZinPx)));
-                }
-            }
-        }
     }
 
     @Override

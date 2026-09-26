@@ -750,7 +750,7 @@ public abstract class PFTracking3D implements PlugInFilter {
                     if (aBitmap[vZ][vY][vX]) {
                         vLogLikelihood += -aGivenImage[vZ][vY][vX] + (float) aStackProcs[vZ][vY * mWidth + vX] * (float) Math.log(aGivenImage[vZ][vY][vX]);
                         if (Float.isNaN(vLogLikelihood)) {
-                            System.out.println("NAN at vz = " + vZ + ", vY = " + vY + ", vX = " + vX);
+                            IJ.log("NAN at vz = " + vZ + ", vY = " + vY + ", vX = " + vX);
                         }
                     }
                 }
@@ -773,6 +773,111 @@ public abstract class PFTracking3D implements PlugInFilter {
     abstract protected void drawFromProposalDistribution(float[] aParticle, float aPxWidthInNm, float aPxDepthInNm);
 
     /**
+     * Fills every pixel of {@code aImage} with {@code aBackground}.
+     *
+     * @param aImage the 3D intensity image (z, y, x) to fill.
+     * @param aBackground the constant added to every pixel.
+     */
+    protected void addBackgroundToImage(float[][][] aImage, float aBackground) {
+        for (float[][] vSlice : aImage) {
+            for (float[] vRow : vSlice) {
+                for (int vI = 0; vI < vRow.length; vI++) {
+                    vRow[vI] += aBackground;
+                }
+            }
+        }
+    }
+
+    /**
+     * Adds the PSF of a single feature point to {@code aImage}.
+     *
+     * @param aImage the 3D intensity image (z, y, x) to accumulate into.
+     * @param aPoint the feature point position (in pixels).
+     * @param aIntensity the point's intensity.
+     * @param aW image width, {@code aH} height, {@code aS} depth (pixels).
+     * @param aPxWidthInNm pixel width, {@code aPxDepthInNm} pixel depth.
+     */
+    protected void addFeaturePointTo3DImage(float[][][] aImage, Point3D aPoint, float aIntensity, int aW, int aH, int aS, float aPxWidthInNm, float aPxDepthInNm, float aGhostImage[][]) {
+        float vVarianceXYinPx = mSigmaPSFxy * mSigmaPSFxy / (aPxWidthInNm * aPxWidthInNm);
+        float vVarianceZinPx = mSigmaPSFz * mSigmaPSFz / (aPxDepthInNm * aPxDepthInNm);
+        float vMaxDistancexy = 3 * mSigmaPSFxy / aPxWidthInNm;
+        float vMaxDistancez = 3 * mSigmaPSFz / aPxDepthInNm; //in pixel!
+
+        int vXStart, vXEnd, vYStart, vYEnd, vZStart, vZEnd; //defines a bounding box around the tip
+        if (aPoint.mX + .5f - (vMaxDistancexy + .5f) < 0) {
+            vXStart = 0;
+        } else {
+            vXStart = (int) (aPoint.mX + .5f) - (int) (vMaxDistancexy + .5f);
+        }
+        if (aPoint.mY + .5f - (vMaxDistancexy + .5f) < 0) {
+            vYStart = 0;
+        } else {
+            vYStart = (int) (aPoint.mY + .5f) - (int) (vMaxDistancexy + .5f);
+        }
+        if (aPoint.mZ + .5f - (vMaxDistancez + .5f) < 0) {
+            vZStart = 0;
+        } else {
+            vZStart = (int) (aPoint.mZ + .5f) - (int) (vMaxDistancez + .5f);
+        }
+        if (aPoint.mX + .5f + (vMaxDistancexy + .5f) >= aW) {
+            vXEnd = aW - 1;
+        } else {
+            vXEnd = (int) (aPoint.mX + .5f) + (int) (vMaxDistancexy + .5f);
+        }
+        if (aPoint.mY + .5f + (vMaxDistancexy + .5f) >= aH) {
+            vYEnd = aH - 1;
+        } else {
+            vYEnd = (int) (aPoint.mY + .5f) + (int) (vMaxDistancexy + .5f);
+        }
+        if (aPoint.mZ + .5f + (vMaxDistancez + .5f) >= aS) {
+            vZEnd = aS - 1;
+        } else {
+            vZEnd = (int) (aPoint.mZ + .5f) + (int) (vMaxDistancez + .5f);
+        }
+
+        for (int vZ = vZStart; vZ <= vZEnd && vZ < aImage.length; vZ++) {
+            for (int vY = vYStart; vY <= vYEnd && vY < aImage[vZ].length; vY++) {
+                for (int vX = vXStart; vX <= vXEnd && vX < aImage[vZ][vY].length; vX++) {
+                    aImage[vZ][vY][vX] += (float) (aIntensity
+                            * Math.pow(Math.E, -(Math.pow(vX - aPoint.mX + .5f, 2) + Math.pow(vY - aPoint.mY + .5f, 2)) / (2 * vVarianceXYinPx))
+                            * Math.pow(Math.E, -Math.pow(vZ - aPoint.mZ + .5f, 2) / 2 * vVarianceZinPx));
+                }
+            }
+        }
+    }
+
+    /**
+     * Calculates the expected mean of a Gaussian fitted to a ray through the
+     * image stack.
+     *
+     * @param aX the x position of the ray.
+     * @param aY the y position of the ray.
+     * @param aIS the image stack from which intensities are read.
+     * @return the expected z position of a Gaussian in {@code [1; aIS.getSize()]}
+     * at index 0 and the maximal intensity at position {@code (aX, aY)} at index 1.
+     */
+    protected float[] calculateExpectedZPositionAt(int aX, int aY, ImageStack aIS) {
+        float vMaxInt = 0;
+        int vMaxSlice = 0;
+        for (int vZ = 0; vZ < mNSlices; vZ++) {
+            float vThisInt;
+            if ((vThisInt = aIS.getProcessor(vZ + 1).getf(aX, aY)) > vMaxInt) {
+                vMaxInt = vThisInt;
+                vMaxSlice = vZ;
+            }
+        }
+        float vSumOfIntensities = 0f;
+        float vRes = 0f;
+        int vStartSlice = Math.max(0, vMaxSlice - 2);
+        int vStopSlice = Math.min(mNSlices - 1, vMaxSlice + 2);
+        for (int vZ = vStartSlice; vZ <= vStopSlice; vZ++) {
+            vSumOfIntensities += aIS.getProcessor(vZ + 1).getf(aX, aY);
+            vRes += (vZ + 1) * aIS.getProcessor(vZ + 1).getf(aX, aY);
+        }
+        return new float[]{vRes / vSumOfIntensities, vMaxInt};
+    }
+
+    /**
      * Converts a slice index to a frame index using the parameters of the image
      * defined by the user.
      *
@@ -781,7 +886,7 @@ public abstract class PFTracking3D implements PlugInFilter {
      */
     protected int sliceToFrame(int aSlice) {
         if (aSlice < 1) {
-            System.err.println("wrong argument in particle filter in SliceToFrame: < 1");
+            IJ.log("wrong argument in particle filter in sliceToFrame: < 1");
         }
         return (int) (aSlice - 1) / mOriginalImagePlus.getNSlices() + 1;
     }
@@ -873,13 +978,13 @@ public abstract class PFTracking3D implements PlugInFilter {
                 vW.write(vS + "\n");
             }
         } catch (IOException aIOE) {
-            aIOE.printStackTrace();
+            IJ.handleException(aIOE);
             return false;
         } finally {
             try {
                 vW.close();
             } catch (IOException aIOE) {
-                aIOE.printStackTrace();
+                IJ.handleException(aIOE);
                 return false;
             }
         }
@@ -899,13 +1004,13 @@ public abstract class PFTracking3D implements PlugInFilter {
             vW = new BufferedWriter(new FileWriter(aFile));
             vW.write(generateOutputString(mStateVectorsMemory, ",", true));
         } catch (IOException aIOE) {
-            aIOE.printStackTrace();
+            IJ.handleException(aIOE);
             return false;
         } finally {
             try {
                 vW.close();
             } catch (IOException aIOE) {
-                aIOE.printStackTrace();
+                IJ.handleException(aIOE);
                 return false;
             }
         }
@@ -958,13 +1063,13 @@ public abstract class PFTracking3D implements PlugInFilter {
 
             }
         } catch (IOException aIOE) {
-            aIOE.printStackTrace();
+            IJ.handleException(aIOE);
             return false;
         } finally {
             try {
                 vR.close();
             } catch (IOException aIOE) {
-                aIOE.printStackTrace();
+                IJ.handleException(aIOE);
                 return false;
             }
         }
@@ -1038,13 +1143,13 @@ public abstract class PFTracking3D implements PlugInFilter {
 
             }
         } catch (IOException aIOE) {
-            aIOE.printStackTrace();
+            IJ.handleException(aIOE);
             return false;
         } finally {
             try {
                 vR.close();
             } catch (IOException aIOE) {
-                aIOE.printStackTrace();
+                IJ.handleException(aIOE);
                 return false;
             }
         }
@@ -1355,7 +1460,9 @@ public abstract class PFTracking3D implements PlugInFilter {
                     }
                 }
             } catch (java.lang.NullPointerException vE) {
-                //do nothing
+                // The particle monitor may not yet hold a frame for the current
+                // slice (e.g. before tracking starts or under partial updates).
+                // Rendering is best-effort, so skip drawing rather than fail.
             }
         }
     }

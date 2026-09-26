@@ -63,6 +63,64 @@ Maven wrapper matching IAClassLibrary. `mvn verify` passes on JDK 21.
 
 ---
 
+## 2026-09-26 — M2, M3, and M4 (partial) landed
+
+### M2 — Dead-code removal (Phase D1)
+
+Stripped commented-out/experimental code across four files:
+
+| Commit | What |
+|---|---|
+| — | `TrajectoryBuilder`: removed the legacy combinatorial scoring path (`getMinScores`, `getMinScoreIndices`, `calcScore`, `getNCombs`, `getFirstResult`, `increment`, `allUnique`, commented-out `calcAllPossibleCombs`) and ~20 lines of debug `println`s; dropped the now-unused `DescriptiveStatistics` import. |
+| — | `ProbabilisticTracker`: removed the commented-out `main` (hardcoded `C:\Users\barry05\...`) and `mouseReleased` override. |
+| — | `PFTracking3D`: removed six commented-out debug/profiling `println` blocks. |
+| — | `UserVariables`: removed commented-out `c1Index`/`c2Index`/`channels`/`c2CurveFitTol`/`prevRes`/`medianThresh` fields and accessors. |
+
+Two deliberate deferrals, both recorded:
+
+- The **live** `System.out`/`System.err` diagnostics in `PFTracking3D` → moved to D4.
+- `UserVariables.RED`/`GREEN`/`BLUE`/`FOREGROUND` are now unreferenced in-repo but
+  left as `public static final` — public API (Lesson L4).
+
+### M3 — Test harness (Phase C)
+
+- Added `org.junit.jupiter:junit-jupiter-api` + `-engine` (test scope, version
+  managed by parent → 5.13.4). Note the parent's `junit.version` is 4.13.2
+  (JUnit 4), so JUnit 5 required explicit declaration — mirror IAClassLibrary.
+- 4 test classes / 16 tests, all headless-safe (no ImageJ runtime):
+  `NonIsoGaussianTest`, `FluorophoreTest`, `DecayingFluorophoreTest`,
+  `ParticleTrajectoryTest`.
+- One test initially failed and exposed a real behavioural detail: `addPoint`
+  links newest→oldest, so `getDisplacement` must walk from `getEnd()`, not
+  `getStart()`.
+
+### M4 — Refactor (D3–D5 done; D2 gated on D6)
+
+- **D4 (error handling):** 8× `printStackTrace()` → `IJ.handleException(...)`;
+  live `System.out`/`System.err` → `IJ.log(...)`; the no-op `e.toString()` and
+  the `catch (NullPointerException) { /*do nothing*/ }` now carry explanatory
+  comments.
+- **D3 (dedupe):** `addBackgroundToImage`, `addFeaturePointTo3DImage`,
+  `calculateExpectedZPositionAt` promoted to `protected` in `PFTracking3D` and
+  removed from the three subclasses. Kept the defensively-bounded loop variant
+  (superset, so behaviour is unchanged) and the `aGhostImage` parameter
+  (call-site compatibility).
+- **D5 (surface):** 9 `@Override`s added to `ProbabilisticTracker`; no raw
+  types; `LinearMovementFPTracker3D` tabs → 4 spaces.
+- **D2 blocked** on the D6 decision (see below).
+
+### New lesson from M3/M4
+
+1. **Imports can be "used" transitively without being obvious.** Removing
+   `calculateExpectedZPositionAt` from `FPTracker3D`/`LinearMovementFPTracker3D`
+   looked like it orphaned `import ij.ImageStack;`, but both files still use
+   `ImageStack` elsewhere (`mouseReleased` → `getAFrameCopy`, `autoInitFilter`).
+   Always recompile before deleting an import; `findstr` on multiple files via
+   `cmd.exe` silently returns "no match" on a parse error. *(Two round-trips of
+   compile failures were avoided only by the clean-test gate.)*
+
+---
+
 ## 2026-09-25 — Review & plan kick-off (pre-M1)
 
 Initial full review of `TrackerLibrary` and creation of the modernization plan.
