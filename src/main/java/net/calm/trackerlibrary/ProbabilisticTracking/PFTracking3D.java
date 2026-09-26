@@ -428,7 +428,6 @@ public abstract class PFTracking3D implements PlugInFilter {
 
                 if (mDoResampling) {
                     if (!resample(mParticles)) {//further iterations are not necessary.
-//						System.out.println("number of iterations needed at this frame: " + vRepStep);
                         break;
                     }
                 }
@@ -556,13 +555,11 @@ public abstract class PFTracking3D implements PlugInFilter {
             vNeff = 1 / vNeff;
 
             if (vNeff > mResamplingThreshold) {
-//				System.out.println("no resampling");
                 return false; //we won't do the resampling
             }
             //
             // Begin resampling
             //
-//			System.out.println("Resampling");
             float VNBPARTICLES_1 = 1f / (float) mNbParticles;
             double[] vC = new double[mNbParticles + 1];
             vC[0] = 0;
@@ -747,7 +744,6 @@ public abstract class PFTracking3D implements PlugInFilter {
         //we need all processors anyway. Profiling showed that the method getProcessor needs a lot of time. Store them
         //in an Array.
 
-//		long vTime1 = System.currentTimeMillis();
         for (int vZ = 0; vZ < mNSlices; vZ++) {
             for (int vY = 0; vY < mHeight; vY++) {
                 for (int vX = 0; vX < mWidth; vX++) {
@@ -760,7 +756,6 @@ public abstract class PFTracking3D implements PlugInFilter {
                 }
             }
         }
-//		System.out.println("used time for loglik = " + (System.currentTimeMillis() - vTime1));
         //IJ.showStatus("likelihood finshed");
         return vLogLikelihood;
     }
@@ -1425,9 +1420,6 @@ public abstract class PFTracking3D implements PlugInFilter {
         public void run() {
             int vI;
             while ((vI = getNewParticleIndex()) != -1) {
-//								if(vI == 2) {
-//									System.out.println("run stop");
-//								}
                 //get the particle
                 float[] vParticle = mParticles.elementAt(vI);
                 //calculate ideal image
@@ -1441,9 +1433,6 @@ public abstract class PFTracking3D implements PlugInFilter {
 
                 //calculate likelihood
                 mResultArray[vI] = calculateLogLikelihood_3D(mStackProcs, mFrameIndex, vIdealImage, mBitmap);
-//				if(Float.isNaN(mResultArray[vI])){
-//					System.out.println("NAN found! at particle index vI = " + vI);
-//				}
 
             }
         }

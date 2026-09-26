@@ -27,17 +27,6 @@ public class ProbabilisticTracker extends PFTracking3D {
     private boolean mDoPrecisionCorrection = true;
     int mDimOfState = 7;
 
-//    public static void main(String args[]) {
-//        Probabilistic_Tracker tracker = new Probabilistic_Tracker();
-//        ImagePlus imp = new ImagePlus();
-//        imp.setStack(Utils.buildStack(new File("C:\\Users\\barry05\\Desktop\\Tracking Test Sequences\\TiffSim2")),
-//                1, 1, 50);
-//        imp.getCalibration().setUnit("nm");
-//        imp.getCalibration().pixelWidth = 132.0;
-//        imp.getCalibration().pixelDepth = 132.0;
-//        tracker.setup(null, imp);
-//    }
-
     public boolean getMDoPrecisionOptimization() {
         return mDoPrecisionCorrection;
     }
@@ -147,15 +136,6 @@ public class ProbabilisticTracker extends PFTracking3D {
         }
     }
 
-//    protected void mouseReleased(int ax, int ay) {
-//        if (getMStateOfFilter() == PFTracking3D.STATE_OF_FILTER.INIT) {
-//            setMStateOfFilter(STATE_OF_FILTER.READY_TO_RUN);
-//            int index = getMZProjectedImagePlus().getCurrentSlice();
-//            float intens = getMZProjectedImagePlus().getImageStack().getProcessor(index).getPixelValue(ax, ay);
-//            float[] vFirstState = new float[]{ax, ay, 1.0f, intens};
-//            mStateVectors.add(vFirstState);
-//        }
-//    }
     protected boolean showParameterDialog() {
         GenericDialog vGenericDialog = new GenericDialog("Enter search radius parameters", IJ.getInstance());
         for (int vD = 0; vD < mSigmaOfDynamics.length; vD++) {

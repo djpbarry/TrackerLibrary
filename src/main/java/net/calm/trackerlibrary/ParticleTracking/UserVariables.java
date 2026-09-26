@@ -20,19 +20,14 @@ public class UserVariables {
     private static double curveFitTol = 0.5d;
     private static double blobSize = 0.5;
     private static double blobThresh = 0.1;
-//    private static double c2CurveFitTol = 0.0d;
     private static double trackLength = 5.0;
     private static double msdThresh = 0.0;
     private static int nMax = 1;
     private static double colocalThresh = 0.25;
     private static boolean colocal = true, preProcess = true, gpu = false, useCals = false, extractsigs = false;
-//    public static final String[] channels = {"Red", "Green"};
-//    private static int c1Index = RED;
-//    private static int c2Index = GREEN;
     public static final int FOREGROUND = 255; //Integer value of foreground pixels
     private static double sigEstGreen = 0.2;
     private static double sigEstRed = 0.3;
-//    private static double medianThresh = 1.05;
     private static int minMSDPoints = 10;
     private static boolean fitC2 = false, trackRegions = false;
     private static int detectionMode = MAXIMA;
@@ -106,20 +101,6 @@ public class UserVariables {
         UserVariables.preProcess = preProcess;
     }
 
-//    public static int getC1Index() {
-//        return c1Index;
-//    }
-//
-//    public static void setC1Index(int c1Index) {
-//        UserVariables.c1Index = c1Index;
-//    }
-//    public static int getC2Index() {
-//        return c2Index;
-//    }
-//
-//    public static void setC2Index(int c2Index) {
-//        UserVariables.c2Index = c2Index;
-//    }
     public static double getCurveFitTol() {
         return curveFitTol;
     }
@@ -128,12 +109,6 @@ public class UserVariables {
         UserVariables.curveFitTol = curveFitTol;
     }
 
-//    public static double getC2CurveFitTol() {
-//        return c2CurveFitTol;
-//    }
-//    public static void setC2CurveFitTol(double c2CurveFitTol) {
-//        UserVariables.c2CurveFitTol = c2CurveFitTol;
-//    }
     public static int getnMax() {
         return nMax;
     }
@@ -166,12 +141,6 @@ public class UserVariables {
         UserVariables.trackLength = trackLength;
     }
 
-//    public static boolean isPrevRes() {
-//        return prevRes;
-//    }
-//    public static void setPrevRes(boolean prevRes) {
-//        UserVariables.prevRes = prevRes;
-//    }
     public static boolean isUseCals() {
         return useCals;
     }
@@ -220,13 +189,6 @@ public class UserVariables {
         UserVariables.sigEstRed = sigEstRed;
     }
 
-//    public static double getMedianThresh() {
-//        return medianThresh;
-//    }
-//
-//    public static void setMedianThresh(double medianThresh) {
-//        UserVariables.medianThresh = medianThresh;
-//    }
     public static int getMinMSDPoints() {
         return minMSDPoints;
     }
