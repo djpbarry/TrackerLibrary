@@ -30,7 +30,7 @@ public class TrajectoryBuilder {
 
     public static void updateTrajectories(ParticleArray objects, double timeRes, double minStepTol, double spatialRes, double magNormFactor, ArrayList<ParticleTrajectory> trajectories, boolean morph) {
         double mw, vw, pw;
-        if (UserVariables.getMotionModel() == UserVariables.RANDOM) {
+        if (UserVariables.getInstance().getMotionModel() == UserVariables.RANDOM) {
             mw = 0.0;
             vw = 0.0;
             pw = 1.0;
@@ -91,8 +91,8 @@ public class TrajectoryBuilder {
                             ArrayRealVector vector2 = new ArrayRealVector(new double[]{last.getX(), last.getY()});
                             double posScore = vector1.getDistance(vector2);
                             double projScore = 1.0;
-                            if (UserVariables.getMotionModel() != UserVariables.RANDOM) {
-                                double deltaT = currentParticle.getFrameNumber() * UserVariables.getTimeRes() - last.getFrameNumber() * UserVariables.getTimeRes();
+                            if (UserVariables.getInstance().getMotionModel() != UserVariables.RANDOM) {
+                                double deltaT = currentParticle.getFrameNumber() * UserVariables.getInstance().getTimeRes() - last.getFrameNumber() * UserVariables.getInstance().getTimeRes();
                                 ArrayRealVector vector3 = new ArrayRealVector(new double[]{x, y});
                                 ArrayRealVector vector4 = new ArrayRealVector(new double[]{last.getX() + traj.getXVelocity() * deltaT, last.getY() + traj.getYVelocity() * deltaT});
                                 projScore = 1.0 - vector3.getDistance(vector4) / vector3.getL1Norm();
@@ -106,7 +106,7 @@ public class TrajectoryBuilder {
                     }
                     if (minIndex > -1) {
                         ParticleTrajectory traj = (ParticleTrajectory) trajectories.get(minIndex);
-                        if ((minScore < UserVariables.getTrajMaxStep()) && (minScore < traj.getTempScore())) {
+                        if ((minScore < UserVariables.getInstance().getTrajMaxStep()) && (minScore < traj.getTempScore())) {
                             traj.addTempPoint(currentParticle.makeCopy(), minScore, j, k);
                         }
                     }

@@ -39,7 +39,7 @@ public class ParticleTrajectory {
     private double[] kappa;
     private double[] smoothXPoints, smoothYPoints;
     private Rectangle bounds;
-    public static double scale;
+    protected double scale = 1.0;
     private static final int segment = 5;
     private double xFluorSpread, yFluorSpread;
     private int startTimeIndex;
@@ -57,7 +57,7 @@ public class ParticleTrajectory {
      */
     public ParticleTrajectory(double timeRes, double spatRes) {
         this.timeRes = timeRes;
-        scale = 1.0 / spatRes;
+        this.scale = 1.0 / spatRes;
         peakIntens = 0.0;
     }
 
@@ -236,14 +236,14 @@ public class ParticleTrajectory {
         int frame = (int) Math.round(particle.getFeature(Spot.FRAME));
         double x = particle.getX();
         double y = particle.getY();
-        int xPix = (int) Math.round(x / UserVariables.getSpatialRes());
-        int yPix = (int) Math.round(y / UserVariables.getSpatialRes());
+        int xPix = (int) Math.round(x / UserVariables.getInstance().getSpatialRes());
+        int yPix = (int) Math.round(y / UserVariables.getInstance().getSpatialRes());
         double c1Mag = stacks[0].getProcessor(frame + 1).getPixelValue(xPix, yPix);
         double c2Mag = Double.NaN;
         if (stacks[1] != null) {
             c2Mag = stacks[1].getProcessor(frame + 1).getPixelValue(xPix, yPix);
         }
-        return new double[]{frame, frame / UserVariables.getTimeRes(), x, y, c1Mag, c2Mag};
+        return new double[]{frame, frame / UserVariables.getInstance().getTimeRes(), x, y, c1Mag, c2Mag};
     }
 
     public int getType(double thresh) {
@@ -508,19 +508,60 @@ public class ParticleTrajectory {
      * <code>getDiffCoeff()</code> method of <code>ParticleTrajectory</code>.
      */
     public boolean calcMSD(int seg, int label) {
-        int maxLength;
-        double xval, yval;
         double points[][] = getInterpolatedPoints();
         double xPoints[] = points[0], yPoints[] = points[1];
         if (xPoints == null) {
             return false;
         }
         int length = xPoints.length;
-        if (seg > 0) {
-            maxLength = seg;
-        } else {
-            maxLength = length;
+        int maxLength = seg > 0 ? seg : length;
+        double[][] result = calcMSDValues(xPoints, yPoints, maxLength);
+        if (result == null) {
+            return false;
         }
+        double[] tsA = result[0];
+        double[] msdA = result[1];
+        if (msdPlot == null) {
+            msdPlot = new Plot("Mean Square Displacement",
+                    "Time (s)", "Mean Square Displacement (" + IJ.micronSymbol + "m^2)");
+            msdPlot.setLineWidth(3);
+        }
+        for (int i = 0; i < msdA.length; i++) {
+            if (globalMSD.size() <= i) {
+                globalMSD.add(new DescriptiveStatistics());
+            }
+            globalMSD.get(i).addValue(msdA[i]);
+        }
+        Random r = new Random();
+        msdPlot.setColor(new Color(r.nextFloat(), r.nextFloat(), r.nextFloat()));
+        ArrayList<Double> timesteps = new ArrayList<>();
+        ArrayList<Double> msd = new ArrayList<>();
+        for (int i = 0; i < tsA.length; i++) {
+            timesteps.add(tsA[i]);
+            msd.add(msdA[i]);
+        }
+        msdPlot.addPoints(timesteps, msd, Plot.CONNECTED_CIRCLES);
+        msdPlot.setLimitsToFit(false);
+        plotLegend = ((plotLegend.concat("Particle ")).concat(String.valueOf(label))).concat("\n");
+        msdPlot.addLegend(plotLegend);
+        msdPlot.draw();
+        msdPlot.show();
+        CurveFitter fitter = new CurveFitter(tsA, msdA);
+        fitter.doFit(CurveFitter.STRAIGHT_LINE);
+        diffCoeff = (fitter.getParams())[1] / D_SCALING;
+
+        return true;
+    }
+
+    /**
+     * Computes the pure mean-square-displacement time series from the given
+     * interpolated trajectory points, independent of any ImageJ plotting.
+     * Returns {@code null} if there are too few points to average. The first
+     * returned array holds the timesteps (in seconds) and the second holds the
+     * corresponding mean squared displacement.
+     */
+    private double[][] calcMSDValues(double[] xPoints, double[] yPoints, int maxLength) {
+        double xval, yval;
         ArrayList<Double> timesteps = new ArrayList<>();
         ArrayList<Double> msd = new ArrayList<>();
         for (int i = 0; i < maxLength; i++) {
@@ -536,39 +577,16 @@ public class ParticleTrajectory {
                 msd.add(thisMSD.getMean());
             }
         }
-        if (!(msd.size() > 0)) {
-            return false;
-        }
-        if (msdPlot == null) {
-            msdPlot = new Plot("Mean Square Displacement",
-                    "Time (s)", "Mean Square Displacement (" + IJ.micronSymbol + "m^2)");
-            msdPlot.setLineWidth(3);
+        if (msd.isEmpty()) {
+            return null;
         }
         double[] tsA = new double[timesteps.size()];
         double[] msdA = new double[msd.size()];
         for (int i = 0; i < timesteps.size(); i++) {
             tsA[i] = timesteps.get(i);
-        }
-        for (int i = 0; i < msd.size(); i++) {
             msdA[i] = msd.get(i);
-            if (globalMSD.size() <= i) {
-                globalMSD.add(new DescriptiveStatistics());
-            }
-            globalMSD.get(i).addValue(msd.get(i));
         }
-        Random r = new Random();
-        msdPlot.setColor(new Color(r.nextFloat(), r.nextFloat(), r.nextFloat()));
-        msdPlot.addPoints(timesteps, msd, Plot.CONNECTED_CIRCLES);
-        msdPlot.setLimitsToFit(false);
-        plotLegend = ((plotLegend.concat("Particle ")).concat(String.valueOf(label))).concat("\n");
-        msdPlot.addLegend(plotLegend);
-        msdPlot.draw();
-        msdPlot.show();
-        CurveFitter fitter = new CurveFitter(tsA, msdA);
-        fitter.doFit(CurveFitter.STRAIGHT_LINE);
-        diffCoeff = (fitter.getParams())[1] / D_SCALING;
-
-        return true;
+        return new double[][]{tsA, msdA};
     }
 
     public static void drawGlobalMSDPlot() {
@@ -586,7 +604,7 @@ public class ParticleTrajectory {
         for (int i = 0; i < N; i++) {
             DescriptiveStatistics ds = globalMSD.get(i);
             msdErrorA[i] = ds.getStandardDeviation() / Math.sqrt(ds.getN());
-            tsA[i] = i / UserVariables.getTimeRes();
+            tsA[i] = i / UserVariables.getInstance().getTimeRes();
             msdA[i] = ds.getMean();
         }
         globalMsdPlot.addPoints(tsA, msdA, Plot.CONNECTED_CIRCLES);

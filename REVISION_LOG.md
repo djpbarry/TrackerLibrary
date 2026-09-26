@@ -63,6 +63,46 @@ Maven wrapper matching IAClassLibrary. `mvn verify` passes on JDK 21.
 
 ---
 
+## 2026-09-26 — D6 resolved (Option A): static mutable state → instance state
+
+Decision 4 of the plan was settled in favour of **Option A** (instance-based
+state). This unblocks the remaining D2 decomposition work and makes the
+tracking code unit-testable without global-state bleed.
+
+| Change | What |
+|---|---|
+| `ParticleTrajectory.scale` | `public static double` → `protected double` instance field, defaulting to `1.0`. The no-arg constructor (used by `TrackMateTracker`) no longer inherits whatever `scale` a previous trajectory last set — a latent hidden-global bug fixed. |
+| `UserVariables` | Converted from a `public static` singleton to an instance holder: instance (non-static) fields, public constructor, `getInstance()` (lazy) and `setInstance(...)` (inject/reset). In-repo consumers (`TrajectoryBuilder`, `TrajectoryBridger`, `ParticleTrajectory`) now route through `UserVariables.getInstance()`. The `public static final int` constants (`RANDOM`, `MAXIMA`, etc.) are unchanged. |
+| `ParticleTrajectory.calcMSD` | Extracted the pure MSD computation into ImageJ-free `calcMSDValues(...)`; the `Plot` rendering/accumulation stays in `calcMSD` as a thin layer (D2). |
+| Test | Added `UserVariablesTest` (singleton + instance-isolation). Suite now **18/18**. |
+
+### Deliberately not changed
+
+- `msdPlot`, `plotLegend`, `globalMSD` remain static: they are the **population
+  MSD accumulator** (one shared chart aggregating across a run, exposed via
+  `drawGlobalMSDPlot()`/`getMsdPlot()`/`resetMSDPlot()`). That is global by
+  design, and `ij.gui.Plot`-bound, so headless-testing it adds no value. The
+  *testable* math was extracted (above) instead.
+
+### Compatibility note (downstream impact)
+
+This is a **breaking change for downstream callers**: the old `public static`
+`UserVariables.getX()`/`setX(...)` methods are gone, replaced by
+`UserVariables.getInstance().getX()` (and `setInstance(...)` for injection).
+ADAPT / `AdaptDataProcessing` must be updated in the same coordinated pass.
+If a smoother migration window is desired, re-add `public static` shim methods
+delegating to `getInstance()` — deferred pending the maintainer's preference.
+
+### Lesson
+
+No new lesson — this followed the plan's D6 route as designed. The only
+reminders: (1) a source-level breaking change to a library's public API needs an
+explicit downstream-usage note (Lesson L4 in spirit); (2) toggle the
+"waiting-for-decision" notes in `DEVELOPMENT_PLAN.md` as soon as a decision
+lands, not on a later pass.
+
+---
+
 ## 2026-09-26 — M2, M3, and M4 (partial) landed
 
 ### M2 — Dead-code removal (Phase D1)

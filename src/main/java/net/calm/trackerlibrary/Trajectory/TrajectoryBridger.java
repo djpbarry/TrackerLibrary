@@ -61,8 +61,8 @@ public class TrajectoryBridger {
                         ArrayRealVector vector2 = new ArrayRealVector(new double[]{traj1End.getX(), traj1End.getY()});
                         double posScore = vector1.getDistance(vector2);
                         double projScore = 1.0;
-                        if (UserVariables.getMotionModel() != UserVariables.RANDOM) {
-                            double deltaT = traj2Start.getFrameNumber() * UserVariables.getTimeRes() - traj1End.getFrameNumber() * UserVariables.getTimeRes();
+                        if (UserVariables.getInstance().getMotionModel() != UserVariables.RANDOM) {
+                            double deltaT = traj2Start.getFrameNumber() * UserVariables.getInstance().getTimeRes() - traj1End.getFrameNumber() * UserVariables.getInstance().getTimeRes();
                             ArrayRealVector vector3 = new ArrayRealVector(new double[]{x, y});
                             ArrayRealVector vector4 = new ArrayRealVector(new double[]{traj1End.getX() + traj1.getXVelocity() * deltaT, traj1End.getY() + traj1.getYVelocity() * deltaT});
                             projScore = 1.0 - vector3.getDistance(vector4) / vector3.getL1Norm();
@@ -77,7 +77,7 @@ public class TrajectoryBridger {
             }
             if (minIndex > -1) {
                 ParticleTrajectory traj = (ParticleTrajectory) trajectories.get(minIndex);
-                if (minScore < UserVariables.getTrajMaxStep()) {
+                if (minScore < UserVariables.getInstance().getTrajMaxStep()) {
                     traj1.addTrajectory(traj);
                     trajectories.remove(minIndex);
                     size--;

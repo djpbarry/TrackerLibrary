@@ -22,6 +22,15 @@ maintainable design and preserving a legacy API, prefer the cleaner design.
   [`REVISION_LOG.md`](REVISION_LOG.md) so the remaining sibling
   (`AdaptDataProcessing`, ADAPT) does not repeat them.
 
+### Standing rule (applies to every change)
+
+Every code change **must** be followed, in the same pass, by the corresponding
+updates to [`DEVELOPMENT_PLAN.md`](DEVELOPMENT_PLAN.md) (milestone/phase status,
+deviations from what was planned) and [`REVISION_LOG.md`](REVISION_LOG.md)
+(dated entry + any new lesson). Do not wait for a separate prompt — keeping the
+plan and the revision log in lockstep with the code is part of finishing the
+change, not an optional follow-up.
+
 ## Current state (context for the plan)
 
 > **Status update (M1 landed):** Phases A1–A3 and B1–B3 are **complete** — see
@@ -353,8 +362,11 @@ confirmed, not re-derived:
    from Decision 3).
 4. **Static mutable state — decide Options A vs B** (see D6). This is
    TrackerLibrary-specific and needs a maintainer call.
-   **Note (post-M4):** D2 decomposition is now gated on this decision; it was
-   the only M4 item left outstanding.
+   **Note (post-M4):** Decision made — **Option A** adopted (instance-based
+   state). `ParticleTrajectory.scale` is now an instance field and `UserVariables`
+   is an instance holder with `getInstance()`/`setInstance(...)`. See the
+   milestone-status table and `REVISION_LOG.md` 2026-09-26 "D6 (Option A)".
+   D2 is thereby unblocked.
 5. **Public API — "no in-repo reference" ≠ "dead code".** The simulation classes
    and `TailTracer` may be consumed externally (inherited from IAClassLibrary
    Decision 0). Removal of public symbols requires a deprecation window and an
@@ -390,11 +402,11 @@ unblocks the coordinated downstream modernization.
 | M1 — B4 (IAClassLibrary re-pin) | ⏸ **Deferred** | No `v2.0.0` tag on JitPack yet; deprioritised by the maintainer (Javadoc is the compat target, not the pin). Still using `37a1be016a`. Flag if/when the deprecated `DataStatistics`/`ProgressDialog` migration requires the new API. |
 | **M2** — Dead-code removal | ✅ **Done** | Stripped the commented-out combinatorial scoring (`getMinScores`, `getMinScoreIndices`, `calcScore`, `getNCombs`, `getFirstResult`, `increment`, `allUnique`, `calcAllPossibleCombs`) and scattered debug `println`s in `TrajectoryBuilder`; removed the commented-out `main` + `mouseReleased` in `ProbabilisticTracker`; removed six commented-out debug blocks in `PFTracking3D`; removed commented-out `UserVariables` fields/methods. Deliberately left the *live* `System.out`/`System.err` in `PFTracking3D` (deferred to D4) and the now-unused public `RED`/`GREEN`/`BLUE`/`FOREGROUND` constants (public API — Lesson L4). |
 | **M3** — Test harness | ✅ **Done** | Added JUnit 5 (`junit-jupiter-api`/`-engine`, test scope, version-managed by parent 5.13.4). 4 test classes / 16 tests, all headless-safe: `NonIsoGaussianTest`, `FluorophoreTest`, `DecayingFluorophoreTest`, `ParticleTrajectoryTest`. |
-| **M4** — Refactor core | 🔶 **Partly done** | D3, D4, D5 complete. D2 (decompose `PFTracking3D`/`ParticleTrajectory`/`TailTracer`) blocked on the D6 static-state decision (see below). |
-| **M5** — Static-state + docs | ⬜ Pending | |
+| **M4** — Refactor core | 🔶 **Partly done** | D3, D4, D5 complete. D2 blocks: `ParticleTrajectory` MSD math extracted; the floor-standing decomposition of `PFTracking3D` (core / file I/O / GUI split) and `TailTracer` geometry extraction remain. |
+| **M5** — Static-state + docs | 🔶 **Partly done** | D6 (Option A) landed: `UserVariables` → instance holder, `ParticleTrajectory.scale` → instance field. Remaining `msdPlot`/`globalMSD` statics are UI-global by design (documented, not refactored). `README.md` expansion + Javadoc still open. |
 | **M6** — Upstream hand-off | ⬜ Pending | |
 
-### M4 progress (D3–D5 done, D2 gated on D6)
+### M4 progress (D3–D5 done; D2 begun after D6)
 
 - **D4 (error handling):** 8× `printStackTrace()` → `IJ.handleException(...)`;
   live `System.out`/`System.err` diagnostics → `IJ.log(...)`; no-op
@@ -409,10 +421,11 @@ unblocks the coordinated downstream modernization.
   unused `aGhostImage` parameter was retained for call-site compatibility.
 - **D5 (surface):** 9 missing `@Override`s added to `ProbabilisticTracker`;
   no raw types found; `LinearMovementFPTracker3D` converted tabs → 4 spaces.
-- **D2 blocked:** decomposing `ParticleTrajectory`'s analytics and
-  `PFTracking3D`'s monolithic body requires settling D6 first, because the
-  static `scale`/`msdPlot`/`globalMSD` (and `UserVariables`) determine how the
-  extracted classes receive configuration.
+- **D2 (partly done):** extracted the pure MSD computation
+  (`calcMSDValues`) out of `ParticleTrajectory.calcMSD`, leaving the `Plot`
+  rendering/accumulation as a thin layer. Remaining D2 work: split `PFTracking3D`
+  (core / file I/O / GUI) and extract `TailTracer`'s pure vector/intersection
+  geometry.
 
 ### M1 deviations from the original plan
 

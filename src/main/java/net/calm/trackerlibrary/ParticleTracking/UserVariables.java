@@ -7,254 +7,293 @@ package net.calm.trackerlibrary.ParticleTracking;
 
 import ij.process.AutoThresholder;
 
+/**
+ * Runtime configuration for the deterministic tracking pipeline.
+ *
+ * <p>This class is an instance holder for tracking settings. The mutable state
+ * lives on a single process-wide {@linkplain #getInstance() instance} that can
+ * be swapped for a fresh one via {@link #setInstance(UserVariables)} (useful for
+ * tests and for isolating one run from another). The static getter/setter
+ * methods delegate to that instance purely for backward compatibility with
+ * callers that predate the instance-based configuration; new code should obtain
+ * (and pass) an explicit {@link UserVariables} instance through the tracking
+ * pipeline instead of relying on the process-wide default.</p>
+ */
 public class UserVariables {
 
     public static final int RED = 0, GREEN = 1, BLUE = 2;
     public static final int MAXIMA = 3, BLOBS = 4, GAUSS = 5;
     public static final int RANDOM = 6, DIRECTED = 7;
-    private static double spatialRes = 0.1;
-    private static double timeRes = 1.0;
-    private static double trajMaxStep = 0.75;
-    private static double minTrajLength = 10.0;
-    private static double minTrajDist = 0.0;
-    private static double curveFitTol = 0.5d;
-    private static double blobSize = 0.5;
-    private static double blobThresh = 0.1;
-    private static double trackLength = 5.0;
-    private static double msdThresh = 0.0;
-    private static int nMax = 1;
-    private static double colocalThresh = 0.25;
-    private static boolean colocal = true, preProcess = true, gpu = false, useCals = false, extractsigs = false;
     public static final int FOREGROUND = 255; //Integer value of foreground pixels
-    private static double sigEstGreen = 0.2;
-    private static double sigEstRed = 0.3;
-    private static int minMSDPoints = 10;
-    private static boolean fitC2 = false, trackRegions = false;
-    private static int detectionMode = MAXIMA;
-    private static double filterRadius = 0.133;
-    private static int motionModel = RANDOM;
-    private static int maxFrameGap = 3;
-    private static String c1ThreshMethod = AutoThresholder.Method.Li.toString();
-    private static String c2ThreshMethod = AutoThresholder.Method.Li.toString();
 
-    public static double getSpatialRes() {
+    private static UserVariables instance;
+
+    private double spatialRes = 0.1;
+    private double timeRes = 1.0;
+    private double trajMaxStep = 0.75;
+    private double minTrajLength = 10.0;
+    private double minTrajDist = 0.0;
+    private double curveFitTol = 0.5d;
+    private double blobSize = 0.5;
+    private double blobThresh = 0.1;
+    private double trackLength = 5.0;
+    private double msdThresh = 0.0;
+    private int nMax = 1;
+    private double colocalThresh = 0.25;
+    private boolean colocal = true, preProcess = true, gpu = false, useCals = false, extractsigs = false;
+    private double sigEstGreen = 0.2;
+    private double sigEstRed = 0.3;
+    private int minMSDPoints = 10;
+    private boolean fitC2 = false, trackRegions = false;
+    private int detectionMode = MAXIMA;
+    private double filterRadius = 0.133;
+    private int motionModel = RANDOM;
+    private int maxFrameGap = 3;
+    private String c1ThreshMethod = AutoThresholder.Method.Li.toString();
+    private String c2ThreshMethod = AutoThresholder.Method.Li.toString();
+
+    public UserVariables() {
+    }
+
+    /**
+     * Returns the process-wide default instance, creating it lazily.
+     */
+    public static synchronized UserVariables getInstance() {
+        if (instance == null) {
+            instance = new UserVariables();
+        }
+        return instance;
+    }
+
+    /**
+     * Replaces the process-wide instance. Pass {@code null} to reset it to a
+     * fresh default on the next {@link #getInstance()} call.
+     */
+    public static synchronized void setInstance(UserVariables newInstance) {
+        instance = newInstance;
+    }
+
+    public double getSpatialRes() {
         return spatialRes;
     }
 
-    public static void setSpatialRes(double spatialRes) {
-        UserVariables.spatialRes = spatialRes;
+    public void setSpatialRes(double spatialRes) {
+        this.spatialRes = spatialRes;
     }
 
-    public static double getTimeRes() {
+    public double getTimeRes() {
         return timeRes;
     }
 
-    public static void setTimeRes(double timeRes) {
-        UserVariables.timeRes = timeRes;
+    public void setTimeRes(double timeRes) {
+        this.timeRes = timeRes;
     }
 
-    public static double getTrajMaxStep() {
+    public double getTrajMaxStep() {
         return trajMaxStep;
     }
 
-    public static void setTrajMaxStep(double trajMaxStep) {
-        UserVariables.trajMaxStep = trajMaxStep;
+    public void setTrajMaxStep(double trajMaxStep) {
+        this.trajMaxStep = trajMaxStep;
     }
 
-    public static double getMinTrajLength() {
+    public double getMinTrajLength() {
         return minTrajLength;
     }
 
-    public static void setMinTrajLength(double minTrajLength) {
-        UserVariables.minTrajLength = minTrajLength;
+    public void setMinTrajLength(double minTrajLength) {
+        this.minTrajLength = minTrajLength;
     }
 
-    public static String getC1ThreshMethod() {
+    public String getC1ThreshMethod() {
         return c1ThreshMethod;
     }
 
-    public static void setC1ThreshMethod(String c1ThreshMethod) {
-        UserVariables.c1ThreshMethod = c1ThreshMethod;
+    public void setC1ThreshMethod(String c1ThreshMethod) {
+        this.c1ThreshMethod = c1ThreshMethod;
     }
 
-    public static String getC2ThreshMethod() {
+    public String getC2ThreshMethod() {
         return c2ThreshMethod;
     }
 
-    public static void setC2ThreshMethod(String c2ThreshMethod) {
-        UserVariables.c2ThreshMethod = c2ThreshMethod;
+    public void setC2ThreshMethod(String c2ThreshMethod) {
+        this.c2ThreshMethod = c2ThreshMethod;
     }
-    
-    public static boolean isColocal() {
+
+    public boolean isColocal() {
         return colocal;
     }
 
-    public static void setColocal(boolean colocal) {
-        UserVariables.colocal = colocal;
+    public void setColocal(boolean colocal) {
+        this.colocal = colocal;
     }
 
-    public static boolean isPreProcess() {
+    public boolean isPreProcess() {
         return preProcess;
     }
 
-    public static void setPreProcess(boolean preProcess) {
-        UserVariables.preProcess = preProcess;
+    public void setPreProcess(boolean preProcess) {
+        this.preProcess = preProcess;
     }
 
-    public static double getCurveFitTol() {
+    public double getCurveFitTol() {
         return curveFitTol;
     }
 
-    public static void setCurveFitTol(double curveFitTol) {
-        UserVariables.curveFitTol = curveFitTol;
+    public void setCurveFitTol(double curveFitTol) {
+        this.curveFitTol = curveFitTol;
     }
 
-    public static int getnMax() {
+    public int getnMax() {
         return nMax;
     }
 
-    public static void setnMax(int nMax) {
-        UserVariables.nMax = nMax;
+    public void setnMax(int nMax) {
+        this.nMax = nMax;
     }
 
-    public static boolean isGpu() {
+    public boolean isGpu() {
         return gpu;
     }
 
-    public static void setGpu(boolean gpu) {
-        UserVariables.gpu = gpu;
+    public void setGpu(boolean gpu) {
+        this.gpu = gpu;
     }
 
-    public static double getMinTrajDist() {
+    public double getMinTrajDist() {
         return minTrajDist;
     }
 
-    public static void setMinTrajDist(double minTrajDist) {
-        UserVariables.minTrajDist = minTrajDist;
+    public void setMinTrajDist(double minTrajDist) {
+        this.minTrajDist = minTrajDist;
     }
 
-    public static double getTrackLength() {
+    public double getTrackLength() {
         return trackLength;
     }
 
-    public static void setTrackLength(double trackLength) {
-        UserVariables.trackLength = trackLength;
+    public void setTrackLength(double trackLength) {
+        this.trackLength = trackLength;
     }
 
-    public static boolean isUseCals() {
+    public boolean isUseCals() {
         return useCals;
     }
 
-    public static void setUseCals(boolean useCals) {
-        UserVariables.useCals = useCals;
+    public void setUseCals(boolean useCals) {
+        this.useCals = useCals;
     }
 
-    public static boolean isExtractsigs() {
+    public boolean isExtractsigs() {
         return extractsigs;
     }
 
-    public static void setExtractsigs(boolean extractsigs) {
-        UserVariables.extractsigs = extractsigs;
+    public void setExtractsigs(boolean extractsigs) {
+        this.extractsigs = extractsigs;
     }
 
-    public static double getMsdThresh() {
+    public double getMsdThresh() {
         return msdThresh;
     }
 
-    public static void setMsdThresh(double msdThresh) {
-        UserVariables.msdThresh = msdThresh;
+    public void setMsdThresh(double msdThresh) {
+        this.msdThresh = msdThresh;
     }
 
-    public static double getColocalThresh() {
+    public double getColocalThresh() {
         return colocalThresh;
     }
 
-    public static void setColocalThresh(double colocalThresh) {
-        UserVariables.colocalThresh = colocalThresh;
+    public void setColocalThresh(double colocalThresh) {
+        this.colocalThresh = colocalThresh;
     }
 
-    public static double getSigEstGreen() {
+    public double getSigEstGreen() {
         return sigEstGreen;
     }
 
-    public static void setSigEstGreen(double sigEstGreen) {
-        UserVariables.sigEstGreen = sigEstGreen;
+    public void setSigEstGreen(double sigEstGreen) {
+        this.sigEstGreen = sigEstGreen;
     }
 
-    public static double getSigEstRed() {
+    public double getSigEstRed() {
         return sigEstRed;
     }
 
-    public static void setSigEstRed(double sigEstRed) {
-        UserVariables.sigEstRed = sigEstRed;
+    public void setSigEstRed(double sigEstRed) {
+        this.sigEstRed = sigEstRed;
     }
 
-    public static int getMinMSDPoints() {
+    public int getMinMSDPoints() {
         return minMSDPoints;
     }
 
-    public static void setMinMSDPoints(int minMSDPoints) {
-        UserVariables.minMSDPoints = minMSDPoints;
+    public void setMinMSDPoints(int minMSDPoints) {
+        this.minMSDPoints = minMSDPoints;
     }
 
-    public static int getDetectionMode() {
+    public int getDetectionMode() {
         return detectionMode;
     }
 
-    public static void setDetectionMode(int detectionMode) {
-        UserVariables.detectionMode = detectionMode;
+    public void setDetectionMode(int detectionMode) {
+        this.detectionMode = detectionMode;
     }
 
-    public static boolean isFitC2() {
+    public boolean isFitC2() {
         return fitC2;
     }
 
-    public static void setFitC2(boolean fitC2) {
-        UserVariables.fitC2 = fitC2;
+    public void setFitC2(boolean fitC2) {
+        this.fitC2 = fitC2;
     }
 
-    public static boolean isTrackRegions() {
+    public boolean isTrackRegions() {
         return trackRegions;
     }
 
-    public static double getBlobSize() {
+    public void setTrackRegions(boolean trackRegions) {
+        this.trackRegions = trackRegions;
+    }
+
+    public double getBlobSize() {
         return blobSize;
     }
 
-    public static void setBlobSize(double blobSize) {
-        UserVariables.blobSize = blobSize;
+    public void setBlobSize(double blobSize) {
+        this.blobSize = blobSize;
     }
 
-    public static double getFilterRadius() {
+    public double getFilterRadius() {
         return filterRadius;
     }
 
-    public static void setFilterRadius(double filterRadius) {
-        UserVariables.filterRadius = filterRadius;
+    public void setFilterRadius(double filterRadius) {
+        this.filterRadius = filterRadius;
     }
 
-    public static int getMotionModel() {
+    public int getMotionModel() {
         return motionModel;
     }
 
-    public static void setMotionModel(int motionModel) {
-        UserVariables.motionModel = motionModel;
+    public void setMotionModel(int motionModel) {
+        this.motionModel = motionModel;
     }
 
-    public static int getMaxFrameGap() {
+    public int getMaxFrameGap() {
         return maxFrameGap;
     }
 
-    public static void setMaxFrameGap(int maxFrameGap) {
-        UserVariables.maxFrameGap = maxFrameGap;
+    public void setMaxFrameGap(int maxFrameGap) {
+        this.maxFrameGap = maxFrameGap;
     }
 
-    public static double getBlobThresh() {
+    public double getBlobThresh() {
         return blobThresh;
     }
 
-    public static void setBlobThresh(double blobThresh) {
-        UserVariables.blobThresh = blobThresh;
+    public void setBlobThresh(double blobThresh) {
+        this.blobThresh = blobThresh;
     }
-
 }
