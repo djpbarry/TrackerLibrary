@@ -47,6 +47,11 @@ Maven wrapper matching IAClassLibrary. `mvn verify` passes on JDK 21.
 4. **Wrapper Maven pin is a convenience, not a floor** — the enforcer's
    `RequireMavenVersion` is the real gate. 3.9.9 was chosen purely for
    consistency with IAClassLibrary.
+5. **The `mvnw` wrapper must be committed with its executable bit set.** It was
+   initially committed as mode `100644` (no `+x`), so the Linux CI runner's
+   `./mvnw` invocation failed instantly with "Permission denied" and the whole
+   build job died in ~4 seconds. Fixed with `git update-index --chmod=+x mvnw`.
+   This is a recurring failure mode — see **L10**.
 
 ### Deferred (not blocking)
 
@@ -207,3 +212,19 @@ IAClassLibrary could not get a Java LSP (JDTLS) running under Crush across drive
 (`H:` project, `C:` Python/JDK). For the dead-code sweep and `@Override` pass
 planned here, fall back to IntelliJ's "unused declaration" / "missing @Override"
 inspections rather than relying on a Crush LSP.
+
+### L10 — Commit the Maven wrapper with its executable bit set
+
+After adopting the wrapper in M1, `mvnw` was committed with mode `100644` (no
+`+x`). The Linux CI runner invoked `./mvnw …` and failed instantly with
+"Permission denied", killing the whole build in ~4 seconds before Maven even
+started. This is easy to miss on Windows where the executable bit is not part of
+the filesystem (and where `mvnw.cmd` is used instead), so the problem only
+surfaced on the Ubuntu runner.
+
+**Rule:** whenever a repo gains a Maven/Gradle wrapper, verify it is tracked with
+the executable bit (`git ls-files -s mvnw` must show `100755`, not `100644`). On
+Windows, set it explicitly with `git update-index --chmod=+x mvnw` as
+`chmod +x` is a no-op there. This applies to `AdaptDataProcessing` and ADAPT when
+they adopt the wrapper: confirm `100755` *and* LF line endings (see M1 deviation
+3) in the same pass. *(Recurring — has bitten this family of projects before.)*
