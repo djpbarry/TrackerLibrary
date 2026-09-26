@@ -46,7 +46,7 @@ public class TailTracer {
         this.npoints = npoints;
     }
 
-    double[] normalizedVector(double x, double y) {
+    static double[] normalizedVector(double x, double y) {
 // Normalized vector
         double sn[] = new double[2];
         double n = Math.pow(x * x + y * y, 0.5);
@@ -55,7 +55,7 @@ public class TailTracer {
         return sn;
     }
 
-    double[] normalVector(double x1, double y1, double x2, double y2) {
+    static double[] normalVector(double x1, double y1, double x2, double y2) {
         // Normal vector
         double n[] = new double[2];
         double qx = x2 - x1;
@@ -86,14 +86,14 @@ public class TailTracer {
         return cn;
     }
 
-    double[] intersections(double m1, double c1, double m2, double c2) {
+    static double[] intersections(double m1, double c1, double m2, double c2) {
         double point[] = new double[2];
         point[0] = (c2 - c1) / (m1 - m2);
         point[1] = m1 * point[0] + c1;
         return point;
     }
 
-    double[] intersections2(double a, double b, double c2,
+    static double[] intersections2(double a, double b, double c2,
             double x1, double x2, double y1, double y2) {
         double point1[] = new double[2];
         double point2[] = new double[2];
