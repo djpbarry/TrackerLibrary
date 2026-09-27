@@ -36,6 +36,11 @@ JitPack to ADAPT/`AdaptDataProcessing`.
   fails on the JDK/enforcer, the likely fix is a `jitpack.yml` with
   `jdk: [openjdk21]`.
 
+  **Follow-up (same day):** the first `v4.0.0` JitPack build **failed** — JitPack
+  defaults to JDK 8 (`Java version: 1.8.0_292`), and the enforcer's
+  `RequireJavaVersion` rule rejects it (needs `[21,)`). Fixed by adding a
+  `jitpack.yml` with `jdk: [openjdk21]`. See **L11**.
+
 ---
 
 ## 2026-09-26 — M1 (Foundations) landed
@@ -390,3 +395,18 @@ Windows, set it explicitly with `git update-index --chmod=+x mvnw` as
 `chmod +x` is a no-op there. This applies to `AdaptDataProcessing` and ADAPT when
 they adopt the wrapper: confirm `100755` *and* LF line endings (see M1 deviation
 3) in the same pass. *(Recurring — has bitten this family of projects before.)*
+
+### L11 — Pin the JDK in `jitpack.yml` for Java 21 projects
+
+JitPack's default build image runs **JDK 8**. A Java 21 project (like
+`TrackerLibrary` after the `pom-scijava:45.1.0` move) fails JitPack's build at
+the enforcer's `RequireJavaVersion` rule — not because the code is wrong, but
+because the runner is on `1.8.0_292`. The failure only surfaces on the first
+real JitPack request, since the local `mvnw verify` runs on the developer's JDK 21.
+
+**Rule:** any Java 21 (or otherwise non-default-JDK) project consumed via JitPack
+must carry a `jitpack.yml` with `jdk: [openjdk21]` (or the matching version).
+Don't assume the sibling already has one — IAClassLibrary's `development` branch
+does *not*, so its older (pre-Java-21) commits build `ok` while a fresh Java 21
+tag would not. Add `jitpack.yml` in the same pass as the Java 21 / parent-POM
+move, before cutting the release tag.
