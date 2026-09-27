@@ -19,6 +19,25 @@ dated narrative plus the "what not to do again" notes.
 
 ---
 
+## 2026-09-27 — Release 4.0.0 (B2, M6 kick-off)
+
+Version promoted `4.0.0-SNAPSHOT` → `4.0.0` and the malformed SCM URL
+(`github.com/github.com/…`) corrected, so the project can be tagged and served by
+JitPack to ADAPT/`AdaptDataProcessing`.
+
+- **Tag:** `v4.0.0` (semver, no elided patch zero — L2 satisfied).
+- **License:** already resolved to GPL-3.0-or-later before tagging — L3
+  satisfied.
+- **Release mechanism:** the first tag was cut manually; `maven-release-plugin`
+  is configured with `tagNameFormat=v@{project.version}` for future releases.
+- **Pending verification (L5):** confirm JitPack builds the tag under
+  `pom-scijava:45.1.0` (the sibling IAClassLibrary builds `ok` with the same
+  parent and no `jitpack.yml`, so this is expected to work). If the JitPack build
+  fails on the JDK/enforcer, the likely fix is a `jitpack.yml` with
+  `jdk: [openjdk21]`.
+
+---
+
 ## 2026-09-26 — M1 (Foundations) landed
 
 **Phases A1–A3 and B1–B3 complete.** The build now targets Java 21, the license

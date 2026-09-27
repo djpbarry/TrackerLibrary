@@ -13,7 +13,7 @@
 
     <groupId>net.calm</groupId>
     <artifactId>trackerlibrary</artifactId>
-    <version>4.0.0-SNAPSHOT</version>
+    <version>4.0.0</version>
 
     <name>Tracker Library</name>
     <description>Maven implementation of particle tracker library.</description>
@@ -66,7 +66,7 @@
         <connection>scm:git:git://github.com/djpbarry/TrackerLibrary</connection>
         <developerConnection>scm:git:git@github.com:djpbarry/TrackerLibrary</developerConnection>
         <tag>HEAD</tag>
-        <url>https://github.com/github.com/djpbarry/TrackerLibrary</url>
+        <url>https://github.com/djpbarry/TrackerLibrary</url>
     </scm>
     <issueManagement>
         <system>GitHub Issues</system>

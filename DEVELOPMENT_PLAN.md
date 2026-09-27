@@ -195,6 +195,12 @@ major (`4.0.0-SNAPSHOT`) to reflect the scale of the modernization, mirroring
 IAClassLibrary's jump to `2.0.0`. Consider wiring `maven-release-plugin` with
 `tagNameFormat=v@{project.version}` as IAClassLibrary did.
 
+**Done (2026-09-27):** version promoted to `4.0.0` and tagged `v4.0.0` for
+JitPack consumption by ADAPT/`AdaptDataProcessing`. The malformed SCM URL
+(`github.com/github.com/…`) was also corrected in the same change. The
+`maven-release-plugin` `tagNameFormat=v@{project.version}` is in place for future
+releases, though this first tag was cut manually.
+
 ### B3. TrackMate version web (blocks the coordinated move)
 
 This repo pins `sc.fiji:TrackMate:7.10.0` explicitly, while IAClassLibrary now
@@ -404,7 +410,7 @@ unblocks the coordinated downstream modernization.
 | **M3** — Test harness | ✅ **Done** | Added JUnit 5 (`junit-jupiter-api`/`-engine`, test scope, version-managed by parent 5.13.4). 4 test classes / 16 tests, all headless-safe: `NonIsoGaussianTest`, `FluorophoreTest`, `DecayingFluorophoreTest`, `ParticleTrajectoryTest`. |
 | **M4** — Refactor core | 🔶 **Partly done** | D3, D4, D5 complete. D2: `ParticleTrajectory` MSD math extracted (→ `calcMSDValues`), `TailTracer` geometry static + tested, `PFTracking3D` static helpers extracted to `ParticleFilterUtil` (with delegating shims). `PFTracking3D` file-I/O + GUI inner classes remain in place (field-coupled/protected-API, lower-value). |
 | **M5** — Static-state + docs | ✅ **Done** | D6 (Option A) landed: `UserVariables` → instance holder, `ParticleTrajectory.scale` → instance field. Remaining `msdPlot`/`globalMSD` statics are UI-global by design (documented, not refactored). `README.md` expanded (overview, build, deps, package map, license) with Build/Javadoc/JitPack/commit-activity/license badges. Javadoc added to `TrajectoryBuilder`, `TrackMateTracker`, `TrajectoryBridger`, `UserVariables`; `maven-javadoc-plugin` configured (`doclint none`) and a `javadoc.yml` workflow added to publish to `djpbarry.github.io/TrackerLibrary/`. |
-| **M6** — Upstream hand-off | ⬜ Pending | |
+| **M6** — Upstream hand-off | 🔶 **In progress** | Version promoted to `4.0.0` and tagged `v4.0.0` for JitPack consumption by ADAPT/`AdaptDataProcessing` (B2 done; L2/L3 satisfied). Remaining: confirm the JitPack build succeeds under `pom-scijava:45.1.0` (L5) and coordinate Java 21 / TrackMate 8 / the tag with ADAPT and `AdaptDataProcessing`. |
 
 ### M4 progress (D3–D5 done; D2 begun after D6)
 
