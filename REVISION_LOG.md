@@ -85,6 +85,22 @@ instance state) and added `TailTracerTest` (4 tests). The ImageJ-bound helpers
 were left instance-bound. This completes the `TailTracer` leg of D2; only the
 `PFTracking3D` core / file I/O / GUI split remains outstanding.
 
+### PFTracking3D static helpers extracted (D2, same pass)
+
+Extracted the eight `public static` helpers from `PFTracking3D`
+(`copyStateVector`, `copyParticleVector`, `searchLocalMaximumIntensityWithSteepestAscent`,
+`addImage`, `initArrayToValue`, `getAFrameCopy`, `getSubStackFloatCopy`,
+`getSubStackFloat`) into a new `ParticleFilterUtil` class, leaving thin
+`public static` delegating methods in `PFTracking3D` so the inherited-API surface
+is unchanged for the subclasses and any downstream callers (Lesson L4).
+`PFTracking3D` shrank from ~2206 to ~2095 lines. Added `ParticleFilterUtilTest`
+(4 tests: deep copies, elementwise add, array fill). Suite now **26/26**.
+
+The remaining `PFTracking3D` clusters (file I/O ↔ `mStateVectors`/`mFrameOfInitialization`/`mDimensionsDescription`,
+and the `ImageCanvas` inner classes) are field-coupled and part of the protected
+API, so extracting them would churn call sites for little headless-testability
+gain — parked as a lower-value follow-up rather than forced in this pass.
+
 ### Deliberately not changed
 
 - `msdPlot`, `plotLegend`, `globalMSD` remain static: they are the **population

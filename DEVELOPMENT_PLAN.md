@@ -402,7 +402,7 @@ unblocks the coordinated downstream modernization.
 | M1 — B4 (IAClassLibrary re-pin) | ⏸ **Deferred** | No `v2.0.0` tag on JitPack yet; deprioritised by the maintainer (Javadoc is the compat target, not the pin). Still using `37a1be016a`. Flag if/when the deprecated `DataStatistics`/`ProgressDialog` migration requires the new API. |
 | **M2** — Dead-code removal | ✅ **Done** | Stripped the commented-out combinatorial scoring (`getMinScores`, `getMinScoreIndices`, `calcScore`, `getNCombs`, `getFirstResult`, `increment`, `allUnique`, `calcAllPossibleCombs`) and scattered debug `println`s in `TrajectoryBuilder`; removed the commented-out `main` + `mouseReleased` in `ProbabilisticTracker`; removed six commented-out debug blocks in `PFTracking3D`; removed commented-out `UserVariables` fields/methods. Deliberately left the *live* `System.out`/`System.err` in `PFTracking3D` (deferred to D4) and the now-unused public `RED`/`GREEN`/`BLUE`/`FOREGROUND` constants (public API — Lesson L4). |
 | **M3** — Test harness | ✅ **Done** | Added JUnit 5 (`junit-jupiter-api`/`-engine`, test scope, version-managed by parent 5.13.4). 4 test classes / 16 tests, all headless-safe: `NonIsoGaussianTest`, `FluorophoreTest`, `DecayingFluorophoreTest`, `ParticleTrajectoryTest`. |
-| **M4** — Refactor core | 🔶 **Partly done** | D3, D4, D5 complete. D2: `ParticleTrajectory` MSD math extracted (→ `calcMSDValues`), `TailTracer` geometry static + tested (4 more tests). Remaining: `PFTracking3D` core / file I/O / GUI split. |
+| **M4** — Refactor core | 🔶 **Partly done** | D3, D4, D5 complete. D2: `ParticleTrajectory` MSD math extracted (→ `calcMSDValues`), `TailTracer` geometry static + tested, `PFTracking3D` static helpers extracted to `ParticleFilterUtil` (with delegating shims). `PFTracking3D` file-I/O + GUI inner classes remain in place (field-coupled/protected-API, lower-value). |
 | **M5** — Static-state + docs | 🔶 **Partly done** | D6 (Option A) landed: `UserVariables` → instance holder, `ParticleTrajectory.scale` → instance field. Remaining `msdPlot`/`globalMSD` statics are UI-global by design (documented, not refactored). `README.md` expansion + Javadoc still open. |
 | **M6** — Upstream hand-off | ⬜ Pending | |
 
@@ -426,7 +426,12 @@ unblocks the coordinated downstream modernization.
   rendering/accumulation as a thin layer. Made `TailTracer`'s pure geometry
   helpers (`normalizedVector`, `normalVector`, `intersections`,
   `intersections2`) `static` and unit-tested them (`TailTracerTest`, 4 tests).
-  Remaining D2 work: split `PFTracking3D` (core / file I/O / GUI).
+  Extracted the eight `public static` helpers from `PFTracking3D` (copy/sum/
+  fill/stack-crop utilities) into a new `ParticleFilterUtil` class with thin
+  delegating methods left in place for API compatibility; added
+  `ParticleFilterUtilTest` (4 tests). `PFTracking3D` shrunk ~2206 → ~2095 lines.
+  Remaining D2 work: split the `PFTracking3D` file-I/O and GUI inner classes, if
+  warranted (they are field-coupled and protected-API, so lower-value).
 
 ### M1 deviations from the original plan
 

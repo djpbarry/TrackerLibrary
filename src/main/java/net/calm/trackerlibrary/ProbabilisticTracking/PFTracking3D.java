@@ -1282,148 +1282,37 @@ public abstract class PFTracking3D implements PlugInFilter {
      * @return the copy.
      */
     public static Vector<float[]> copyStateVector(Vector<float[]> aOrig) {
-        Vector<float[]> vResVector = new Vector<float[]>(aOrig.size());
-        for (float[] vA : aOrig) {
-            float[] vResA = new float[vA.length];
-            for (int vI = 0; vI < vA.length; vI++) {
-                vResA[vI] = vA[vI];
-            }
-            vResVector.add(vResA);
-        }
-        return vResVector;
+        return ParticleFilterUtil.copyStateVector(aOrig);
     }
 
-    /**
-     * Copies a
-     * <code>Vector&lt;Vector&lt;float[]&gt;&gt;</code> data structure. Used to
-     * copy the particle vector here.
-     *
-     * @param aOrig
-     * @return the copy.
-     */
     public static Vector<Vector<float[]>> copyParticleVector(Vector<Vector<float[]>> aOrig) {
-        Vector<Vector<float[]>> vResVector = new Vector<Vector<float[]>>(aOrig.size());
-        for (Vector<float[]> vP : aOrig) {
-            vResVector.add(copyStateVector(vP));
-        }
-        return vResVector;
+        return ParticleFilterUtil.copyParticleVector(aOrig);
     }
 
-    /**
-     * Recursively searches the brightest voxel in the neighborhood. Might be
-     * used for the initialization.
-     *
-     * @param aStartX
-     * @param aStartY
-     * @param aStartZ
-     * @param aImageStack
-     * @return a int array with 3 entries: x,y and z coordinate.
-     */
     public static int[] searchLocalMaximumIntensityWithSteepestAscent(int aStartX, int aStartY, int aStartZ, ImageStack aImageStack) {
-        int[] vRes = new int[]{aStartX, aStartY, aStartZ};
-        float vMaxValue = aImageStack.getProcessor(aStartZ).getPixelValue(aStartX, aStartY);
-        for (int vZi = -1; vZi < 2; vZi++) {
-            if (aStartZ + vZi > 0 && aStartZ + vZi <= aImageStack.getSize()) {
-                for (int vXi = -1; vXi < 2; vXi++) {
-                    for (int vYi = -1; vYi < 2; vYi++) {
-                        if (aImageStack.getProcessor(aStartZ + vZi).getPixelValue(aStartX + vXi, aStartY + vYi) > vMaxValue) {
-                            vMaxValue = aImageStack.getProcessor(aStartZ + vZi).getPixelValue(aStartX + vXi, aStartY + vYi);
-                            vRes[0] = aStartX + vXi;
-                            vRes[1] = aStartY + vYi;
-                            vRes[2] = aStartZ + vZi;
-                        }
-                    }
-                }
-            }
-        }
-        if (vMaxValue > aImageStack.getProcessor(aStartZ).getPixelValue(aStartX, aStartY)) {
-            return searchLocalMaximumIntensityWithSteepestAscent(vRes[0], vRes[1], vRes[2], aImageStack);
-        }
-        return vRes;
+        return ParticleFilterUtil.searchLocalMaximumIntensityWithSteepestAscent(aStartX, aStartY, aStartZ, aImageStack);
     }
 
-    /**
-     * Add the intensities of 2 2D arrays.
-     *
-     * @param aResult here the first image is stored in.
-     * @param aImageToAdd a Image that is added to
-     * <code>aResult</code>
-     */
     public static void addImage(float[][] aResult, float[][] aImageToAdd) {
-        int vIMax = Math.min(aResult.length, aImageToAdd.length);
-        int vJMax = Math.min(aResult[0].length, aImageToAdd[0].length);
-        for (int vI = 0; vI < vIMax; vI++) {
-            for (int vJ = 0; vJ < vJMax; vJ++) {
-                aResult[vI][vJ] += aImageToAdd[vI][vJ];
-            }
-        }
+        ParticleFilterUtil.addImage(aResult, aImageToAdd);
     }
 
-    /**
-     * Sets all values in the array to
-     * <code>aValue</code>
-     *
-     * @param aArray
-     * @param aValue
-     */
     public static void initArrayToValue(float[][] aArray, float aValue) {
-        for (int vI = 0; vI < aArray.length; vI++) {
-            for (int vJ = 0; vJ < aArray[0].length; vJ++) {
-                aArray[vI][vJ] = aValue;
-            }
-        }
+        ParticleFilterUtil.initArrayToValue(aArray, aValue);
     }
 
-    /**
-     * Returns a copy of a single frame. Note that the properties of the
-     * ImagePlus have to be correct
-     *
-     * @param aMovie
-     * @param aFrameNumber
-     * @return The frame copy.
-     */
     public static ImageStack getAFrameCopy(ImagePlus aMovie, int aFrameNumber) {
-        if (aFrameNumber > aMovie.getNFrames() || aFrameNumber < 1) {
-            throw new IllegalArgumentException();
-        }
-        int vS = aMovie.getNSlices();
-        return getSubStackFloatCopy(aMovie.getStack(), (aFrameNumber - 1) * vS + 1, aFrameNumber * vS);
+        return ParticleFilterUtil.getAFrameCopy(aMovie, aFrameNumber);
     }
 
-    /**
-     * Rerurns a copy of a substack (i.e.frames)
-     *
-     * @param aImageStack: the stack to crop
-     * @param aStartPos: 1 &le; aStartPos &le; aImageStack.size()
-     * @param aEndPos: 1 &le; aStartPos &le; aEndPos &le; aImageStack.size()
-     * @return a Copy of the supstack
-     */
     public static ImageStack getSubStackFloatCopy(ImageStack aImageStack, int aStartPos, int aEndPos) {
-        ImageStack res = new ImageStack(aImageStack.getWidth(), aImageStack.getHeight());
-        if (!(aStartPos < 1 || aEndPos < 0)) {
-            for (int vI = aStartPos; vI <= aEndPos; vI++) {
-                res.addSlice(aImageStack.getSliceLabel(vI), aImageStack.getProcessor(vI).convertToFloat().duplicate());
-            }
-        }
-        return res;
+        return ParticleFilterUtil.getSubStackFloatCopy(aImageStack, aStartPos, aEndPos);
     }
 
-    /**
-     *
-     * @param aImageStack: the stack to crop
-     * @param aStartPos: 1 &le; aStartPos &le; aImageStack.size()
-     * @param aEndPos: 1 &le; aStartPos &le; aEndPos &le; aImageStack.size()
-     * @return
-     */
     public static ImageStack getSubStackFloat(ImageStack aImageStack, int aStartPos, int aEndPos) {
-        ImageStack res = new ImageStack(aImageStack.getWidth(), aImageStack.getHeight());
-        if (!(aStartPos < 1 || aEndPos < 0)) {
-            for (int vI = aStartPos; vI <= aEndPos; vI++) {
-                res.addSlice(aImageStack.getSliceLabel(vI), aImageStack.getProcessor(vI).convertToFloat());
-            }
-        }
-        return res;
+        return ParticleFilterUtil.getSubStackFloat(aImageStack, aStartPos, aEndPos);
     }
+
     private int mControllingParticleIndex = 0;
 
     @SuppressWarnings("serial")
