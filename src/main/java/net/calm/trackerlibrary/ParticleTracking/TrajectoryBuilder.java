@@ -28,6 +28,21 @@ import org.apache.commons.math3.linear.ArrayRealVector;
 
 public class TrajectoryBuilder {
 
+    /**
+     * Links detections across successive frames into {@link ParticleTrajectory}s
+     * using a greedy nearest-neighbour score of position, projected velocity,
+     * and morphology. Each detection that cannot be linked starts a new
+     * single-point trajectory.
+     *
+     * @param objects the detections organised by frame.
+     * @param timeRes the time resolution (seconds per frame).
+     * @param minStepTol the minimum step tolerance (reserved; see
+     * {@code UserVariables#getTrajMaxStep()} for the active threshold).
+     * @param spatialRes the spatial resolution (pixels per unit).
+     * @param magNormFactor the magnitude normalisation factor.
+     * @param trajectories the output list, appended to in place.
+     * @param morph whether to include a morphology term in the score.
+     */
     public static void updateTrajectories(ParticleArray objects, double timeRes, double minStepTol, double spatialRes, double magNormFactor, ArrayList<ParticleTrajectory> trajectories, boolean morph) {
         double mw, vw, pw;
         if (UserVariables.getInstance().getMotionModel() == UserVariables.RANDOM) {

@@ -28,6 +28,16 @@ import org.apache.commons.math3.linear.ArrayRealVector;
 
 public class TrajectoryBridger {
 
+    /**
+     * Re-links trajectory segments whose end/start fall within {@code maxStep}
+     * frames, using the same position + projected-velocity + morphology scoring
+     * as {@code TrajectoryBuilder}. Segments are spliced in place.
+     *
+     * @param trajectories the segments to bridge (mutated in place).
+     * @param scoreWeightings the {@code {morphology, velocity, position}}
+     * weights applied to each score term.
+     * @param maxStep the maximum frame gap across which to attempt a bridge.
+     */
     public static void bridgeTrajectories(ArrayList<ParticleTrajectory> trajectories, double[] scoreWeightings, int maxStep) {
         int size = trajectories.size();
         ProgressDialog progress = new ProgressDialog(null, "Processing Trajectories...", false, "net.calm.trackerlibrary.Trajectory Builder", false);

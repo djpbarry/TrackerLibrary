@@ -32,7 +32,7 @@ public class NonIsoGaussian extends IsoGaussian {
                 + Math.pow(Math.sin(theta), 2.0) / (2.0 * Math.pow(xSigma, 2.0));
     }
 
-    public NonIsoGaussian(NonIsoGaussianFitter fitter, double fitTol) {
+    public NonIsoGaussian(NonIsoGaussianFitter fitter) {
         super();
         double p[] = fitter.getParams();
         this.xSigma = p[1];

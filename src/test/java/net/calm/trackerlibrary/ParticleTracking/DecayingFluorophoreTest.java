@@ -21,7 +21,6 @@ class DecayingFluorophoreTest {
         // With a zero decay rate and tiny noise, magnitude tracks the decay
         // factor (1 - decayRate) multiplicatively, bounded by the noise term.
         DecayingFluorophore f = new DecayingFluorophore(0.0, 0.0, 200.0, 0.0);
-        double before = f.getCurrentMag();
         f.updateMag();
         // decayRate == 0, so magnitude *= (1 + noise * gaussian); the expected
         // sign is independent of the random draw only when noise == 0. Here we

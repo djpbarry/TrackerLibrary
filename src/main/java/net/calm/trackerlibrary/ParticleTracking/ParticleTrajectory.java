@@ -7,17 +7,16 @@ import ij.ImageStack;
 import ij.gui.Plot;
 import ij.measure.CurveFitter;
 import ij.text.TextWindow;
-import java.awt.Color;
-import java.awt.Rectangle;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Random;
-
 import net.calm.iaclasslibrary.IAClasses.DSPProcessor;
 import net.calm.iaclasslibrary.IAClasses.DataStatistics;
 import net.calm.iaclasslibrary.IAClasses.Utils;
 import net.calm.iaclasslibrary.Particle.Particle;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+
+import java.awt.*;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Represents a the trajectory followed by a particle through a series of
@@ -32,16 +31,13 @@ public class ParticleTrajectory {
     protected Particle end = null, temp = null;
     private int size = 0, dualScore = 0, tempRow = -1, tempColumn = -1;
     public final static int NON_COLOCAL = 0, UNKNOWN = 1, COLOCAL = 2; //Flags
-    protected double tempScore = Double.MAX_VALUE, xVelocity = 0.0, yVelocity = 0.0, projectXVel,
-            projectYVel, diffCoeff, boxCountFD = 0.0, angleSpread = 0.0,
-            stepSpread, timeRes, specFD, meanKappa, logDC, directionality,
-            peakIntens, peakTime;
+    protected double tempScore = Double.MAX_VALUE, xVelocity = 0.0, yVelocity = 0.0, projectXVel, projectYVel, diffCoeff, boxCountFD = 0.0, angleSpread = 0.0, stepSpread, timeRes, specFD, meanKappa, logDC, directionality, peakIntens, peakTime;
     private double[] kappa;
     private double[] smoothXPoints, smoothYPoints;
     private Rectangle bounds;
     protected double scale = 1.0;
     private static final int segment = 5;
-    private double xFluorSpread, yFluorSpread;
+    // --Commented out by Inspection (27/09/2026 08:59):private double xFluorSpread, yFluorSpread;
     private int startTimeIndex;
     private static Plot msdPlot;
     private static String plotLegend = "";
@@ -164,8 +160,7 @@ public class ParticleTrajectory {
         }
         int s = 0;
         while (current.getLink() != null && s < steps) {
-            displacement += Utils.calcDistance(current.getX(), current.getY(),
-                    (current.getLink()).getX(), (current.getLink()).getY());
+            displacement += Utils.calcDistance(current.getX(), current.getY(), (current.getLink()).getX(), (current.getLink()).getY());
             current = current.getLink();
             s++;
         }
@@ -425,18 +420,15 @@ public class ParticleTrajectory {
         double dY[] = Utils.convolve(dgaussian, input[1]);
         double ddX[] = Utils.convolve(ddgaussian, input[0]);
         double ddY[] = Utils.convolve(ddgaussian, input[1]);
-        double shrinkX = (1.0 / ddX[0])
-                * (1.0 - Math.exp(-sigma * sigma * ddX[0] * ddX[0] / 2.0));
-        double shrinkY = (1.0 / ddY[0])
-                * (1.0 - Math.exp(-sigma * sigma * ddY[0] * ddY[0] / 2.0));
+        double shrinkX = (1.0 / ddX[0]) * (1.0 - Math.exp(-sigma * sigma * ddX[0] * ddX[0] / 2.0));
+        double shrinkY = (1.0 / ddY[0]) * (1.0 - Math.exp(-sigma * sigma * ddY[0] * ddY[0] / 2.0));
         smoothXPoints = new double[X.length - 2 * (gLength - 1)];
         smoothYPoints = new double[Y.length - 2 * (gLength - 1)];
         kappa = new double[Y.length - 2 * (gLength - 1)];
         for (int i = gLength - 1; i < X.length - gLength + 1; i++) {
             smoothXPoints[i - gLength + 1] = X[i] - shrinkX;
             smoothYPoints[i - gLength + 1] = Y[i] - shrinkY;
-            kappa[i - gLength + 1] = (dX[i] * ddY[i] - dY[i] * ddX[i])
-                    / Math.pow(dX[i] * dX[i] + dY[i] * dY[i], 1.5);
+            kappa[i - gLength + 1] = (dX[i] * ddY[i] - dY[i] * ddX[i]) / Math.pow(dX[i] * dX[i] + dY[i] * dY[i], 1.5);
         }
         DataStatistics stats = new DataStatistics(95, kappa, kappa.length);
         meanKappa = Math.abs(1000.0 * stats.getMean());
@@ -492,8 +484,7 @@ public class ParticleTrajectory {
             xSum += xPoints[i];
             ySum += yPoints[i];
         }
-        double[] eigenvalues = Utils.calcEigenvalues(
-                Utils.covarianceMatrix(xPoints, yPoints, xSum, ySum));
+        double[] eigenvalues = Utils.calcEigenvalues(Utils.covarianceMatrix(xPoints, yPoints, xSum, ySum));
         if (Math.abs(eigenvalues[0]) > Math.abs(eigenvalues[1])) {
             directionality = 1.0d / (1.0d + 1.0d / Math.sqrt(Math.abs(eigenvalues[0] / eigenvalues[1])));
         } else {
@@ -522,8 +513,7 @@ public class ParticleTrajectory {
         double[] tsA = result[0];
         double[] msdA = result[1];
         if (msdPlot == null) {
-            msdPlot = new Plot("Mean Square Displacement",
-                    "Time (s)", "Mean Square Displacement (" + IJ.micronSymbol + "m^2)");
+            msdPlot = new Plot("Mean Square Displacement", "Time (s)", "Mean Square Displacement (" + IJ.micronSymbol + "m^2)");
             msdPlot.setLineWidth(3);
         }
         for (int i = 0; i < msdA.length; i++) {
@@ -590,8 +580,7 @@ public class ParticleTrajectory {
     }
 
     public static void drawGlobalMSDPlot() {
-        Plot globalMsdPlot = new Plot("Population Mean Square Displacement",
-                "Time (s)", "Mean Square Displacement (" + IJ.micronSymbol + "m^2)");
+        Plot globalMsdPlot = new Plot("Population Mean Square Displacement", "Time (s)", "Mean Square Displacement (" + IJ.micronSymbol + "m^2)");
         globalMsdPlot.setLineWidth(3);
         globalMsdPlot.setColor(Color.red);
         int N = globalMSD.size();
@@ -650,8 +639,7 @@ public class ParticleTrajectory {
         int length = smoothXPoints.length;
         double steps[] = new double[length - 1];
         for (int i = 0; i < length - 1; i++) {
-            steps[i] = Utils.calcDistance(smoothXPoints[i], smoothYPoints[i],
-                    smoothXPoints[i + 1], smoothYPoints[i + 1]);
+            steps[i] = Utils.calcDistance(smoothXPoints[i], smoothYPoints[i], smoothXPoints[i + 1], smoothYPoints[i + 1]);
         }
         DataStatistics stats = new DataStatistics(0.0, steps, length - 1);
         stepSpread = stats.getStdDev();
@@ -666,13 +654,6 @@ public class ParticleTrajectory {
         return directionality;
     }
 
-    public double getxFluorSpread() {
-        return xFluorSpread;
-    }
-
-    public double getyFluorSpread() {
-        return yFluorSpread;
-    }
 
     public double getPeakTime() {
         return peakTime;

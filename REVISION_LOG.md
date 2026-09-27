@@ -63,6 +63,20 @@ Maven wrapper matching IAClassLibrary. `mvn verify` passes on JDK 21.
 
 ---
 
+## 2026-09-26 — M5 docs (README + Javadoc) landing
+
+- **`README.md`** expanded from a single heading to a full overview: the two
+  tracking paradigms, build instructions (wrapper on JDK 21), dependencies,
+  package map, consumption via JitPack, and license.
+- **Javadoc:** added class/method docs to the public API surface most likely
+  touched downstream — `TrajectoryBuilder.updateTrajectories`,
+  `TrackMateTracker.track`/`updateTrajectories`, `TrajectoryBridger.bridgeTrajectories`
+  (plus `UserVariables`, already documented in the D6 pass). Simulation classes
+  retain their existing minimal `@author` headers; a full Javadoc pass over
+  `ParticleTrajectory`'s analytics methods is a non-blocking follow-up.
+
+---
+
 ## 2026-09-26 — D6 resolved (Option A): static mutable state → instance state
 
 Decision 4 of the plan was settled in favour of **Option A** (instance-based

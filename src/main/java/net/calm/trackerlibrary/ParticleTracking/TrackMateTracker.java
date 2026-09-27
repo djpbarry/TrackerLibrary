@@ -49,6 +49,14 @@ public class TrackMateTracker {
 
     }
 
+    /**
+     * Runs TrackMate's {@code SparseLAPTracker} over the given spots, storing
+     * the resulting track model for later conversion via
+     * {@link #updateTrajectories(ArrayList)}.
+     *
+     * @param spots the detections to track.
+     * @param settings tracker settings passed to the {@code SparseLAPTracker}.
+     */
     public void track(SpotCollection spots, Map<String, Object> settings) {
         SparseLAPTracker tracker = (SparseLAPTracker) (new SparseLAPTrackerFactory()).create(spots, settings);
         if (!tracker.process()) {
@@ -61,6 +69,13 @@ public class TrackMateTracker {
         tm = model.getTrackModel();
     }
 
+    /**
+     * Converts the tracked spots (from {@link #track(SpotCollection, Map)})
+     * into {@link ParticleTrajectory}s, appending one trajectory per TrackMate
+     * track.
+     *
+     * @param trajectories the output list, appended to in place.
+     */
     public void updateTrajectories(ArrayList<ParticleTrajectory> trajectories) {
         Set<Integer> trackIds = tm.trackIDs(false);
         for (Integer id : trackIds) {
