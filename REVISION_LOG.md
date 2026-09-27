@@ -67,13 +67,19 @@ Maven wrapper matching IAClassLibrary. `mvn verify` passes on JDK 21.
 
 - **`README.md`** expanded from a single heading to a full overview: the two
   tracking paradigms, build instructions (wrapper on JDK 21), dependencies,
-  package map, consumption via JitPack, and license.
+  package map, consumption via JitPack, and license. Added Build / Javadoc /
+  JitPack / commit-activity / license **badges** (mirroring IAClassLibrary).
 - **Javadoc:** added class/method docs to the public API surface most likely
   touched downstream — `TrajectoryBuilder.updateTrajectories`,
   `TrackMateTracker.track`/`updateTrajectories`, `TrajectoryBridger.bridgeTrajectories`
-  (plus `UserVariables`, already documented in the D6 pass). Simulation classes
-  retain their existing minimal `@author` headers; a full Javadoc pass over
-  `ParticleTrajectory`'s analytics methods is a non-blocking follow-up.
+  (plus `UserVariables`, already documented in the D6 pass).
+- **Javadoc publishing:** added `.github/workflows/javadoc.yml` (mirrors the
+  sibling) to publish to `djpbarry.github.io/TrackerLibrary/`, and configured
+  `maven-javadoc-plugin` in `pom.xml` with `doclint=none` + `quiet=true`.
+  Without this the Javadoc build **failed** — two `malformed HTML` errors from
+  unescaped `<david.barry at crick.ac.uk>` in `@author` tags, plus ~100
+  doclint warnings. The sibling works around the same class of issues with the
+  exact same plugin configuration.
 
 ---
 

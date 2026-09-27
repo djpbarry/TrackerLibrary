@@ -1,3 +1,5 @@
+[![Build](https://github.com/djpbarry/TrackerLibrary/actions/workflows/maven.yml/badge.svg)](https://github.com/djpbarry/TrackerLibrary/actions/workflows/maven.yml) [![Javadoc](https://img.shields.io/badge/docs-Javadoc-blue)](https://djpbarry.github.io/TrackerLibrary/) [![JitPack](https://jitpack.io/v/djpbarry/TrackerLibrary.svg)](https://jitpack.io/#djpbarry/TrackerLibrary) ![Commit activity](https://img.shields.io/github/commit-activity/y/djpbarry/TrackerLibrary?style=plastic) ![License](https://img.shields.io/github/license/djpbarry/TrackerLibrary?color=green&style=plastic)
+
 # TrackerLibrary
 
 A Java library for particle tracking in fluorescence microscopy. It is designed
