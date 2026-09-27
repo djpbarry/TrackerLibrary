@@ -41,6 +41,13 @@ JitPack to ADAPT/`AdaptDataProcessing`.
   `RequireJavaVersion` rule rejects it (needs `[21,)`). Fixed by adding a
   `jitpack.yml` with `jdk: [openjdk21]`. See **L11**.
 
+  **Second follow-up:** the `jitpack.yml` commit (`fdae91d`) builds **ok** on
+  JitPack, confirming the fix. However, force-moving the `v4.0.0` tag did not
+  invalidate JitPack's cached `ref → commit` mapping — the `v4.0.0` name kept
+  serving the old failed build. Resolution: since `v4.0.0` never shipped, bump
+  to **`4.0.1`** and tag `v4.0.1` (a fresh tag name JitPack has never cached),
+  which builds clean. *(This is a JitPack quirk worth remembering — see L11.)*
+
 ---
 
 ## 2026-09-26 — M1 (Foundations) landed
@@ -410,3 +417,9 @@ Don't assume the sibling already has one — IAClassLibrary's `development` bran
 does *not*, so its older (pre-Java-21) commits build `ok` while a fresh Java 21
 tag would not. Add `jitpack.yml` in the same pass as the Java 21 / parent-POM
 move, before cutting the release tag.
+
+Corollary: **JitPack caches build results by ref name.** Force-moving a tag does
+not reliably invalidate the cached `ref → commit` mapping, so a "fixed" tag can
+keep serving the stale failed build. If a release tag fails on JitPack, prefer
+cutting a fresh tag (next patch version) over force-moving the broken one — a
+never-seen tag name always triggers a clean build.
