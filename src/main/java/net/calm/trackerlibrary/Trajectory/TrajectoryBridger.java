@@ -21,7 +21,7 @@ import net.calm.trackerlibrary.ParticleTracking.ParticleTrajectory;
 import net.calm.trackerlibrary.ParticleTracking.UserVariables;
 import java.util.ArrayList;
 
-import net.calm.iaclasslibrary.IAClasses.ProgressDialog;
+import ij.IJ;
 import net.calm.iaclasslibrary.IAClasses.Region;
 import net.calm.iaclasslibrary.Particle.Particle;
 import org.apache.commons.math3.linear.ArrayRealVector;
@@ -40,10 +40,8 @@ public class TrajectoryBridger {
      */
     public static void bridgeTrajectories(ArrayList<ParticleTrajectory> trajectories, double[] scoreWeightings, int maxStep) {
         int size = trajectories.size();
-        ProgressDialog progress = new ProgressDialog(null, "Processing Trajectories...", false, "net.calm.trackerlibrary.Trajectory Builder", false);
-        progress.setVisible(true);
         for (int m = 0; m < size; m++) {
-            progress.updateProgress(m, size);
+            IJ.showProgress(m, size);
             ParticleTrajectory traj1 = trajectories.get(m);
             Particle traj1End = traj1.getEnd();
             if (traj1End == null) {
@@ -95,6 +93,6 @@ public class TrajectoryBridger {
                 }
             }
         }
-        progress.dispose();
+        IJ.showProgress(1.0);
     }
 }

@@ -19,6 +19,31 @@ dated narrative plus the "what not to do again" notes.
 
 ---
 
+## 2026-09-28 — IAClassLibrary re-pinned to v2.0.1 (B4) + patch release 4.0.2
+
+The IAClassLibrary dependency was pinned to a raw JitPack commit hash
+(`37a1be016a`) rather than a tagged release — an error, since a commit pin is
+not a reproducible semver coordinate and can drift silently. Re-pinned to the
+latest JitPack tag, `v2.0.1`.
+
+| Change | What |
+|---|---|
+| IAClassLibrary pin | `37a1be016a` → `v2.0.1` (latest tag; `v2.0.0` builds `Error` on JitPack, so `v2.0.1` is the first clean tag). |
+| `DataStatistics` migration | The 3 `IAClasses.DataStatistics` sites in `ParticleTrajectory` moved to `org.apache.commons.math3.stat.descriptive.DescriptiveStatistics`. The std-dev sites use `Math.sqrt(getPopulationVariance())` to preserve the deprecated class's population (÷N) semantics, which differ from `DescriptiveStatistics.getStandardDeviation()` (sample, ÷(N−1)). |
+| `ProgressDialog` migration | `TrajectoryBuilder` and `TrajectoryBridger` now use ImageJ's native `IJ.showProgress(m, n)` loop + `IJ.showProgress(1.0)` clear instead of `IAClasses.ProgressDialog`. |
+| Version | `4.0.1` → `4.0.2` (patch — dependency re-pin only; no change to TrackerLibrary's own public API). |
+
+`mvn verify` passes on JDK 21 (26/26 tests).
+
+### Lesson
+
+No new lesson — this is the B4 re-pin the plan already flagged, executed once
+`v2.0.1` shipped. Reinforces the existing rule: pin dependencies to **tagged
+releases**, not commit hashes (L2 in spirit), and land the deprecated-API
+migrations in the same pass as the re-pin so the build gate proves them.
+
+---
+
 ## 2026-09-27 — Release 4.0.0 (B2, M6 kick-off)
 
 Version promoted `4.0.0-SNAPSHOT` → `4.0.0` and the malformed SCM URL

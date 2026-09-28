@@ -226,6 +226,12 @@ this repo still uses that are now `@Deprecated`:
 
 These migrations are prerequisites for the re-pin, not merely cleanup.
 
+**Done (2026-09-28):** re-pinned to the latest JitPack tag `v2.0.1` (`v2.0.0`
+builds `Error` on JitPack). Both deprecated-class migrations landed in the same
+pass — `DataStatistics` → `DescriptiveStatistics` (population std-dev via
+`Math.sqrt(getPopulationVariance())`) and `ProgressDialog` → `IJ.showProgress`.
+See `REVISION_LOG.md` 2026-09-28.
+
 ---
 
 ## Phase C — Introduce tests (the biggest maintainability win)
@@ -405,7 +411,7 @@ unblocks the coordinated downstream modernization.
 | Milestone | Status | Notes |
 |---|---|---|
 | **M1 — Foundations** | ✅ **Done** | A1 wrapper (Maven 3.9.9, matching IAClassLibrary), A2 CI (JDK 21 + cache + wrapper), A3 `.gitignore`, B1 license → GPL-3.0-or-later, B2 version → `4.0.0-SNAPSHOT`, B3 parent `pom-scijava:45.1.0` + Java 21 + TrackMate parent-managed (resolves 8.0.0). `mvn verify` passes on JDK 21. |
-| M1 — B4 (IAClassLibrary re-pin) | ⏸ **Deferred** | No `v2.0.0` tag on JitPack yet; deprioritised by the maintainer (Javadoc is the compat target, not the pin). Still using `37a1be016a`. Flag if/when the deprecated `DataStatistics`/`ProgressDialog` migration requires the new API. |
+| M1 — B4 (IAClassLibrary re-pin) | ✅ **Done** | Re-pinned `37a1be016a` → `v2.0.1` (latest JitPack tag; `v2.0.0` builds `Error`). Deprecated `DataStatistics`/`ProgressDialog` migrations landed in the same pass — see `REVISION_LOG.md` 2026-09-28. |
 | **M2** — Dead-code removal | ✅ **Done** | Stripped the commented-out combinatorial scoring (`getMinScores`, `getMinScoreIndices`, `calcScore`, `getNCombs`, `getFirstResult`, `increment`, `allUnique`, `calcAllPossibleCombs`) and scattered debug `println`s in `TrajectoryBuilder`; removed the commented-out `main` + `mouseReleased` in `ProbabilisticTracker`; removed six commented-out debug blocks in `PFTracking3D`; removed commented-out `UserVariables` fields/methods. Deliberately left the *live* `System.out`/`System.err` in `PFTracking3D` (deferred to D4) and the now-unused public `RED`/`GREEN`/`BLUE`/`FOREGROUND` constants (public API — Lesson L4). |
 | **M3** — Test harness | ✅ **Done** | Added JUnit 5 (`junit-jupiter-api`/`-engine`, test scope, version-managed by parent 5.13.4). 4 test classes / 16 tests, all headless-safe: `NonIsoGaussianTest`, `FluorophoreTest`, `DecayingFluorophoreTest`, `ParticleTrajectoryTest`. |
 | **M4** — Refactor core | 🔶 **Partly done** | D3, D4, D5 complete. D2: `ParticleTrajectory` MSD math extracted (→ `calcMSDValues`), `TailTracer` geometry static + tested, `PFTracking3D` static helpers extracted to `ParticleFilterUtil` (with delegating shims). `PFTracking3D` file-I/O + GUI inner classes remain in place (field-coupled/protected-API, lower-value). |

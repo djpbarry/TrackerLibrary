@@ -20,7 +20,7 @@ package net.calm.trackerlibrary.ParticleTracking;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import net.calm.iaclasslibrary.IAClasses.ProgressDialog;
+import ij.IJ;
 import net.calm.iaclasslibrary.IAClasses.Region;
 import net.calm.iaclasslibrary.Particle.Particle;
 import net.calm.iaclasslibrary.Particle.ParticleArray;
@@ -58,10 +58,8 @@ public class TrajectoryBuilder {
             return;
         }
         int depth = objects.getDepth();
-        ProgressDialog progress = new ProgressDialog(null, "Building Trajectories...", false, "net.calm.trackerlibrary.Trajectory Builder", false);
-        progress.setVisible(true);
         for (int m = 0; m < depth; m++) {
-            progress.updateProgress(m, depth);
+            IJ.showProgress(m, depth);
             ArrayList<Particle> detections = objects.getLevel(m);
             for (Particle currentParticle : detections) {
                 if (currentParticle != null) {
@@ -140,7 +138,7 @@ public class TrajectoryBuilder {
                 }
             }
         }
-        progress.dispose();
+        IJ.showProgress(1.0);
     }
 
     private static int[] getTerminatedTrajMap(ArrayList<ParticleTrajectory> trajectories, int frame) {

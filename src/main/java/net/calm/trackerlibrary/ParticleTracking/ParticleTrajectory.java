@@ -8,7 +8,6 @@ import ij.gui.Plot;
 import ij.measure.CurveFitter;
 import ij.text.TextWindow;
 import net.calm.iaclasslibrary.IAClasses.DSPProcessor;
-import net.calm.iaclasslibrary.IAClasses.DataStatistics;
 import net.calm.iaclasslibrary.IAClasses.Utils;
 import net.calm.iaclasslibrary.Particle.Particle;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
@@ -430,7 +429,7 @@ public class ParticleTrajectory {
             smoothYPoints[i - gLength + 1] = Y[i] - shrinkY;
             kappa[i - gLength + 1] = (dX[i] * ddY[i] - dY[i] * ddX[i]) / Math.pow(dX[i] * dX[i] + dY[i] * dY[i], 1.5);
         }
-        DataStatistics stats = new DataStatistics(95, kappa, kappa.length);
+        DescriptiveStatistics stats = new DescriptiveStatistics(kappa);
         meanKappa = Math.abs(1000.0 * stats.getMean());
         calcSpec();
     }
@@ -627,8 +626,8 @@ public class ParticleTrajectory {
             m2 = (smoothYPoints[i] - smoothYPoints[i - 1]) / (smoothXPoints[i] - smoothXPoints[i - 1]);
             angles[i - 1] = Math.atan(Math.abs((m1 - m2) / (1 + m1 * m2)));
         }
-        DataStatistics stats = new DataStatistics(0.0, angles, length - 2);
-        angleSpread = stats.getStdDev();
+        DescriptiveStatistics stats = new DescriptiveStatistics(angles);
+        angleSpread = Math.sqrt(stats.getPopulationVariance());
         return true;
     }
 
@@ -641,8 +640,8 @@ public class ParticleTrajectory {
         for (int i = 0; i < length - 1; i++) {
             steps[i] = Utils.calcDistance(smoothXPoints[i], smoothYPoints[i], smoothXPoints[i + 1], smoothYPoints[i + 1]);
         }
-        DataStatistics stats = new DataStatistics(0.0, steps, length - 1);
-        stepSpread = stats.getStdDev();
+        DescriptiveStatistics stats = new DescriptiveStatistics(steps);
+        stepSpread = Math.sqrt(stats.getPopulationVariance());
         return true;
     }
 

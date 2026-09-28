@@ -49,7 +49,7 @@ Declared in `pom.xml`:
 
 - `sc.fiji:TrackMate` (Fiji's TrackMate, version parent-managed; currently
   resolves to 8.0.0)
-- `com.github.djpbarry:IAClassLibrary:37a1be016a` (from **JitPack**, with
+- `com.github.djpbarry:IAClassLibrary:v2.0.1` (from **JitPack**, with
   TrackMate excluded) — a sibling library by the same author providing
   `net.calm.iaclasslibrary` (`Particle.Particle`, `Particle.IsoGaussian`,
   `IAClasses.Utils`, `IAClasses.Region`, `IAClasses.ProgressDialog`,
@@ -67,18 +67,16 @@ The current IAClassLibrary API is browsable at
 Treat this Javadoc as the **authoritative source** for the
 `net.calm.iaclasslibrary.*` surface, not the raw IAClassLibrary source.
 
-Note the pin (`37a1be016a`) predates `2.0.0-SNAPSHOT`, so the Javadoc reflects
-the *target* API after the planned re-pin, not what the current build compiles
-against. Two classes this repo still uses are `@Deprecated` there:
+The pin is now the `v2.0.1` tag, so the Javadoc reflects the compiled-against
+API. The two `@Deprecated` classes this repo previously used have been migrated
+off:
 
-- `net.calm.iaclasslibrary.IAClasses.DataStatistics` — used in
-  `ParticleTrajectory.java` (3 sites). Prefer
-  `org.apache.commons.math3.stat.descriptive.DescriptiveStatistics`, which this
-  repo already imports elsewhere.
-- `net.calm.iaclasslibrary.IAClasses.ProgressDialog` — used in
-  `TrajectoryBuilder.java` and `TrajectoryBridger.java`.
-
-Both must be migrated off before/when re-pinning to `v2.0.0`.
+- `net.calm.iaclasslibrary.IAClasses.DataStatistics` → replaced by
+  `org.apache.commons.math3.stat.descriptive.DescriptiveStatistics` in
+  `ParticleTrajectory.java`.
+- `net.calm.iaclasslibrary.IAClasses.ProgressDialog` → replaced by ImageJ's
+  native `IJ.showProgress(...)` in `TrajectoryBuilder.java` and
+  `TrajectoryBridger.java`.
 
 ## Package layout
 
