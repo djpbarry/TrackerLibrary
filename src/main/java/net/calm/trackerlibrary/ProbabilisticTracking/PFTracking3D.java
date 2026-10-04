@@ -24,6 +24,9 @@ import java.io.IOException;
 import java.util.Vector;
 import java.util.Random;
 import java.util.regex.Pattern;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.awt.Button;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -608,20 +611,17 @@ public abstract class PFTracking3D implements PlugInFilter {
             float[] vLogLikelihoods = new float[mNbParticles];
             float vMaxLogLikelihood = Float.NEGATIVE_INFINITY;
             boolean[][][] vBitmap = generateParticlesIntensityBitmap_3D(vObjectParticles, mWidth, mHeight, mNSlices);
-            Thread[] vThreads = new Thread[mNbThreads];
+            ParticleIndexAllocator indexAllocator = new ParticleIndexAllocator();
+            ExecutorService executor = Executors.newFixedThreadPool(mNbThreads);
             for (int vT = 0; vT < mNbThreads; vT++) {
-                vThreads[vT] = new ParallelizedLikelihoodCalculator(aObservationStack, vBitmap, aFrameIndex, vLogLikelihoods, vObjectParticles);
+                executor.execute(new ParallelizedLikelihoodCalculator(aObservationStack, vBitmap, aFrameIndex, vLogLikelihoods, vObjectParticles, indexAllocator));
             }
-            for (int vT = 0; vT < mNbThreads; vT++) {
-                vThreads[vT].start();
-            }
-            //wait for the threads to end.
-            for (int vT = 0; vT < mNbThreads; vT++) {
-                try {
-                    vThreads[vT].join();
-                } catch (InterruptedException aIE) {
-                    IJ.showMessage("Not all particles calculated, the tracking might be wrong.");
-                }
+            executor.shutdown();
+            try {
+                executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            } catch (InterruptedException aIE) {
+                IJ.showMessage("Not all particles calculated, the tracking might be wrong.");
+                Thread.currentThread().interrupt();
             }
 
             for (int vI = 0; vI < vObjectParticles.size(); vI++) {
@@ -1273,8 +1273,6 @@ public abstract class PFTracking3D implements PlugInFilter {
         return ParticleFilterUtil.getSubStackFloat(aImageStack, aStartPos, aEndPos);
     }
 
-    private int mControllingParticleIndex = 0;
-
     @SuppressWarnings("serial")
     private class DrawCanvas extends ImageCanvas {
 
@@ -1327,7 +1325,7 @@ public abstract class PFTracking3D implements PlugInFilter {
         return;
     }
 
-    private class ParallelizedLikelihoodCalculator extends Thread {
+    private class ParallelizedLikelihoodCalculator implements Runnable {
         //
         // Most of this members are used to speed up the algorithm, so that they have not to be
         // evaluated for each particle but only for each thread.
@@ -1340,12 +1338,12 @@ public abstract class PFTracking3D implements PlugInFilter {
         boolean[][][] mBitmap;
         int mFrameIndex;
         float mPxWidthInNm, mPxDepthInNm;
+        ParticleIndexAllocator mIndexAllocator;
 
         /**
          * Calculates likelihoods for particles given a image and writes them in
          * the result array. There are two options: 1. LeastSquares
-         * likelihoods(negative!) and 2. Poisson LOG(!) Likelihoods. DO FIRST
-         * CONSTRUCT ALL THREADS BEFORE RUNNING THE FIRST ONE!
+         * likelihoods(negative!) and 2. Poisson LOG(!) Likelihoods.
          *
          * @param aImageStack: The frame to operate on, i.e. the observed image
          * @param aRusultArray: the results are written in this array in the
@@ -1354,14 +1352,13 @@ public abstract class PFTracking3D implements PlugInFilter {
          * @param aParticles: the particles to score
          *
          */
-        public ParallelizedLikelihoodCalculator(ImageStack aImageStack, boolean[][][] aBitmap, int aFrameIndex, float[] aRusultArray, Vector<float[]> aParticles) {
+        public ParallelizedLikelihoodCalculator(ImageStack aImageStack, boolean[][][] aBitmap, int aFrameIndex, float[] aRusultArray, Vector<float[]> aParticles, ParticleIndexAllocator aIndexAllocator) {
             mResultArray = aRusultArray;
             mParticles = aParticles;
             mObservedImage = aImageStack;
             mBitmap = aBitmap;
             mFrameIndex = aFrameIndex;
-            // The next line is only ok if the threads are first constructed and run afterwards!
-            mControllingParticleIndex = 0;
+            mIndexAllocator = aIndexAllocator;
             //this members speeds the algorithm drastically up since we only have to 
             //invoke getProcessor() once per thread instead of for each particle.
             mStackProcs = new float[mNSlices][];
@@ -1373,9 +1370,10 @@ public abstract class PFTracking3D implements PlugInFilter {
 
         }
 
+        @Override
         public void run() {
             int vI;
-            while ((vI = getNewParticleIndex()) != -1) {
+            while ((vI = mIndexAllocator.next(mNbParticles)) != -1) {
                 //get the particle
                 float[] vParticle = mParticles.elementAt(vI);
                 //calculate ideal image
@@ -1391,15 +1389,6 @@ public abstract class PFTracking3D implements PlugInFilter {
                 mResultArray[vI] = calculateLogLikelihood_3D(mStackProcs, mFrameIndex, vIdealImage, mBitmap);
 
             }
-        }
-
-        synchronized int getNewParticleIndex() {
-            if (mControllingParticleIndex < mNbParticles && mControllingParticleIndex >= 0) {
-                mControllingParticleIndex++;
-                return mControllingParticleIndex - 1;
-            }
-            mControllingParticleIndex = -1;
-            return -1;
         }
     }
 

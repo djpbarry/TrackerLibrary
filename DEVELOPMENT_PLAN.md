@@ -445,23 +445,17 @@ read/written by `getNewParticleIndex()` (`:1396`), which is `synchronized` on th
 thread. The mutex therefore does **not** serialise access to the shared counter:
 two threads can return the same particle index or skip one.
 
-Plan:
+**Done (2026-10-04).**
 
-1. Convert `ParallelizedLikelihoodCalculator` from `extends Thread` to
-   `implements Runnable` (it is a `private` inner class — no API concern).
-2. Extract the work-stealing counter into a small headless-testable unit (an
-   `AtomicInteger`-backed counter whose contract "each index `0..N-1` is returned
-   exactly once" is asserted by a test — see test-first above), then use it from
-   `getNewParticleIndex()`.
-3. Replace the `Thread[]` + `start()`/`join()` block with a fixed
-   `ExecutorService` (`newFixedThreadPool(mNbThreads)`) + `submit` +
-   `awaitTermination` (or `invokeAll`). Likelihood is CPU-bound, so platform
-   threads in a bounded pool are correct (not virtual threads).
-
-`updateParticleWeights` itself needs an ImageJ `ImageStack` and is not
-headless-testable; the extracted counter *is*, so test that directly. Keep the
-rest mechanical, run the full 26-test suite plus a manual smoke, and record the
-race fix explicitly in `REVISION_LOG.md`.
+- `ParallelizedLikelihoodCalculator` now `implements Runnable`; the work-stealing
+  counter was extracted into a new `ParticleIndexAllocator` (`AtomicInteger`-
+  backed) with a headless contract test (`ParticleIndexAllocatorTest`, 2 tests:
+  single-threaded order and concurrent "each index claimed exactly once").
+- `updateParticleWeights` now submits the runnables to a fixed `ExecutorService`
+  (`newFixedThreadPool(mNbThreads)`) and awaits termination, replacing the
+  hand-rolled `Thread[]` + `start()`/`join()`.
+- The racy `mControllingParticleIndex` field and `getNewParticleIndex()` were
+  removed entirely. 29/29 tests green.
 
 ### G2. Static mutable state — already resolved (verify only)
 
@@ -532,7 +526,7 @@ remaining `System.out`/`System.err`/`printStackTrace` in `src/main`. No work.
    suite.
 5. **G6 (language features)** — cosmetic, last.
 
-Each step compiles + 27 tests green and bumps `pom.xml` `<version>` per the
+Each step compiles + 29 tests green and bumps `pom.xml` `<version>` per the
 Conventional Commits rule (patch for `refactor`/`chore`/`fix`).
 
 ### G8. Redundant reimplementations (small)
@@ -632,7 +626,7 @@ unblocks the coordinated downstream modernization.
 | **M4** — Refactor core | 🔶 **Partly done** | D3, D4, D5 complete. D2: `ParticleTrajectory` MSD math extracted (→ `calcMSDValues`), `TailTracer` geometry static + tested, `PFTracking3D` static helpers extracted to `ParticleFilterUtil` (with delegating shims). `PFTracking3D` file-I/O + GUI inner classes remain in place (field-coupled/protected-API, lower-value). |
 | **M5** — Static-state + docs | ✅ **Done** | D6 (Option A) landed: `UserVariables` → instance holder, `ParticleTrajectory.scale` → instance field. Remaining `msdPlot`/`globalMSD` statics are UI-global by design (documented, not refactored). `README.md` expanded (overview, build, deps, package map, license) with Build/Javadoc/JitPack/commit-activity/license badges. Javadoc added to `TrajectoryBuilder`, `TrackMateTracker`, `TrajectoryBridger`, `UserVariables`; `maven-javadoc-plugin` configured (`doclint none`) and a `javadoc.yml` workflow added to publish to `djpbarry.github.io/TrackerLibrary/`. |
 | **M6** — Upstream hand-off | 🔶 **In progress** | Released `4.0.2` (tags `v4.0.0`/`v4.0.1`/`v4.0.2`) for JitPack consumption by ADAPT/`AdaptDataProcessing`. JitPack build now green (via `jitpack.yml` JDK 21 pin — L11). Remaining: the `net.calm.*` → `io.github.djpbarry.*` namespace rename (IAClassLibrary Decision 7), and coordinating Java 21 / TrackMate 8 / the `v4.0.2` coordinate with ADAPT and `AdaptDataProcessing`. |
-| **M7** — Java 21 modernisation | 🔶 **In progress** | Phase G scoped above. G3 (boxing) **done**, G4 (try-with-resources) **done**, G8 (redundant math) **done**. Remaining: G1 (threading + race fix) → G6 (pattern matching). G2/G5 already done. Not blocked on M6. |
+| **M7** — Java 21 modernisation | 🔶 **In progress** | Phase G scoped above. G3 (boxing) **done**, G4 (try-with-resources) **done**, G8 (redundant math) **done**, G1 (threading + race fix) **done**. Remaining: G6 (pattern matching). G2/G5 already done. Not blocked on M6. |
 
 ### M4 progress (D3–D5 done; D2 begun after D6)
 

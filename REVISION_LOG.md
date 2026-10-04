@@ -19,6 +19,33 @@ dated narrative plus the "what not to do again" notes.
 
 ---
 
+## 2026-10-04 — G1: threading modernisation + data-race fix
+
+Fixed a real concurrency bug and modernised the hand-rolled thread pool in
+`PFTracking3D` (Phase G1), test-first:
+
+- **The bug:** the particle-likelihood pass hand-rolled a `Thread[]` pool. The
+  shared work counter `mControllingParticleIndex` was an *outer* instance field,
+  but `getNewParticleIndex()` was `synchronized` on the *inner*
+  `ParallelizedLikelihoodCalculator` instance (one per thread), so the mutex did
+  not protect the shared counter — two threads could claim the same particle
+  index (or skip one). Each thread's constructor also reset the shared counter
+  to `0`, relying on the fragile "construct all before running any" ordering.
+- **The fix:** extracted a thread-safe `ParticleIndexAllocator` (`AtomicInteger`
+  `getAndIncrement()` with a bounds check) and wrote `ParticleIndexAllocatorTest`
+  (2 tests) asserting the contract — every index `0..N-1` returned exactly once,
+  then `-1`, under both single-threaded and 8-thread concurrent claiming.
+- `ParallelizedLikelihoodCalculator` now `implements Runnable` (was `extends
+  Thread`); `updateParticleWeights` submits the runnables to a fixed
+  `ExecutorService` (`newFixedThreadPool(mNbThreads)`) and awaits termination.
+  The obsolete `mControllingParticleIndex` field and `getNewParticleIndex()`
+  method were removed.
+
+29/29 tests green. Version → `4.0.6` (patch, `fix`). Next: G6 (pattern matching
+— cosmetic, last).
+
+---
+
 ## 2026-10-04 — G8: redundant math swaps + deprecation investigation
 
 Completed the redundant-reimplementation pass (Phase G8), test-first:
