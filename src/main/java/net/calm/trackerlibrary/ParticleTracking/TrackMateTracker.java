@@ -89,12 +89,12 @@ public class TrackMateTracker {
                 double x = s.getFeature(Spot.POSITION_X);
                 double y = s.getFeature(Spot.POSITION_Y);
                 double t = s.getFeature(Spot.FRAME);
-                if (s instanceof Point) {
+                if (s instanceof Point point) {
                     p = new Point((int) t, x, y, 0.0);
-                } else if (s instanceof Blob) {
+                } else if (s instanceof Blob blob) {
                     p = new Blob((int) t, x, y, 0.0);
-                } else if (s instanceof IsoGaussian) {
-                    p = new IsoGaussian((int) t, x, y, 0.0, s.getFeature(Spot.RADIUS), s.getFeature(Spot.RADIUS), s.getFeature(Spot.QUALITY), null, 0, null);
+                } else if (s instanceof IsoGaussian gaussian) {
+                    p = new IsoGaussian((int) t, x, y, 0.0, gaussian.getFeature(Spot.RADIUS), gaussian.getFeature(Spot.RADIUS), gaussian.getFeature(Spot.QUALITY), null, 0, null);
                 }
                 p.putFeature(Spot.FRAME, s.getFeature(Spot.FRAME));
                 p.putFeature(Particle.COLOCALISED, s.getFeature(Particle.COLOCALISED));

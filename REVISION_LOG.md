@@ -19,6 +19,25 @@ dated narrative plus the "what not to do again" notes.
 
 ---
 
+## 2026-10-04 — G6: `instanceof` pattern matching (M7 complete)
+
+Final Phase G item landed. The three `instanceof` sites in
+`TrackMateTracker.updateTrajectories` (`Point`/`Blob`/`IsoGaussian`) now use
+pattern variables; the `IsoGaussian` branch uses the bound `gaussian` variable
+instead of the broad `s` for its `getFeature(...)` lookups. Cosmetic, no
+behaviour change (the method is not headless-testable, but the full suite
+compiles and re-runs clean).
+
+29/29 tests green. Version → `4.0.7` (patch, `refactor`).
+
+**M7 (Phase G, Java 21 modernisation) is now complete** — G3 (boxing), G4
+(try-with-resources), G8 (redundant math), G1 (threading + race fix), and G6
+(pattern matching) are all done; G2/G5 were already done. The only remaining
+plan item is M6's `net.calm.*` → `io.github.djpbarry.*` namespace rename
+(coordinated with IAClassLibrary/ADAPT/`AdaptDataProcessing`).
+
+---
+
 ## 2026-10-04 — G1: threading modernisation + data-race fix
 
 Fixed a real concurrency bug and modernised the hand-rolled thread pool in

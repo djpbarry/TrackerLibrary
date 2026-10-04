@@ -509,11 +509,16 @@ remaining `System.out`/`System.err`/`printStackTrace` in `src/main`. No work.
 
 ### G6. Modern language features
 
+**Done (2026-10-04).**
+
 - **`instanceof` pattern matching** (3 sites, `TrackMateTracker.java:92-96`):
-  the `Point`/`Blob`/`IsoGaussian` branches construct a `Particle` from a `Spot`.
-  Pattern variables remove the repeated `s.getFeature(...)` lookups.
+  the `Point`/`Blob`/`IsoGaussian` branches now bind pattern variables
+  (`point`/`blob`/`gaussian`); the `IsoGaussian` branch uses the bound
+  `gaussian` for its feature lookups.
 - No `switch` statements, no record-eligible data holders (all extend a class),
-  no further anonymous-`Thread`→lambda sites beyond G1. Small, cosmetic pass.
+  no further anonymous-`Thread`→lambda sites beyond G1.
+
+29/29 tests green.
 
 ### G7. Sequencing & risk
 
@@ -626,7 +631,7 @@ unblocks the coordinated downstream modernization.
 | **M4** — Refactor core | 🔶 **Partly done** | D3, D4, D5 complete. D2: `ParticleTrajectory` MSD math extracted (→ `calcMSDValues`), `TailTracer` geometry static + tested, `PFTracking3D` static helpers extracted to `ParticleFilterUtil` (with delegating shims). `PFTracking3D` file-I/O + GUI inner classes remain in place (field-coupled/protected-API, lower-value). |
 | **M5** — Static-state + docs | ✅ **Done** | D6 (Option A) landed: `UserVariables` → instance holder, `ParticleTrajectory.scale` → instance field. Remaining `msdPlot`/`globalMSD` statics are UI-global by design (documented, not refactored). `README.md` expanded (overview, build, deps, package map, license) with Build/Javadoc/JitPack/commit-activity/license badges. Javadoc added to `TrajectoryBuilder`, `TrackMateTracker`, `TrajectoryBridger`, `UserVariables`; `maven-javadoc-plugin` configured (`doclint none`) and a `javadoc.yml` workflow added to publish to `djpbarry.github.io/TrackerLibrary/`. |
 | **M6** — Upstream hand-off | 🔶 **In progress** | Released `4.0.2` (tags `v4.0.0`/`v4.0.1`/`v4.0.2`) for JitPack consumption by ADAPT/`AdaptDataProcessing`. JitPack build now green (via `jitpack.yml` JDK 21 pin — L11). Remaining: the `net.calm.*` → `io.github.djpbarry.*` namespace rename (IAClassLibrary Decision 7), and coordinating Java 21 / TrackMate 8 / the `v4.0.2` coordinate with ADAPT and `AdaptDataProcessing`. |
-| **M7** — Java 21 modernisation | 🔶 **In progress** | Phase G scoped above. G3 (boxing) **done**, G4 (try-with-resources) **done**, G8 (redundant math) **done**, G1 (threading + race fix) **done**. Remaining: G6 (pattern matching). G2/G5 already done. Not blocked on M6. |
+| **M7** — Java 21 modernisation | ✅ **Done** | G3 (boxing), G4 (try-with-resources), G8 (redundant math), G1 (threading + race fix), and G6 (pattern matching) all complete. G2/G5 already done. 29/29 tests green. |
 
 ### M4 progress (D3–D5 done; D2 begun after D6)
 
