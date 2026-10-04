@@ -104,6 +104,11 @@ IAClassLibrary Decision 2; supersedes the earlier "semver tags only" framing.)*
 
 ### Verified gotchas (from the code review)
 
+> These are the **as-found** findings from the initial review, retained as the
+> pre-refactor snapshot. Most are now resolved by M2–M5 (see the milestone-status
+> table and `REVISION_LOG.md`); the one still-open item is the GPL-2 source-header
+> inconsistency (B1, deferred).
+
 - **Three-way license inconsistency** — `pom.xml` says BSD-2, `LICENSE` is
   GPL-3.0, and source headers are a mix of GPL-2 (`TrajectoryBuilder`,
   `TrackMateTracker`, `ConfinedGaussian`, `TrajectoryBridger`), NetBeans stubs
@@ -430,12 +435,12 @@ particle-likelihood pass:
 
 - `updateParticleWeights` (`PFTracking3D.java:611-625`) creates
   `Thread[mNbThreads]`, `start()`s each, then `join()`s each.
-- `ParallelizedLikelihoodCalculator` (`:1370`) `extends Thread`; its `run()`
+- `ParallelizedLikelihoodCalculator` (`:1330`) `extends Thread`; its `run()`
   drains a shared work counter.
 
 **Data race (real bug found in review):** the shared counter
-`mControllingParticleIndex` is an *outer* instance field (`:1316`), but it is
-read/written by `getNewParticleIndex()` (`:1436`), which is `synchronized` on the
+`mControllingParticleIndex` is an *outer* instance field (`:1276`), but it is
+read/written by `getNewParticleIndex()` (`:1396`), which is `synchronized` on the
 *inner* `ParallelizedLikelihoodCalculator` instance — a different object per
 thread. The mutex therefore does **not** serialise access to the shared counter:
 two threads can return the same particle index or skip one.
@@ -535,7 +540,7 @@ Conventional Commits rule (patch for `refactor`/`chore`/`fix`).
 - `Math.pow(x*x + y*y, 0.5)` → `Math.hypot(x, y)` (`TailTracer.normalizedVector`
   `:52`, `TailTracer.normalVector` `:63`).
 - `Math.pow(..., 0.5)` → `Math.sqrt(...)` (`TailTracer.intersections2` `:102-103`).
-- `Math.pow(x, 2.0)` → `x * x` (`ParticleTrajectory.calcMSD` `:559-560`,
+- `Math.pow(x, 2.0)` → `x * x` (`ParticleTrajectory.calcMSDValues` `:559-560`,
   `NonIsoGaussian` `:27-53` — micro-opt, low value; do only if trivial).
 
 **Investigate:** the pre-existing `-Xlint:deprecation` note in

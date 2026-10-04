@@ -232,13 +232,13 @@ tracking code unit-testable without global-state bleed.
 | `ParticleTrajectory.scale` | `public static double` → `protected double` instance field, defaulting to `1.0`. The no-arg constructor (used by `TrackMateTracker`) no longer inherits whatever `scale` a previous trajectory last set — a latent hidden-global bug fixed. |
 | `UserVariables` | Converted from a `public static` singleton to an instance holder: instance (non-static) fields, public constructor, `getInstance()` (lazy) and `setInstance(...)` (inject/reset). In-repo consumers (`TrajectoryBuilder`, `TrajectoryBridger`, `ParticleTrajectory`) now route through `UserVariables.getInstance()`. The `public static final int` constants (`RANDOM`, `MAXIMA`, etc.) are unchanged. |
 | `ParticleTrajectory.calcMSD` | Extracted the pure MSD computation into ImageJ-free `calcMSDValues(...)`; the `Plot` rendering/accumulation stays in `calcMSD` as a thin layer (D2). |
-| Test | Added `UserVariablesTest` (singleton + instance-isolation). Suite now **22/22**. |
+| Test | Added `UserVariablesTest` (singleton + instance-isolation). Suite now **18/18**. |
 
 ### TailTracer geometry (D2, same pass)
 
 Made the four pure geometry helpers in `TailTracer` — `normalizedVector`,
 `normalVector`, `intersections`, `intersections2` — `static` (they never touched
-instance state) and added `TailTracerTest` (4 tests). The ImageJ-bound helpers
+instance state) and added `TailTracerTest` (4 tests; suite → **22/22**). The ImageJ-bound helpers
 (`candidatesIntensityCentre`, `findStartingVector`, `trace`, `getX/Y/TailIntens`)
 were left instance-bound. This completes the `TailTracer` leg of D2; only the
 `PFTracking3D` core / file I/O / GUI split remains outstanding.
