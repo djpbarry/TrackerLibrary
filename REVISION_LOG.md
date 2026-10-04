@@ -19,6 +19,30 @@ dated narrative plus the "what not to do again" notes.
 
 ---
 
+## 2026-10-04 — Cross-repo review of IAClassLibrary (plan + docs)
+
+Reviewed the sibling's `DEVELOPMENT_PLAN.md`/`AGENTS.md`/`REVISION_LOG.md` to
+fold its newer decisions into this project's roadmap. Outcomes:
+
+- **Namespace rename (IAClassLibrary Decision 7) added to our plan** as the main
+  open M6 item — `net.calm.*` → `io.github.djpbarry.*` (package root + Maven
+  `groupId`), to be executed in lockstep across IAClassLibrary, TrackerLibrary,
+  ADAPT, and `AdaptDataProcessing`. This is a breaking change not previously
+  tracked here.
+- **Conventional Commits + version-bump-on-every-change** recorded as an open
+  decision (our Decision 7) — the sibling does it (no `-SNAPSHOT`), we do plain
+  semver tags.
+- **Lessons L12–L14 carried forward** (marked inherited) from the sibling's
+  L13–L15: field-lifetime resources → `AutoCloseable`; version-bump discipline;
+  verify upstream is `public` before declaring a copy redundant.
+- Confirmed our `v2.0.1` pin is current (their working tree is `2.0.21`, last
+  release still `v2.0.1`) and that we are already aligned on `pom-scijava:45.1.0`,
+  Java 21, TrackMate 8.0.0, `central`, `jitpack.yml` JDK 21, and `.gitattributes`.
+
+No code change; docs only.
+
+---
+
 ## 2026-09-28 — IAClassLibrary re-pinned to v2.0.1 (B4) + patch release 4.0.2
 
 The IAClassLibrary dependency was pinned to a raw JitPack commit hash
@@ -448,3 +472,37 @@ not reliably invalidate the cached `ref → commit` mapping, so a "fixed" tag ca
 keep serving the stale failed build. If a release tag fails on JitPack, prefer
 cutting a fresh tag (next patch version) over force-moving the broken one — a
 never-seen tag name always triggers a clean build.
+
+### L12 — Field-lifetime resources need `close()`/`AutoCloseable`, not try-with-resources *(inherited)*
+
+A resource held as a field and used across many methods (e.g. a Bio-Formats
+`ImageReader` opened in one method, consumed in others) cannot be wrapped in a
+method-local try-with-resources. The correct fix is to make the owning class
+`implements AutoCloseable` and expose a `close()`.
+
+**Rule:** distinguish method-scoped resources (try-with-resources) from
+object-lifetime resources (implement `AutoCloseable` + `close()`); never just
+ignore a field-held reader/stream because it "can't be wrapped in a try".
+
+### L13 — Version via Conventional Commits (bump on every change) *(inherited)*
+
+IAClassLibrary adopted Conventional Commits with the `pom.xml` `<version>` bumped
+on **every** code change (`fix`/`refactor`/`chore`/`docs`/`test` → patch,
+`feat` → minor, breaking → major) and no `-SNAPSHOT` suffix. Leaving the pom on a
+stale version across a batch of commits breaks the version↔tag mapping.
+
+**Rule:** decide the versioning discipline up front; if adopting the sibling's
+scheme, bump the version on every change and never leave a `-SNAPSHOT` or stale
+version. *(Open question for TrackerLibrary — see `DEVELOPMENT_PLAN.md` Decision 7.)*
+
+### L14 — Verify the upstream method is public before declaring a copy redundant *(inherited)*
+
+A "copied from X" method is only a redundant reimplementation if X's equivalent is
+actually `public`/callable and still behaviourally equivalent. IAClassLibrary
+found two cases where a grep-based "redundant" verdict was wrong: `OverlayToRoi`
+(no public `OverlayCommands.overlayToRoi` exists) and `ImageBlurrer` (already a
+thin delegation).
+
+**Rule:** before replacing a "copied from X" method, confirm X's replacement is
+public/callable and equivalent — inspect the dependency's class/source (e.g.
+`javap`), don't trust a grep-only redundancy verdict.

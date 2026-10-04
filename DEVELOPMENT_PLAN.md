@@ -352,13 +352,35 @@ ADAPT, so several items are prerequisites for, or follow from, the sibling plans
 
 | Sibling plan item | TrackerLibrary action | This plan |
 |---|---|---|
-| IAClassLibrary B1 (license) | adopt GPL-3.0-or-later | B1 |
-| IAClassLibrary B2 (tag) | re-pin IAClassLibrary to `v2.0.0` | B4 |
-| IAClassLibrary B3 (TrackMate 8 / Java 21) | bump TrackMate to 8.0.0, Java 21 | A2, B3 |
-| ADAPT G2 (tag all three) | tag `v4.0.0` (or agreed version) | B2 |
+| IAClassLibrary B1 (license) | adopt GPL-3.0-or-later | B1 (done) |
+| IAClassLibrary B2 (tag) | re-pin IAClassLibrary to `v2.0.1` | B4 (done) |
+| IAClassLibrary B3 (TrackMate 8 / Java 21) | bump TrackMate to 8.0.0, Java 21 | A2, B3 (done) |
+| IAClassLibrary Decision 7 (namespace rename) | rename `net.calm.trackerlibrary` → `io.github.djpbarry.trackerlibrary` and update every `net.calm.iaclasslibrary.*` import, in lockstep | **NEW** — see below |
+| ADAPT G2 (tag all three) | tag `v4.0.2` (or agreed version) | B2 (done) |
 
 Coordinate the Java-target and TrackMate-version decision with the maintainer of
 `IAClassLibrary` (already resolved there) and confirm the same applies here.
+
+### Namespace rename (`net.calm` → `io.github.djpbarry`) — the main open item
+
+IAClassLibrary's Decision 7 resolves to rename its package root
+`net.calm.iaclasslibrary` → `io.github.djpbarry.iaclasslibrary` (and Maven
+`groupId` `net.calm` → `io.github.djpbarry`), because `net.calm` was based on a
+non-existent domain. It is deferred to the coordinated hand-off, **not yet done**.
+
+For TrackerLibrary this means, in the same lockstep pass:
+
+- Rename our package root `net.calm.trackerlibrary` →
+  `io.github.djpbarry.trackerlibrary` (and `groupId` `net.calm` →
+  `io.github.djpbarry`; `artifactId` `trackerlibrary` unchanged).
+- Rewrite every `import net.calm.iaclasslibrary.*` to
+  `import io.github.djpbarry.iaclasslibrary.*`.
+- Coordinate with ADAPT and `AdaptDataProcessing` (which also use the
+  `net.calm.*` umbrella), and with the IAClassLibrary release that actually ships
+  the rename.
+
+This is the largest remaining cross-repo coordination item and is currently
+**absent from this plan's milestones** — tracked here rather than buried in M6.
 
 ---
 
@@ -386,6 +408,16 @@ confirmed, not re-derived:
    and `TailTracer` may be consumed externally (inherited from IAClassLibrary
    Decision 0). Removal of public symbols requires a deprecation window and an
    external-usage check.
+6. **Namespace — `io.github.djpbarry`** *(inherited from IAClassLibrary Decision
+   7, pending coordination)*. Rename `net.calm.*` → `io.github.djpbarry.*`
+   (package root and Maven `groupId`) in lockstep with IAClassLibrary, ADAPT, and
+   `AdaptDataProcessing`. Not yet executed anywhere.
+7. **Versioning — Conventional Commits vs semver-tags-only** *(open question)*.
+   IAClassLibrary adopted Conventional Commits with a `pom.xml` `<version>` bump
+   on **every** code change (patch/minor/major) and no `-SNAPSHOT` suffix
+   (Decision 2 / L14). TrackerLibrary currently uses plain semver tags
+   (`v4.0.2`) with a `-SNAPSHOT`-based history. Decide whether to adopt the same
+   discipline for cross-repo consistency; if not, document the divergence.
 
 ---
 
@@ -419,7 +451,7 @@ unblocks the coordinated downstream modernization.
 | **M3** — Test harness | ✅ **Done** | Added JUnit 5 (`junit-jupiter-api`/`-engine`, test scope, version-managed by parent 5.13.4). 4 test classes / 16 tests, all headless-safe: `NonIsoGaussianTest`, `FluorophoreTest`, `DecayingFluorophoreTest`, `ParticleTrajectoryTest`. |
 | **M4** — Refactor core | 🔶 **Partly done** | D3, D4, D5 complete. D2: `ParticleTrajectory` MSD math extracted (→ `calcMSDValues`), `TailTracer` geometry static + tested, `PFTracking3D` static helpers extracted to `ParticleFilterUtil` (with delegating shims). `PFTracking3D` file-I/O + GUI inner classes remain in place (field-coupled/protected-API, lower-value). |
 | **M5** — Static-state + docs | ✅ **Done** | D6 (Option A) landed: `UserVariables` → instance holder, `ParticleTrajectory.scale` → instance field. Remaining `msdPlot`/`globalMSD` statics are UI-global by design (documented, not refactored). `README.md` expanded (overview, build, deps, package map, license) with Build/Javadoc/JitPack/commit-activity/license badges. Javadoc added to `TrajectoryBuilder`, `TrackMateTracker`, `TrajectoryBridger`, `UserVariables`; `maven-javadoc-plugin` configured (`doclint none`) and a `javadoc.yml` workflow added to publish to `djpbarry.github.io/TrackerLibrary/`. |
-| **M6** — Upstream hand-off | 🔶 **In progress** | Released `4.0.2` (tags `v4.0.0`/`v4.0.1`/`v4.0.2`) for JitPack consumption by ADAPT/`AdaptDataProcessing`. JitPack build now green (via `jitpack.yml` JDK 21 pin — L11). Remaining: coordinate Java 21 / TrackMate 8 / the `v4.0.2` coordinate with ADAPT and `AdaptDataProcessing`. |
+| **M6** — Upstream hand-off | 🔶 **In progress** | Released `4.0.2` (tags `v4.0.0`/`v4.0.1`/`v4.0.2`) for JitPack consumption by ADAPT/`AdaptDataProcessing`. JitPack build now green (via `jitpack.yml` JDK 21 pin — L11). Remaining: the `net.calm.*` → `io.github.djpbarry.*` namespace rename (IAClassLibrary Decision 7), and coordinating Java 21 / TrackMate 8 / the `v4.0.2` coordinate with ADAPT and `AdaptDataProcessing`. |
 
 ### M4 progress (D3–D5 done; D2 begun after D6)
 
