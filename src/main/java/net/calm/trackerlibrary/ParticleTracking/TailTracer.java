@@ -154,9 +154,9 @@ public class TailTracer {
         for (int i = 0; i < pn; i++) {
             double xcoord = sn[0] * dxy * (i + 1) + x1;
             double ycoord = sn[0] * dxy * (i + 1) + y1;
-            x.add(new Double(xcoord));
-            y.add(new Double(ycoord));
-            tailIntens.add(new Double(im.getInterpolatedValue(xcoord, ycoord)));
+            x.add(xcoord);
+            y.add(ycoord);
+            tailIntens.add(im.getInterpolatedValue(xcoord, ycoord));
         }
         // Tracing
         int stop = 0;
@@ -287,13 +287,13 @@ public class TailTracer {
                     double point[] = intersections2(p[2], p[1], p[0], xl[i][0],
                             xl[i][2 * npoints], yl[i][0], yl[i][2 * npoints]);
                     if (k < x.size()) {
-                        x.set(k, new Double(point[0]));
-                        y.set(k, new Double(point[1]));
-                        tailIntens.set(k, new Double(im.getInterpolatedValue(point[0], point[1])));
+                        x.set(k, point[0]);
+                        y.set(k, point[1]);
+                        tailIntens.set(k, im.getInterpolatedValue(point[0], point[1]));
                     } else {
-                        x.add(new Double(point[0]));
-                        y.add(new Double(point[1]));
-                        tailIntens.add(new Double(im.getInterpolatedValue(point[0], point[1])));
+                        x.add(point[0]);
+                        y.add(point[1]);
+                        tailIntens.add(im.getInterpolatedValue(point[0], point[1]));
                     }
                     k++;
                 }
@@ -309,12 +309,12 @@ public class TailTracer {
                             array[j][0] = hcp[j][0];
                             array[j][1] = hcp[j][1];
                         }
-                        array[hcp.length][0] = new Double(point[0]);
-                        array[hcp.length][1] = new Double(point[1]);
+                        array[hcp.length][0] = point[0];
+                        array[hcp.length][1] = point[1];
                     } else {
                         array = new Double[1][2];
-                        array[0][0] = new Double(point[0]);
-                        array[0][1] = new Double(point[1]);
+                        array[0][0] = point[0];
+                        array[0][1] = point[1];
                     }
                     hc.set(i - 1, array);
                 }
@@ -393,12 +393,12 @@ public class TailTracer {
                                 array[j][0] = hcp[j][0];
                                 array[j][1] = hcp[j][1];
                             }
-                            array[hcp.length][0] = new Double(point[0]);
-                            array[hcp.length][1] = new Double(point[1]);
+                            array[hcp.length][0] = point[0];
+                            array[hcp.length][1] = point[1];
                         } else {
                             array = new Double[1][2];
-                            array[0][0] = new Double(point[0]);
-                            array[0][1] = new Double(point[1]);
+                            array[0][0] = point[0];
+                            array[0][1] = point[1];
                         }
                         hc.set(i - 1, array);
                     }
@@ -413,9 +413,9 @@ public class TailTracer {
                         xsum += xyhc[i][0].doubleValue();
                         ysum += xyhc[i][1].doubleValue();
                     }
-                    x.add(new Double(xsum / xyhc.length));
-                    y.add(new Double(ysum / xyhc.length));
-                    tailIntens.add(new Double(im.getInterpolatedValue(xsum / xyhc.length, ysum / xyhc.length)));
+                    x.add(xsum / xyhc.length);
+                    y.add(ysum / xyhc.length);
+                    tailIntens.add(im.getInterpolatedValue(xsum / xyhc.length, ysum / xyhc.length));
                 } else {
                     stop = 1;
                 }

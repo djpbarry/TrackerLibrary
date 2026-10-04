@@ -19,6 +19,22 @@ dated narrative plus the "what not to do again" notes.
 
 ---
 
+## 2026-10-04 — G3: deprecated boxing constructors removed (M7 start)
+
+First Phase G step landed: the 20 `new Double(...)` calls in `TailTracer`
+(the `Double(double)` constructor, deprecated-for-removal in Java 21) were
+converted to autoboxing. Mechanical, no behaviour change.
+
+- The 20 `Double(double)` compiler warnings are gone.
+- 26/26 tests green.
+- Version → `4.0.3` (patch, `refactor`).
+
+The only remaining deprecation note is the pre-existing
+`ProbabilisticTracker` "uses or overrides a deprecated API" (tracked as a G8
+investigation item). Next: G4 (try-with-resources in `PFTracking3D` file I/O).
+
+---
+
 ## 2026-10-04 — Phase G scoped (Java 21 modernisation plan)
 
 Thorough code review to scope the next milestone (M7). Added `DEVELOPMENT_PLAN.md`

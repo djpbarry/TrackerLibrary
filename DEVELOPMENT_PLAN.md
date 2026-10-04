@@ -395,7 +395,7 @@ This is the largest remaining cross-repo coordination item and is currently
 
 ## Phase G — Modern Java modernisation (Java 21)
 
-**Status: planned (2026-10-04), not started.** Mirror IAClassLibrary's Phase G.
+**Status: in progress (started 2026-10-04).** Mirror IAClassLibrary's Phase G.
 The core is over a decade old and predates most Java 21 language/API features.
 This is a self-contained pass (not blocked on the M6 namespace rename) and is the
 natural next milestone after M1–M5.
@@ -476,6 +476,9 @@ No further G2 work. The one remaining concurrency hazard was the
 `:396-401`, `:416-418`) use the `Double(double)` constructor, deprecated-for-
 removal in Java 21. Replace with autoboxing (`x.add(xcoord)`) or
 `Double.valueOf(...)`. Mechanical, no behaviour change.
+
+**Done (2026-10-04):** all 20 sites converted to autoboxing; the 20
+`Double(double)` compiler warnings are gone; 26/26 tests green.
 
 No raw types remain (checked in D5). `Vector` → `List`/`ArrayList` is **deferred**
 (public/protected API freeze — the state-vector fields and helpers expose
@@ -610,7 +613,7 @@ unblocks the coordinated downstream modernization.
 | **M4** — Refactor core | 🔶 **Partly done** | D3, D4, D5 complete. D2: `ParticleTrajectory` MSD math extracted (→ `calcMSDValues`), `TailTracer` geometry static + tested, `PFTracking3D` static helpers extracted to `ParticleFilterUtil` (with delegating shims). `PFTracking3D` file-I/O + GUI inner classes remain in place (field-coupled/protected-API, lower-value). |
 | **M5** — Static-state + docs | ✅ **Done** | D6 (Option A) landed: `UserVariables` → instance holder, `ParticleTrajectory.scale` → instance field. Remaining `msdPlot`/`globalMSD` statics are UI-global by design (documented, not refactored). `README.md` expanded (overview, build, deps, package map, license) with Build/Javadoc/JitPack/commit-activity/license badges. Javadoc added to `TrajectoryBuilder`, `TrackMateTracker`, `TrajectoryBridger`, `UserVariables`; `maven-javadoc-plugin` configured (`doclint none`) and a `javadoc.yml` workflow added to publish to `djpbarry.github.io/TrackerLibrary/`. |
 | **M6** — Upstream hand-off | 🔶 **In progress** | Released `4.0.2` (tags `v4.0.0`/`v4.0.1`/`v4.0.2`) for JitPack consumption by ADAPT/`AdaptDataProcessing`. JitPack build now green (via `jitpack.yml` JDK 21 pin — L11). Remaining: the `net.calm.*` → `io.github.djpbarry.*` namespace rename (IAClassLibrary Decision 7), and coordinating Java 21 / TrackMate 8 / the `v4.0.2` coordinate with ADAPT and `AdaptDataProcessing`. |
-| **M7** — Java 21 modernisation | ⬜ **Planned** | Phase G scoped above. Order: G3 (boxing) → G4 (try-with-resources) → G8 (redundant math) → G1 (threading + `mControllingParticleIndex` race fix) → G6 (pattern matching). G2/G5 already done. Not blocked on M6. |
+| **M7** — Java 21 modernisation | 🔶 **In progress** | Phase G scoped above. G3 (boxing) **done** — 20 `new Double(...)` → autoboxing. Remaining: G4 (try-with-resources) → G8 (redundant math) → G1 (threading + race fix) → G6 (pattern matching). G2/G5 already done. Not blocked on M6. |
 
 ### M4 progress (D3–D5 done; D2 begun after D6)
 
