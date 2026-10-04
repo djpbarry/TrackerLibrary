@@ -49,7 +49,7 @@ public class TailTracer {
     static double[] normalizedVector(double x, double y) {
 // Normalized vector
         double sn[] = new double[2];
-        double n = Math.pow(x * x + y * y, 0.5);
+        double n = Math.hypot(x, y);
         sn[0] = x / n;
         sn[1] = y / n;
         return sn;
@@ -60,7 +60,7 @@ public class TailTracer {
         double n[] = new double[2];
         double qx = x2 - x1;
         double qy = y2 - y1;
-        double pmag = Math.pow(qx * qx + qy * qy, 0.5);
+        double pmag = Math.hypot(qx, qy);
         n[0] = qy / pmag;
         n[1] = -qx / pmag;
         return n;
@@ -99,8 +99,8 @@ public class TailTracer {
         double point2[] = new double[2];
         double m = (y2 - y1) / (x2 - x1);
         double c1 = y1 - m * x1;
-        point1[0] = (m - b + Math.pow((b - m) * (b - m) - 4 * a * (c2 - c1), 0.5)) / (2 * a);
-        point2[0] = (m - b - Math.pow((b - m) * (b - m) - 4 * a * (c2 - c1), 0.5)) / (2 * a);
+        point1[0] = (m - b + Math.sqrt((b - m) * (b - m) - 4 * a * (c2 - c1))) / (2 * a);
+        point2[0] = (m - b - Math.sqrt((b - m) * (b - m) - 4 * a * (c2 - c1))) / (2 * a);
         point1[1] = m * point1[0] + c1;
         point2[1] = m * point2[0] + c1;
         Rectangle r;

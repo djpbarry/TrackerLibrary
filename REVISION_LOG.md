@@ -19,6 +19,36 @@ dated narrative plus the "what not to do again" notes.
 
 ---
 
+## 2026-10-04 — G8: redundant math swaps + deprecation investigation
+
+Completed the redundant-reimplementation pass (Phase G8), test-first:
+
+- **`TailTracer`** — `Math.pow(x*x + y*y, 0.5)` → `Math.hypot(x, y)` in
+  `normalizedVector`/`normalVector`, and `Math.pow(disc, 0.5)` → `Math.sqrt(disc)`
+  in `intersections2`.
+- **`ParticleTrajectory.calcMSDValues`** — `Math.pow(d, 2.0)` → `d * d` via
+  `dx`/`dy` locals.
+- **`NonIsoGaussian`** — `Math.pow(Math.cos/sin(...), 2.0)` and
+  `Math.pow(xSigma, 2.0)` replaced with squared locals in both constructors and
+  `evaluate` (which now uses `dx`/`dy`).
+
+Test-first: `TailTracerTest` was extended to pin `intersections2`'s exact root
+selection (the `+` root when inside the bounding box, the `-` root otherwise)
+*before* the swaps, replacing the previous weak "is on the line" assertion. The
+new tests pass against the old `Math.pow` code and the new code alike.
+
+**Deprecation investigation resolved:** the pre-existing `-Xlint:deprecation`
+note in `ProbabilisticTracker` is `Utils.findLocalMaxima(int, ImageProcessor,
+double, boolean, boolean)` (called from `calcFromHereButtonPressed()`). All three
+`findLocalMaxima` overloads are `@Deprecated` in IAClassLibrary `v2.0.1` with no
+non-deprecated successor in `Utils`, so the call is **retained** — it sits in an
+ImageJ-bound GUI path (button handler) that is headless-untestable.
+
+27/27 tests green. Version → `4.0.5` (patch, `refactor`). Next: G1 (threading +
+`mControllingParticleIndex` race fix).
+
+---
+
 ## 2026-10-04 — G4: try-with-resources in `PFTracking3D` file I/O
 
 Converted the four file-I/O methods to try-with-resources:

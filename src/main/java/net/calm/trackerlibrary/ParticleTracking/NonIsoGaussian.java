@@ -24,12 +24,14 @@ public class NonIsoGaussian extends IsoGaussian {
         this.ySigma = ysig;
         this.fit = fit;
         this.theta = theta;
-        this.a = Math.pow(Math.cos(theta), 2.0) / (2.0 * Math.pow(xSigma, 2.0))
-                + Math.pow(Math.sin(theta), 2.0) / (2.0 * Math.pow(ySigma, 2.0));
-        this.b = -Math.sin(2.0 * theta) / (4.0 * Math.pow(xSigma, 2.0))
-                + Math.sin(2.0 * theta) / (4.0 * Math.pow(ySigma, 2.0));
-        this.c = Math.pow(Math.cos(theta), 2.0) / (2.0 * Math.pow(ySigma, 2.0))
-                + Math.pow(Math.sin(theta), 2.0) / (2.0 * Math.pow(xSigma, 2.0));
+        double cosTheta = Math.cos(theta);
+        double sinTheta = Math.sin(theta);
+        double sin2Theta = Math.sin(2.0 * theta);
+        double xSigmaSq = xSigma * xSigma;
+        double ySigmaSq = ySigma * ySigma;
+        this.a = cosTheta * cosTheta / (2.0 * xSigmaSq) + sinTheta * sinTheta / (2.0 * ySigmaSq);
+        this.b = -sin2Theta / (4.0 * xSigmaSq) + sin2Theta / (4.0 * ySigmaSq);
+        this.c = cosTheta * cosTheta / (2.0 * ySigmaSq) + sinTheta * sinTheta / (2.0 * xSigmaSq);
     }
 
     public NonIsoGaussian(NonIsoGaussianFitter fitter) {
@@ -40,17 +42,20 @@ public class NonIsoGaussian extends IsoGaussian {
         this.magnitude = p[3];
         this.x = p[4];
         this.y = p[5];
-        this.a = Math.pow(Math.cos(p[0]), 2.0) / (2.0 * Math.pow(p[1], 2.0))
-                + Math.pow(Math.sin(p[0]), 2.0) / (2.0 * Math.pow(p[2], 2.0));
-        this.b = -Math.sin(2.0 * p[0]) / (4.0 * Math.pow(p[1], 2.0))
-                + Math.sin(2.0 * p[0]) / (4.0 * Math.pow(p[2], 2.0));
-        this.c = Math.pow(Math.cos(p[0]), 2.0) / (2.0 * Math.pow(p[2], 2.0))
-                + Math.pow(Math.sin(p[0]), 2.0) / (2.0 * Math.pow(p[1], 2.0));
+        double cosP = Math.cos(p[0]);
+        double sinP = Math.sin(p[0]);
+        double sin2P = Math.sin(2.0 * p[0]);
+        double p1Sq = p[1] * p[1];
+        double p2Sq = p[2] * p[2];
+        this.a = cosP * cosP / (2.0 * p1Sq) + sinP * sinP / (2.0 * p2Sq);
+        this.b = -sin2P / (4.0 * p1Sq) + sin2P / (4.0 * p2Sq);
+        this.c = cosP * cosP / (2.0 * p2Sq) + sinP * sinP / (2.0 * p1Sq);
     }
 
     public double evaluate(double x, double y) {
-        return magnitude * Math.exp(-(a * Math.pow(x - this.x, 2.0) + 2 * b * (x - this.x)
-                * (y - this.y) + c * Math.pow(y - this.y, 2.0)));
+        double dx = x - this.x;
+        double dy = y - this.y;
+        return magnitude * Math.exp(-(a * dx * dx + 2 * b * dx * dy + c * dy * dy));
     }
 
     public double getTheta() {

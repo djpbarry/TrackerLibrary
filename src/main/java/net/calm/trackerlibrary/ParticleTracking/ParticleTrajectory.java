@@ -556,8 +556,10 @@ public class ParticleTrajectory {
         for (int i = 0; i < maxLength; i++) {
             DescriptiveStatistics thisMSD = new DescriptiveStatistics();
             for (int j = 0; i + j < maxLength; j++) {
-                xval = Math.pow(xPoints[i + j] - xPoints[j], 2.0);
-                yval = Math.pow(yPoints[i + j] - yPoints[j], 2.0);
+                double dx = xPoints[i + j] - xPoints[j];
+                double dy = yPoints[i + j] - yPoints[j];
+                xval = dx * dx;
+                yval = dy * dy;
                 thisMSD.addValue(xval + yval);
             }
             long N = thisMSD.getN();

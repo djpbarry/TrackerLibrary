@@ -532,21 +532,29 @@ remaining `System.out`/`System.err`/`printStackTrace` in `src/main`. No work.
    suite.
 5. **G6 (language features)** — cosmetic, last.
 
-Each step compiles + 26 tests green and bumps `pom.xml` `<version>` per the
+Each step compiles + 27 tests green and bumps `pom.xml` `<version>` per the
 Conventional Commits rule (patch for `refactor`/`chore`/`fix`).
 
 ### G8. Redundant reimplementations (small)
+
+**Done (2026-10-04).**
 
 - `Math.pow(x*x + y*y, 0.5)` → `Math.hypot(x, y)` (`TailTracer.normalizedVector`
   `:52`, `TailTracer.normalVector` `:63`).
 - `Math.pow(..., 0.5)` → `Math.sqrt(...)` (`TailTracer.intersections2` `:102-103`).
 - `Math.pow(x, 2.0)` → `x * x` (`ParticleTrajectory.calcMSDValues` `:559-560`,
-  `NonIsoGaussian` `:27-53` — micro-opt, low value; do only if trivial).
+  `NonIsoGaussian` `:27-53`).
 
-**Investigate:** the pre-existing `-Xlint:deprecation` note in
-`ProbabilisticTracker` ("uses or overrides a deprecated API") — identify the
-deprecated symbol (likely an IAClassLibrary `Utils` or ImageJ method) and either
-migrate or document why it is retained.
+`TailTracerTest` was first extended (test-first) to pin `intersections2`'s exact
+root selection — the `+` root when it falls inside the bounding box, the `-`
+root otherwise — then the swaps were applied and the full suite re-ran green
+(27/27).
+
+**Investigation resolved:** the pre-existing `-Xlint:deprecation` note is
+`Utils.findLocalMaxima(int, ImageProcessor, double, boolean, boolean)`, called
+from `ProbabilisticTracker.calcFromHereButtonPressed()`. All `findLocalMaxima`
+overloads are `@Deprecated` in IAClassLibrary `v2.0.1` with no non-deprecated
+successor in `Utils`, so the call is retained (GUI-only path, headless-untestable).
 
 ### G9. (none)
 
@@ -624,7 +632,7 @@ unblocks the coordinated downstream modernization.
 | **M4** — Refactor core | 🔶 **Partly done** | D3, D4, D5 complete. D2: `ParticleTrajectory` MSD math extracted (→ `calcMSDValues`), `TailTracer` geometry static + tested, `PFTracking3D` static helpers extracted to `ParticleFilterUtil` (with delegating shims). `PFTracking3D` file-I/O + GUI inner classes remain in place (field-coupled/protected-API, lower-value). |
 | **M5** — Static-state + docs | ✅ **Done** | D6 (Option A) landed: `UserVariables` → instance holder, `ParticleTrajectory.scale` → instance field. Remaining `msdPlot`/`globalMSD` statics are UI-global by design (documented, not refactored). `README.md` expanded (overview, build, deps, package map, license) with Build/Javadoc/JitPack/commit-activity/license badges. Javadoc added to `TrajectoryBuilder`, `TrackMateTracker`, `TrajectoryBridger`, `UserVariables`; `maven-javadoc-plugin` configured (`doclint none`) and a `javadoc.yml` workflow added to publish to `djpbarry.github.io/TrackerLibrary/`. |
 | **M6** — Upstream hand-off | 🔶 **In progress** | Released `4.0.2` (tags `v4.0.0`/`v4.0.1`/`v4.0.2`) for JitPack consumption by ADAPT/`AdaptDataProcessing`. JitPack build now green (via `jitpack.yml` JDK 21 pin — L11). Remaining: the `net.calm.*` → `io.github.djpbarry.*` namespace rename (IAClassLibrary Decision 7), and coordinating Java 21 / TrackMate 8 / the `v4.0.2` coordinate with ADAPT and `AdaptDataProcessing`. |
-| **M7** — Java 21 modernisation | 🔶 **In progress** | Phase G scoped above. G3 (boxing) **done**, G4 (try-with-resources) **done**. Remaining: G8 (redundant math) → G1 (threading + race fix) → G6 (pattern matching). G2/G5 already done. Not blocked on M6. |
+| **M7** — Java 21 modernisation | 🔶 **In progress** | Phase G scoped above. G3 (boxing) **done**, G4 (try-with-resources) **done**, G8 (redundant math) **done**. Remaining: G1 (threading + race fix) → G6 (pattern matching). G2/G5 already done. Not blocked on M6. |
 
 ### M4 progress (D3–D5 done; D2 begun after D6)
 

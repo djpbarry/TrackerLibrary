@@ -35,13 +35,20 @@ class TailTracerTest {
     }
 
     @Test
-    void intersections2ReturnsRootInsideBoundingBox() {
-        // Quadratic y = x^2 - 1 (a=1, b=0, c2=-1) and line y = 2x over x in [0,2].
-        // Roots are 1 +/- sqrt(2); x = 1 + sqrt(2) ~ 2.414 is outside [0,2],
-        // x = 1 - sqrt(2) ~ -0.414 is outside too; but the returned point must be
-        // one of the two roots, so we only assert both are real and on the line.
-        double[] p = TailTracer.intersections2(1.0, 0.0, -1.0, 0.0, 2.0, 0.0, 4.0);
-        double m = (4.0 - 0.0) / (2.0 - 0.0);
-        assertEquals(m * p[0], p[1], TOL);
+    void intersections2ReturnsPositiveRootWhenInsideBoundingBox() {
+        // Parabola y = x^2 (a=1, b=0, c2=0) meets line y = x through (0.5,0.5)-(2,2).
+        // Roots x = 0 and x = 1; only (1,1) lies inside the box, so the +root is returned.
+        double[] p = TailTracer.intersections2(1.0, 0.0, 0.0, 0.5, 2.0, 0.5, 2.0);
+        assertEquals(1.0, p[0], TOL);
+        assertEquals(1.0, p[1], TOL);
+    }
+
+    @Test
+    void intersections2ReturnsNegativeRootWhenPositiveRootOutsideBox() {
+        // Same parabola y = x^2 and line y = x, but the box through (0,0)-(0.5,0.5)
+        // contains only the origin; the +root (1,1) is outside, so the -root is returned.
+        double[] p = TailTracer.intersections2(1.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5);
+        assertEquals(0.0, p[0], TOL);
+        assertEquals(0.0, p[1], TOL);
     }
 }
