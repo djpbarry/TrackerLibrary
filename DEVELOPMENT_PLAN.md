@@ -31,6 +31,15 @@ deviations from what was planned) and [`REVISION_LOG.md`](REVISION_LOG.md)
 plan and the revision log in lockstep with the code is part of finishing the
 change, not an optional follow-up.
 
+### Versioning convention (Decision 7 — resolved)
+
+Commit messages use **Conventional Commits** (`fix:`, `feat:`, `chore:`,
+`refactor:`, `docs:`, `test:`; `BREAKING CHANGE:`/`!` for breaking changes), and
+`pom.xml` `<version>` is **bumped on every code change** — `fix`/`refactor`/
+`chore`/`docs`/`test` → patch, `feat` → minor, breaking → major — with **no
+`-SNAPSHOT` suffix**. Release tags stay `vX.Y.Z`. *(Adopted 2026-10-04 to match
+IAClassLibrary Decision 2; supersedes the earlier "semver tags only" framing.)*
+
 ## Current state (context for the plan)
 
 > **Status update:** M1–M5 are **complete** and M6 is **in progress** (released
@@ -412,12 +421,11 @@ confirmed, not re-derived:
    7, pending coordination)*. Rename `net.calm.*` → `io.github.djpbarry.*`
    (package root and Maven `groupId`) in lockstep with IAClassLibrary, ADAPT, and
    `AdaptDataProcessing`. Not yet executed anywhere.
-7. **Versioning — Conventional Commits vs semver-tags-only** *(open question)*.
-   IAClassLibrary adopted Conventional Commits with a `pom.xml` `<version>` bump
-   on **every** code change (patch/minor/major) and no `-SNAPSHOT` suffix
-   (Decision 2 / L14). TrackerLibrary currently uses plain semver tags
-   (`v4.0.2`) with a `-SNAPSHOT`-based history. Decide whether to adopt the same
-   discipline for cross-repo consistency; if not, document the divergence.
+7. **Versioning — Conventional Commits** *(resolved 2026-10-04 — adopt)*.
+   Conventional Commits (`fix:`, `feat:`, `chore:`, `refactor:`, `docs:`, `test:`;
+   `BREAKING CHANGE:`/`!`), with `pom.xml` `<version>` bumped on **every** code
+   change (patch/minor/major) and no `-SNAPSHOT` suffix. Matches IAClassLibrary
+   Decision 2 / L14. Release tags stay `vX.Y.Z`.
 
 ---
 

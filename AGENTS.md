@@ -14,6 +14,14 @@ Two independent tracking approaches coexist here:
 - `ProbabilisticTracking` — a particle-filter (sequential Monte Carlo) tracker
   ported from ETH Zurich (Janick Cardinale).
 
+## Keep documentation in sync
+
+Every change to this repository (code, build, CI, or docs) must be followed, in
+the same pass, by a review of `DEVELOPMENT_PLAN.md` and `REVISION_LOG.md`,
+updating one or both as necessary — mark a milestone/phase done, record a new
+decision, or log a lesson. Never leave them describing the pre-change state. Do
+not wait for a separate prompt.
+
 ## Build
 
 Maven project, JDK 21 (via `scijava.jvm.version`). Parent POM is
@@ -214,3 +222,12 @@ license.
   normalize them unless asked.
 - `@author` tags reference `barry05` / `David Barry` / `Dave Barry` / Janick
   Cardinale (ETH).
+
+### Versioning & commit conventions
+
+- Commit messages follow **Conventional Commits**: `fix:`, `feat:`, `chore:`,
+  `refactor:`, `docs:`, `test:`; `BREAKING CHANGE:`/`!` for breaking changes.
+- Bump `pom.xml` `<version>` on **every** code change — `fix`/`refactor`/`chore`/
+  `docs`/`test` → patch, `feat` → minor, breaking → major. **No `-SNAPSHOT`
+  suffix.**
+- Release tags use `vX.Y.Z` (never elide the patch zero).
