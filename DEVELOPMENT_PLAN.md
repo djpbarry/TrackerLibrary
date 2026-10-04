@@ -406,6 +406,23 @@ type, field type, or class is changed or removed. `ParticleFilterUtil` and the
 into the public surface. Where a change would alter the API, deprecate and add a
 new symbol instead.
 
+### Test-first discipline (inherited from IAClassLibrary)
+
+Every behaviour-affecting step follows the sibling's order — **write or confirm a
+characterisation test that pins current behaviour first, then modify, then re-run
+the test to prove equivalence.** Specifically:
+
+- **G8 (math swaps):** `TailTracerTest` already pins `normalizedVector`/
+  `normalVector`/`intersections`; extend it to pin `intersections2`'s exact root
+  selection before the `Math.hypot`/`Math.sqrt` swap.
+- **G1 (race fix):** extract the work-stealing counter so its contract — every
+  index `0..N-1` returned exactly once — is asserted by a headless test before and
+  after the `AtomicInteger` change (mirrors IAClassLibrary's
+  `MultiThreadedProcessTest.testRunWorkersExecutesAllTasks`).
+- **G3/G4/G6:** mechanical/cosmetic, but re-run the full suite after each. Where
+  a path is not headless-testable (the `PFTracking3D` file I/O), review the
+  conversion carefully and note the gap rather than silently skipping a test.
+
 ### G1. Modernise the hand-rolled thread model (highest value)
 
 `PFTracking3D` hand-rolls a `Thread[]` pool and a `Thread` subclass for the
@@ -427,16 +444,19 @@ Plan:
 
 1. Convert `ParallelizedLikelihoodCalculator` from `extends Thread` to
    `implements Runnable` (it is a `private` inner class — no API concern).
-2. Replace the shared `int mControllingParticleIndex` with an `AtomicInteger`
-   work-stealing counter (fixes the race).
+2. Extract the work-stealing counter into a small headless-testable unit (an
+   `AtomicInteger`-backed counter whose contract "each index `0..N-1` is returned
+   exactly once" is asserted by a test — see test-first above), then use it from
+   `getNewParticleIndex()`.
 3. Replace the `Thread[]` + `start()`/`join()` block with a fixed
    `ExecutorService` (`newFixedThreadPool(mNbThreads)`) + `submit` +
    `awaitTermination` (or `invokeAll`). Likelihood is CPU-bound, so platform
    threads in a bounded pool are correct (not virtual threads).
 
-`updateParticleWeights` needs an ImageJ `ImageStack` to exercise, so it is not
-headless-testable; keep the change mechanical and rely on the full 26-test suite
-plus a manual smoke. Record the race fix explicitly in `REVISION_LOG.md`.
+`updateParticleWeights` itself needs an ImageJ `ImageStack` and is not
+headless-testable; the extracted counter *is*, so test that directly. Keep the
+rest mechanical, run the full 26-test suite plus a manual smoke, and record the
+race fix explicitly in `REVISION_LOG.md`.
 
 ### G2. Static mutable state — already resolved (verify only)
 
@@ -492,9 +512,10 @@ remaining `System.out`/`System.err`/`printStackTrace` in `src/main`. No work.
 1. **G3 (boxing)** — mechanical, zero risk.
 2. **G4 (try-with-resources)** — low risk; file-I/O paths are not exercised by
    the headless tests, so review each conversion carefully.
-3. **G8 (redundant math)** — mechanical clarity swaps.
-4. **G1 (threading + race fix)** — the only behavioural change; do after G3/G4,
-   keep it mechanical, run the full suite.
+3. **G8 (redundant math)** — mechanical clarity swaps, behind `TailTracerTest`.
+4. **G1 (threading + race fix)** — the only behavioural change; extract + test the
+   counter first (test-first discipline), keep the rest mechanical, run the full
+   suite.
 5. **G6 (language features)** — cosmetic, last.
 
 Each step compiles + 26 tests green and bumps `pom.xml` `<version>` per the
