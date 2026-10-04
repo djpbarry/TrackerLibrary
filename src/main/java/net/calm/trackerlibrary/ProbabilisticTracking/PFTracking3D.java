@@ -967,9 +967,7 @@ public abstract class PFTracking3D implements PlugInFilter {
      * @return true if successful, false if not.
      */
     protected boolean writeInitFile(File aFile) {
-        BufferedWriter vW = null;
-        try {
-            vW = new BufferedWriter(new FileWriter(aFile));
+        try (BufferedWriter vW = new BufferedWriter(new FileWriter(aFile))) {
             for (float[] vState : mStateVectors) {
                 String vS = mFrameOfInitialization + " ";
                 for (int vI = 0; vI < vState.length; vI++) {
@@ -980,13 +978,6 @@ public abstract class PFTracking3D implements PlugInFilter {
         } catch (IOException aIOE) {
             IJ.handleException(aIOE);
             return false;
-        } finally {
-            try {
-                vW.close();
-            } catch (IOException aIOE) {
-                IJ.handleException(aIOE);
-                return false;
-            }
         }
         return true;
     }
@@ -999,20 +990,11 @@ public abstract class PFTracking3D implements PlugInFilter {
      * @return true if successful, false if not.
      */
     protected boolean writeResultFile(File aFile) {
-        BufferedWriter vW = null;
-        try {
-            vW = new BufferedWriter(new FileWriter(aFile));
+        try (BufferedWriter vW = new BufferedWriter(new FileWriter(aFile))) {
             vW.write(generateOutputString(mStateVectorsMemory, ",", true));
         } catch (IOException aIOE) {
             IJ.handleException(aIOE);
             return false;
-        } finally {
-            try {
-                vW.close();
-            } catch (IOException aIOE) {
-                IJ.handleException(aIOE);
-                return false;
-            }
         }
         return true;
     }
@@ -1026,14 +1008,8 @@ public abstract class PFTracking3D implements PlugInFilter {
      * @return true if successful. false if not.
      */
     protected boolean readInitFile(File aFile) {
-        BufferedReader vR = null;
-        try {
-            vR = new BufferedReader(new FileReader(aFile));
-        } catch (FileNotFoundException aFNFE) {
-            return false;
-        }
-        String vLine;
-        try {
+        try (BufferedReader vR = new BufferedReader(new FileReader(aFile))) {
+            String vLine;
             while ((vLine = vR.readLine()) != null) {
                 if (vLine.startsWith("#")) {
                     continue; //comment
@@ -1062,16 +1038,11 @@ public abstract class PFTracking3D implements PlugInFilter {
                 mStateVectors.add(vState);
 
             }
+        } catch (FileNotFoundException aFNFE) {
+            return false;
         } catch (IOException aIOE) {
             IJ.handleException(aIOE);
             return false;
-        } finally {
-            try {
-                vR.close();
-            } catch (IOException aIOE) {
-                IJ.handleException(aIOE);
-                return false;
-            }
         }
 
         return true;
@@ -1086,14 +1057,8 @@ public abstract class PFTracking3D implements PlugInFilter {
      * @return true if successful. false if not.
      */
     protected boolean readResultFile(File aFile) {
-        BufferedReader vR = null;
-        try {
-            vR = new BufferedReader(new FileReader(aFile));
-        } catch (FileNotFoundException aFNFE) {
-            return false;
-        }
-        String vLine;
-        try {
+        try (BufferedReader vR = new BufferedReader(new FileReader(aFile))) {
+            String vLine;
             while ((vLine = vR.readLine()) != null) {
                 if (vLine.startsWith("#")) {
                     continue; //ignore
@@ -1142,16 +1107,11 @@ public abstract class PFTracking3D implements PlugInFilter {
                 mStateVectorsMemory.setElementAt(vFrameStates, vFrame);
 
             }
+        } catch (FileNotFoundException aFNFE) {
+            return false;
         } catch (IOException aIOE) {
             IJ.handleException(aIOE);
             return false;
-        } finally {
-            try {
-                vR.close();
-            } catch (IOException aIOE) {
-                IJ.handleException(aIOE);
-                return false;
-            }
         }
 
         return true;

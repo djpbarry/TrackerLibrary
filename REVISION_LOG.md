@@ -19,6 +19,24 @@ dated narrative plus the "what not to do again" notes.
 
 ---
 
+## 2026-10-04 — G4: try-with-resources in `PFTracking3D` file I/O
+
+Converted the four file-I/O methods to try-with-resources:
+
+- `writeInitFile` / `writeResultFile` (`BufferedWriter`).
+- `readInitFile` / `readResultFile` (`BufferedReader`).
+
+The `read*` methods previously used two nested `try` blocks (open + read) with a
+manual `finally`-close; they now open in the resource clause and add
+`catch (FileNotFoundException)` (silent `return false`) before
+`catch (IOException)` (logged `return false`), preserving the original error
+semantics while making the resource lifecycle automatic.
+
+26/26 tests green. Version → `4.0.4` (patch, `refactor`). Next: G8 (redundant
+math — `Math.hypot`/`Math.sqrt` swaps behind `TailTracerTest`).
+
+---
+
 ## 2026-10-04 — G3: deprecated boxing constructors removed (M7 start)
 
 First Phase G step landed: the 20 `new Double(...)` calls in `TailTracer`
