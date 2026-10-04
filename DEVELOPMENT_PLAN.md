@@ -393,6 +393,133 @@ This is the largest remaining cross-repo coordination item and is currently
 
 ---
 
+## Phase G — Modern Java modernisation (Java 21)
+
+**Status: planned (2026-10-04), not started.** Mirror IAClassLibrary's Phase G.
+The core is over a decade old and predates most Java 21 language/API features.
+This is a self-contained pass (not blocked on the M6 namespace rename) and is the
+natural next milestone after M1–M5.
+
+**Guardrail — public API stays unchanged.** No public method signature, return
+type, field type, or class is changed or removed. `ParticleFilterUtil` and the
+`PFTracking3D` static delegates exist precisely so internal changes don't ripple
+into the public surface. Where a change would alter the API, deprecate and add a
+new symbol instead.
+
+### G1. Modernise the hand-rolled thread model (highest value)
+
+`PFTracking3D` hand-rolls a `Thread[]` pool and a `Thread` subclass for the
+particle-likelihood pass:
+
+- `updateParticleWeights` (`PFTracking3D.java:611-625`) creates
+  `Thread[mNbThreads]`, `start()`s each, then `join()`s each.
+- `ParallelizedLikelihoodCalculator` (`:1370`) `extends Thread`; its `run()`
+  drains a shared work counter.
+
+**Data race (real bug found in review):** the shared counter
+`mControllingParticleIndex` is an *outer* instance field (`:1316`), but it is
+read/written by `getNewParticleIndex()` (`:1436`), which is `synchronized` on the
+*inner* `ParallelizedLikelihoodCalculator` instance — a different object per
+thread. The mutex therefore does **not** serialise access to the shared counter:
+two threads can return the same particle index or skip one.
+
+Plan:
+
+1. Convert `ParallelizedLikelihoodCalculator` from `extends Thread` to
+   `implements Runnable` (it is a `private` inner class — no API concern).
+2. Replace the shared `int mControllingParticleIndex` with an `AtomicInteger`
+   work-stealing counter (fixes the race).
+3. Replace the `Thread[]` + `start()`/`join()` block with a fixed
+   `ExecutorService` (`newFixedThreadPool(mNbThreads)`) + `submit` +
+   `awaitTermination` (or `invokeAll`). Likelihood is CPU-bound, so platform
+   threads in a bounded pool are correct (not virtual threads).
+
+`updateParticleWeights` needs an ImageJ `ImageStack` to exercise, so it is not
+headless-testable; keep the change mechanical and rely on the full 26-test suite
+plus a manual smoke. Record the race fix explicitly in `REVISION_LOG.md`.
+
+### G2. Static mutable state — already resolved (verify only)
+
+D6 (Option A) eliminated the mutable statics: `UserVariables` → instance holder,
+`ParticleTrajectory.scale` → instance field. The only remaining statics are
+
+- `ParticleTrajectory.msdPlot` / `plotLegend` / `globalMSD` — the **population
+  MSD accumulator**, global by design (same decision as IAClassLibrary's
+  `DiffusionAnalyser`), left static and documented.
+
+No further G2 work. The one remaining concurrency hazard was the
+`mControllingParticleIndex` race, addressed under G1.
+
+### G3. Deprecated boxing constructors
+
+20 `new Double(...)` calls in `TailTracer` (`:157-159`, `:290-296`, `:312-317`,
+`:396-401`, `:416-418`) use the `Double(double)` constructor, deprecated-for-
+removal in Java 21. Replace with autoboxing (`x.add(xcoord)`) or
+`Double.valueOf(...)`. Mechanical, no behaviour change.
+
+No raw types remain (checked in D5). `Vector` → `List`/`ArrayList` is **deferred**
+(public/protected API freeze — the state-vector fields and helpers expose
+`Vector`).
+
+### G4. Resource management (try-with-resources)
+
+`PFTracking3D`'s file I/O opens readers/writers and closes them manually via a
+`finally` + `null`-initialised local (leak/close-error risk):
+
+- `writeInitFile` (`:970`), `writeResultFile` (`:1002`) — `BufferedWriter`.
+- `readInitFile` (`:1029`), `readResultFile` (`:1089`) — `BufferedReader`.
+
+Convert to try-with-resources (`BufferedWriter`/`BufferedReader`/`FileWriter`/
+`FileReader` all implement `AutoCloseable`). These are `protected` methods; their
+signatures are unchanged, so no API impact.
+
+### G5. Logging / error handling — verify only
+
+D4 already normalised this (`printStackTrace` → `IJ.handleException`, `System.out`
+/`System.err` → `IJ.log`, documented intentional swallows). A re-scan found no
+remaining `System.out`/`System.err`/`printStackTrace` in `src/main`. No work.
+
+### G6. Modern language features
+
+- **`instanceof` pattern matching** (3 sites, `TrackMateTracker.java:92-96`):
+  the `Point`/`Blob`/`IsoGaussian` branches construct a `Particle` from a `Spot`.
+  Pattern variables remove the repeated `s.getFeature(...)` lookups.
+- No `switch` statements, no record-eligible data holders (all extend a class),
+  no further anonymous-`Thread`→lambda sites beyond G1. Small, cosmetic pass.
+
+### G7. Sequencing & risk
+
+1. **G3 (boxing)** — mechanical, zero risk.
+2. **G4 (try-with-resources)** — low risk; file-I/O paths are not exercised by
+   the headless tests, so review each conversion carefully.
+3. **G8 (redundant math)** — mechanical clarity swaps.
+4. **G1 (threading + race fix)** — the only behavioural change; do after G3/G4,
+   keep it mechanical, run the full suite.
+5. **G6 (language features)** — cosmetic, last.
+
+Each step compiles + 26 tests green and bumps `pom.xml` `<version>` per the
+Conventional Commits rule (patch for `refactor`/`chore`/`fix`).
+
+### G8. Redundant reimplementations (small)
+
+- `Math.pow(x*x + y*y, 0.5)` → `Math.hypot(x, y)` (`TailTracer.normalizedVector`
+  `:52`, `TailTracer.normalVector` `:63`).
+- `Math.pow(..., 0.5)` → `Math.sqrt(...)` (`TailTracer.intersections2` `:102-103`).
+- `Math.pow(x, 2.0)` → `x * x` (`ParticleTrajectory.calcMSD` `:559-560`,
+  `NonIsoGaussian` `:27-53` — micro-opt, low value; do only if trivial).
+
+**Investigate:** the pre-existing `-Xlint:deprecation` note in
+`ProbabilisticTracker` ("uses or overrides a deprecated API") — identify the
+deprecated symbol (likely an IAClassLibrary `Utils` or ImageJ method) and either
+migrate or document why it is retained.
+
+### G9. (none)
+
+No equivalent to IAClassLibrary's `RiemannianDistanceTransform` — this library has
+no distance transform to optimise.
+
+---
+
 ## Proposed decisions (to confirm with the maintainer)
 
 These follow directly from IAClassLibrary's resolved decisions and should be
@@ -443,6 +570,8 @@ confirmed, not re-derived:
    and Javadoc. (Phase E)
 6. **M6 — Upstream hand-off:** confirm Java 21 / TrackMate 8 / tag with ADAPT and
    `AdaptDataProcessing`. (Phase F)
+7. **M7 — Java 21 modernisation:** boxing + try-with-resources + threading (incl.
+   the `mControllingParticleIndex` race fix) + language features. (Phase G)
 
 Each milestone is independently shippable. M1 is the immediate next step and
 unblocks the coordinated downstream modernization.
@@ -460,6 +589,7 @@ unblocks the coordinated downstream modernization.
 | **M4** — Refactor core | 🔶 **Partly done** | D3, D4, D5 complete. D2: `ParticleTrajectory` MSD math extracted (→ `calcMSDValues`), `TailTracer` geometry static + tested, `PFTracking3D` static helpers extracted to `ParticleFilterUtil` (with delegating shims). `PFTracking3D` file-I/O + GUI inner classes remain in place (field-coupled/protected-API, lower-value). |
 | **M5** — Static-state + docs | ✅ **Done** | D6 (Option A) landed: `UserVariables` → instance holder, `ParticleTrajectory.scale` → instance field. Remaining `msdPlot`/`globalMSD` statics are UI-global by design (documented, not refactored). `README.md` expanded (overview, build, deps, package map, license) with Build/Javadoc/JitPack/commit-activity/license badges. Javadoc added to `TrajectoryBuilder`, `TrackMateTracker`, `TrajectoryBridger`, `UserVariables`; `maven-javadoc-plugin` configured (`doclint none`) and a `javadoc.yml` workflow added to publish to `djpbarry.github.io/TrackerLibrary/`. |
 | **M6** — Upstream hand-off | 🔶 **In progress** | Released `4.0.2` (tags `v4.0.0`/`v4.0.1`/`v4.0.2`) for JitPack consumption by ADAPT/`AdaptDataProcessing`. JitPack build now green (via `jitpack.yml` JDK 21 pin — L11). Remaining: the `net.calm.*` → `io.github.djpbarry.*` namespace rename (IAClassLibrary Decision 7), and coordinating Java 21 / TrackMate 8 / the `v4.0.2` coordinate with ADAPT and `AdaptDataProcessing`. |
+| **M7** — Java 21 modernisation | ⬜ **Planned** | Phase G scoped above. Order: G3 (boxing) → G4 (try-with-resources) → G8 (redundant math) → G1 (threading + `mControllingParticleIndex` race fix) → G6 (pattern matching). G2/G5 already done. Not blocked on M6. |
 
 ### M4 progress (D3–D5 done; D2 begun after D6)
 

@@ -19,6 +19,30 @@ dated narrative plus the "what not to do again" notes.
 
 ---
 
+## 2026-10-04 — Phase G scoped (Java 21 modernisation plan)
+
+Thorough code review to scope the next milestone (M7). Added `DEVELOPMENT_PLAN.md`
+"Phase G" with a step-by-step, risk-ordered plan mirroring IAClassLibrary's
+Phase G. No code changed yet.
+
+**Key finding — a real data race in `PFTracking3D`:** the particle-likelihood
+pass (`updateParticleWeights`) hand-rolls a `Thread[]` pool; the shared
+work-stealing counter `mControllingParticleIndex` is an *outer* instance field
+(`:1316`), but `getNewParticleIndex()` is `synchronized` on the *inner*
+`ParallelizedLikelihoodCalculator` instance (one per thread), so the mutex does
+not protect the shared counter. Two threads can return the same particle index.
+Fix planned under G1 (convert to `Runnable` + `AtomicInteger` + `ExecutorService`).
+
+**Other Phase G items (evidence-backed):**
+
+- G3: 20 `new Double(...)` deprecation-for-removal sites in `TailTracer`.
+- G4: manual reader/writer close in `PFTracking3D` file I/O (4 methods) → try-with-resources.
+- G6: 3 `instanceof` sites in `TrackMateTracker` → pattern matching.
+- G8: `Math.pow(x,0.5)`→`Math.sqrt`, `Math.pow(x²+y²,0.5)`→`Math.hypot` (small).
+- G2/G5 already done (D6/D4); `msdPlot`/`globalMSD` left static by design.
+
+---
+
 ## 2026-10-04 — Cross-repo review of IAClassLibrary (plan + docs)
 
 Reviewed the sibling's `DEVELOPMENT_PLAN.md`/`AGENTS.md`/`REVISION_LOG.md` to
