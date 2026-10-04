@@ -42,6 +42,9 @@ Notes:
 - The explicit `central` repository was added to `pom.xml` because
   `pom-scijava:45.1.0` drops the implicit Maven Central; without it JitPack
   returned empty artifacts for some transitive deps.
+- `jitpack.yml` pins `jdk: [openjdk21]` — JitPack otherwise defaults to JDK 8 and
+  the enforcer's `RequireJavaVersion` rule fails the build (see L11 in
+  `REVISION_LOG.md`).
 
 ## Dependencies
 
@@ -91,7 +94,7 @@ net.calm.trackerlibrary
 │   ├── ParticleTrajectory.java      # linked-list trajectory + analytics
 │   ├── TrajectoryBuilder.java       # nearest-neighbour linking of detections
 │   ├── TrackMateTracker.java        # wraps TrackMate's SparseLAPTracker
-│   ├── UserVariables.java           # global static configuration
+│   ├── UserVariables.java           # instance-based runtime configuration
 │   ├── Fluorophore.java             # simulation base class
 │   ├── BlinkingFluorophore.java     # simulation (on/off blinking)
 │   ├── DecayingFluorophore.java     # simulation (exponential decay)
@@ -104,7 +107,8 @@ net.calm.trackerlibrary
 │   ├── PFTracking3D.java            # abstract particle-filter base (PlugInFilter)
 │   ├── FPTracker3D.java             # random-walk feature point tracker
 │   ├── LinearMovementFPTracker3D.java # inertia-constrained tracker
-│   └── ProbabilisticTracker.java    # 7-dim state, intensity-aware tracker
+│   ├── ProbabilisticTracker.java    # 7-dim state, intensity-aware tracker
+│   └── ParticleFilterUtil.java      # shared static helpers
 └── Trajectory/
     └── TrajectoryBridger.java       # re-links broken trajectory segments
 ```
@@ -155,19 +159,18 @@ State-vector layout differs per subclass (e.g. `FPTracker3D` uses
 
 ## Conventions and gotchas
 
-### Global mutable static state
+### Mutable state (mostly instance-based since D6)
 
-- `UserVariables` is a **global static settings holder** (spatial/time
-  resolution, thresholds, motion model, detection mode, etc.). All access is via
-  static getters/setters. There is no per-instance configuration; code reads
-  `UserVariables.getX()` directly.
-- `ParticleTrajectory.scale` is a `public static` field overwritten in the
-  constructor from `spatialRes` — a hidden global side effect. The static
-  `msdPlot` / `globalMSD` fields accumulate state across instances until
-  `resetMSDPlot()`.
-
-Be careful: these make classes hard to unit-test in isolation and can leak state
-between operations.
+- `UserVariables` is an **instance-based settings holder**: fields are non-static
+  and accessed via a process-wide singleton (`UserVariables.getInstance()` /
+  `setInstance(...)`). The old static getters/setters were removed in D6; code
+  reads `UserVariables.getInstance().getX()`.
+- `ParticleTrajectory.scale` is now a per-instance `protected double` field
+  (defaulting to `1.0`), no longer a shared static.
+- `msdPlot` / `plotLegend` / `globalMSD` remain `static`: they form the
+  **population MSD accumulator** (one shared chart aggregating across a run,
+  exposed via `drawGlobalMSDPlot()` / `getMsdPlot()` / `resetMSDPlot()`). Global
+  by design, and `ij.gui.Plot`-bound.
 
 ### Magic-int constants, not enums
 
@@ -178,18 +181,19 @@ between operations.
 
 ### ImageJ UI is woven throughout
 
-`IJ.log`, `IJ.showMessage`, `GenericDialog`, `ProgressDialog`, `Plot`,
+`IJ.log`, `IJ.showMessage`, `IJ.showProgress`, `GenericDialog`, `Plot`,
 `TextWindow`, and `Roi` appear in the "business logic", not just UI layers.
-This means most code **cannot run headless**; it expects an ImageJ runtime. There
-is no test harness to work around this.
+This means most code **cannot run headless**; it expects an ImageJ runtime. The
+JUnit 5 test harness therefore targets only headless-safe units (pure math and
+state), not the ImageJ-bound classes.
 
 ### Dead / commented-out code
 
-`TrajectoryBuilder` contains large blocks of commented-out legacy scoring code
-(the old `getMinScoreIndices` / `getMinScores` combinatorial approach). Don't
-assume commented code is unused because of a bug; it was superseded by the
-greedy `addTempPoint` approach. `UserVariables` also has many commented-out
-fields/methods.
+The large blocks of commented-out legacy code (the combinatorial scoring path in
+`TrajectoryBuilder`, the hardcoded `main` in `ProbabilisticTracker`, the debug
+`println`s in `PFTracking3D`, and the commented-out `UserVariables` fields) were
+removed in M2 (Phase D1) and are recoverable from git. Don't re-introduce
+experimental code or machine-specific paths.
 
 ### Licensing is inconsistent — verify before relying on it
 
@@ -204,8 +208,8 @@ license.
 
 ### Style
 
-- Indentation is 4 spaces; tabs appear in the older ETH-ported
-  `LinearMovementFPTracker3D.java` (mixed — preserve locally).
+- Indentation is 4 spaces throughout (the older ETH-ported
+  `LinearMovementFPTracker3D.java` was converted from tabs to 4 spaces in D5).
 - Class headers vary (NetBeans auto-template, GPL boilerplate, or none). Do not
   normalize them unless asked.
 - `@author` tags reference `barry05` / `David Barry` / `Dave Barry` / Janick

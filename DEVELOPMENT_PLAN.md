@@ -33,9 +33,10 @@ change, not an optional follow-up.
 
 ## Current state (context for the plan)
 
-> **Status update (M1 landed):** Phases A1–A3 and B1–B3 are **complete** — see
-> "Milestone status" at the end of this file. The bullets below are retained as
-> the *as-found* snapshot from the pre-milestone review.
+> **Status update:** M1–M5 are **complete** and M6 is **in progress** (released
+> `4.0.2` to JitPack). See "Milestone status" at the end of this file. The
+> bullets below are retained as the *as-found* snapshot from the pre-milestone
+> review.
 
 - `TrackerLibrary` (`net.calm.trackerlibrary`) is a **Java library** (not a
   runnable plugin; `main-class` is `None`) in the ImageJ/Fiji ecosystem. It
@@ -195,11 +196,13 @@ major (`4.0.0-SNAPSHOT`) to reflect the scale of the modernization, mirroring
 IAClassLibrary's jump to `2.0.0`. Consider wiring `maven-release-plugin` with
 `tagNameFormat=v@{project.version}` as IAClassLibrary did.
 
-**Done (2026-09-27):** version promoted to `4.0.0` and tagged `v4.0.0` for
-JitPack consumption by ADAPT/`AdaptDataProcessing`. The malformed SCM URL
-(`github.com/github.com/…`) was also corrected in the same change. The
-`maven-release-plugin` `tagNameFormat=v@{project.version}` is in place for future
-releases, though this first tag was cut manually.
+**Done (2026-09-27/28):** version promoted to `4.0.0` and tagged `v4.0.0`, then
+patched to `4.0.1` (JitPack JDK-8 default fix — see L11) and `4.0.2`
+(IAClassLibrary `v2.0.1` re-pin) for JitPack consumption by
+ADAPT/`AdaptDataProcessing`. The malformed SCM URL (`github.com/github.com/…`)
+was corrected in the same change. `maven-release-plugin`
+`tagNameFormat=v@{project.version}` is in place for future releases; the first
+tags were cut manually.
 
 ### B3. TrackMate version web (blocks the coordinated move)
 
@@ -416,7 +419,7 @@ unblocks the coordinated downstream modernization.
 | **M3** — Test harness | ✅ **Done** | Added JUnit 5 (`junit-jupiter-api`/`-engine`, test scope, version-managed by parent 5.13.4). 4 test classes / 16 tests, all headless-safe: `NonIsoGaussianTest`, `FluorophoreTest`, `DecayingFluorophoreTest`, `ParticleTrajectoryTest`. |
 | **M4** — Refactor core | 🔶 **Partly done** | D3, D4, D5 complete. D2: `ParticleTrajectory` MSD math extracted (→ `calcMSDValues`), `TailTracer` geometry static + tested, `PFTracking3D` static helpers extracted to `ParticleFilterUtil` (with delegating shims). `PFTracking3D` file-I/O + GUI inner classes remain in place (field-coupled/protected-API, lower-value). |
 | **M5** — Static-state + docs | ✅ **Done** | D6 (Option A) landed: `UserVariables` → instance holder, `ParticleTrajectory.scale` → instance field. Remaining `msdPlot`/`globalMSD` statics are UI-global by design (documented, not refactored). `README.md` expanded (overview, build, deps, package map, license) with Build/Javadoc/JitPack/commit-activity/license badges. Javadoc added to `TrajectoryBuilder`, `TrackMateTracker`, `TrajectoryBridger`, `UserVariables`; `maven-javadoc-plugin` configured (`doclint none`) and a `javadoc.yml` workflow added to publish to `djpbarry.github.io/TrackerLibrary/`. |
-| **M6** — Upstream hand-off | 🔶 **In progress** | Version promoted to `4.0.0` and tagged `v4.0.0` for JitPack consumption by ADAPT/`AdaptDataProcessing` (B2 done; L2/L3 satisfied). Remaining: confirm the JitPack build succeeds under `pom-scijava:45.1.0` (L5) and coordinate Java 21 / TrackMate 8 / the tag with ADAPT and `AdaptDataProcessing`. |
+| **M6** — Upstream hand-off | 🔶 **In progress** | Released `4.0.2` (tags `v4.0.0`/`v4.0.1`/`v4.0.2`) for JitPack consumption by ADAPT/`AdaptDataProcessing`. JitPack build now green (via `jitpack.yml` JDK 21 pin — L11). Remaining: coordinate Java 21 / TrackMate 8 / the `v4.0.2` coordinate with ADAPT and `AdaptDataProcessing`. |
 
 ### M4 progress (D3–D5 done; D2 begun after D6)
 
