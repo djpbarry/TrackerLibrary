@@ -27,30 +27,23 @@ public class ProbabilisticTracker extends PFTracking3D {
     private boolean mDoPrecisionCorrection = true;
     int mDimOfState = 7;
 
-//    public static void main(String args[]) {
-//        Probabilistic_Tracker tracker = new Probabilistic_Tracker();
-//        ImagePlus imp = new ImagePlus();
-//        imp.setStack(Utils.buildStack(new File("C:\\Users\\barry05\\Desktop\\Tracking Test Sequences\\TiffSim2")),
-//                1, 1, 50);
-//        imp.getCalibration().setUnit("nm");
-//        imp.getCalibration().pixelWidth = 132.0;
-//        imp.getCalibration().pixelDepth = 132.0;
-//        tracker.setup(null, imp);
-//    }
-
+    @Override
     public boolean getMDoPrecisionOptimization() {
         return mDoPrecisionCorrection;
     }
 
+    @Override
     public String[] getMDimensionsDescription() {
         String[] vS = {"x[nm]", "y[nm]", "z[nm]", "Intensity"};
         return vS;
     }
 
+    @Override
     public float[] getMSigmaOfRandomWalk() {
         return new float[]{1f, 1f, 1f, 0, 0, 0, 1f};
     }
 
+    @Override
     protected void drawFromProposalDistribution(float[] particle,
             float pxWidthInNm, float pxDepthInNm) {
         particle[3] = particle[3] + (float) mRandomGenerator.nextGaussian() * (mSigmaOfDynamics[0] / pxWidthInNm);
@@ -65,6 +58,7 @@ public class ProbabilisticTracker extends PFTracking3D {
         }
     }
 
+    @Override
     protected void paintOnCanvas(Graphics aG, double magnification,
             int activeFrame) {
         if (mStateVectorsMemory.elementAt(activeFrame - 1) == null) {
@@ -79,6 +73,7 @@ public class ProbabilisticTracker extends PFTracking3D {
         }
     }
 
+    @Override
     protected float[][][] generateIdealImage_3D(int aw, int ah, int as,
             float[] particle, int background, float pxWidthInNm,
             float pxDepthInNm) {
@@ -88,74 +83,7 @@ public class ProbabilisticTracker extends PFTracking3D {
         return vIdealImage;
     }
 
-    private void addBackgroundToImage(float[][][] aImage, float aBackground) {
-        for (float[][] vSlice : aImage) {
-            for (float[] vRow : vSlice) {
-                for (int vI = 0; vI < vRow.length; vI++) {
-                    vRow[vI] += aBackground;
-                }
-            }
-        }
-    }
-
-    private void addFeaturePointTo3DImage(float[][][] aImage, Point3D aPoint, float aIntensity, int aW, int aH, int aS, float aPxWidthInNm, float aPxDepthInNm, float aGhostImage[][]) {
-        float vVarianceXYinPx = mSigmaPSFxy * mSigmaPSFxy / (aPxWidthInNm * aPxWidthInNm);
-        float vVarianceZinPx = mSigmaPSFz * mSigmaPSFz / (aPxDepthInNm * aPxDepthInNm);
-        float vMaxDistancexy = 3 * mSigmaPSFxy / aPxWidthInNm;
-        float vMaxDistancez = 3 * mSigmaPSFz / aPxDepthInNm; //in pixel!
-
-        int vXStart, vXEnd, vYStart, vYEnd, vZStart, vZEnd;//defines a bounding box around the tip
-        if (aPoint.mX + .5f - (vMaxDistancexy + .5f) < 0) {
-            vXStart = 0;
-        } else {
-            vXStart = (int) (aPoint.mX + .5f) - (int) (vMaxDistancexy + .5f);
-        }
-        if (aPoint.mY + .5f - (vMaxDistancexy + .5f) < 0) {
-            vYStart = 0;
-        } else {
-            vYStart = (int) (aPoint.mY + .5f) - (int) (vMaxDistancexy + .5f);
-        }
-        if (aPoint.mZ + .5f - (vMaxDistancez + .5f) < 0) {
-            vZStart = 0;
-        } else {
-            vZStart = (int) (aPoint.mZ + .5f) - (int) (vMaxDistancez + .5f);
-        }
-        if (aPoint.mX + .5f + (vMaxDistancexy + .5f) >= aW) {
-            vXEnd = aW - 1;
-        } else {
-            vXEnd = (int) (aPoint.mX + .5f) + (int) (vMaxDistancexy + .5f);
-        }
-        if (aPoint.mY + .5f + (vMaxDistancexy + .5f) >= aH) {
-            vYEnd = aH - 1;
-        } else {
-            vYEnd = (int) (aPoint.mY + .5f) + (int) (vMaxDistancexy + .5f);
-        }
-        if (aPoint.mZ + .5f + (vMaxDistancez + .5f) >= aS) {
-            vZEnd = aS - 1;
-        } else {
-            vZEnd = (int) (aPoint.mZ + .5f) + (int) (vMaxDistancez + .5f);
-        }
-
-        for (int vZ = vZStart; vZ <= vZEnd && vZ < aImage.length; vZ++) {
-            for (int vY = vYStart; vY <= vYEnd && vY < aImage[vZ].length; vY++) {
-                for (int vX = vXStart; vX <= vXEnd && vX < aImage[vZ][vY].length; vX++) {
-                    aImage[vZ][vY][vX] += (float) (aIntensity * Math.pow(Math.E,
-                            -(Math.pow(vX - aPoint.mX + .5f, 2) + Math.pow(vY - aPoint.mY + .5f, 2)) / (2 * vVarianceXYinPx))
-                            * Math.pow(Math.E, -Math.pow(vZ - aPoint.mZ + .5f, 2) / 2 * vVarianceZinPx));
-                }
-            }
-        }
-    }
-
-//    protected void mouseReleased(int ax, int ay) {
-//        if (getMStateOfFilter() == PFTracking3D.STATE_OF_FILTER.INIT) {
-//            setMStateOfFilter(STATE_OF_FILTER.READY_TO_RUN);
-//            int index = getMZProjectedImagePlus().getCurrentSlice();
-//            float intens = getMZProjectedImagePlus().getImageStack().getProcessor(index).getPixelValue(ax, ay);
-//            float[] vFirstState = new float[]{ax, ay, 1.0f, intens};
-//            mStateVectors.add(vFirstState);
-//        }
-//    }
+    @Override
     protected boolean showParameterDialog() {
         GenericDialog vGenericDialog = new GenericDialog("Enter search radius parameters", IJ.getInstance());
         for (int vD = 0; vD < mSigmaOfDynamics.length; vD++) {
@@ -171,6 +99,7 @@ public class ProbabilisticTracker extends PFTracking3D {
         return true;
     }
 
+    @Override
     protected void calcFromHereButtonPressed() {
         ImagePlus imp = getMOriginalImagePlus();
         ImageProcessor proc = imp.getImageStack().getProcessor(1);
@@ -207,6 +136,7 @@ public class ProbabilisticTracker extends PFTracking3D {
         }
     }
 
+    @Override
     protected boolean[][][] generateParticlesIntensityBitmap_3D(Vector< float[]> setOfParticles, int aW, int aH, int aS) {
         boolean[][][] vBitmap = new boolean[aS][aH][aW];
 // convert to pixel distance and multiply with 3: 4

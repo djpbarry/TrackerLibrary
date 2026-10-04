@@ -22,7 +22,30 @@ maintainable design and preserving a legacy API, prefer the cleaner design.
   [`REVISION_LOG.md`](REVISION_LOG.md) so the remaining sibling
   (`AdaptDataProcessing`, ADAPT) does not repeat them.
 
+### Standing rule (applies to every change)
+
+Every code change **must** be followed, in the same pass, by the corresponding
+updates to [`DEVELOPMENT_PLAN.md`](DEVELOPMENT_PLAN.md) (milestone/phase status,
+deviations from what was planned) and [`REVISION_LOG.md`](REVISION_LOG.md)
+(dated entry + any new lesson). Do not wait for a separate prompt — keeping the
+plan and the revision log in lockstep with the code is part of finishing the
+change, not an optional follow-up.
+
+### Versioning convention (Decision 7 — resolved)
+
+Commit messages use **Conventional Commits** (`fix:`, `feat:`, `chore:`,
+`refactor:`, `docs:`, `test:`; `BREAKING CHANGE:`/`!` for breaking changes), and
+`pom.xml` `<version>` is **bumped on every code change** — `fix`/`refactor`/
+`chore`/`docs`/`test` → patch, `feat` → minor, breaking → major — with **no
+`-SNAPSHOT` suffix**. Release tags stay `vX.Y.Z`. *(Adopted 2026-10-04 to match
+IAClassLibrary Decision 2; supersedes the earlier "semver tags only" framing.)*
+
 ## Current state (context for the plan)
+
+> **Status update:** M1–M5 are **complete** and M6 is **in progress** (released
+> `4.0.2` to JitPack). See "Milestone status" at the end of this file. The
+> bullets below are retained as the *as-found* snapshot from the pre-milestone
+> review.
 
 - `TrackerLibrary` (`net.calm.trackerlibrary`) is a **Java library** (not a
   runnable plugin; `main-class` is `None`) in the ImageJ/Fiji ecosystem. It
@@ -182,6 +205,14 @@ major (`4.0.0-SNAPSHOT`) to reflect the scale of the modernization, mirroring
 IAClassLibrary's jump to `2.0.0`. Consider wiring `maven-release-plugin` with
 `tagNameFormat=v@{project.version}` as IAClassLibrary did.
 
+**Done (2026-09-27/28):** version promoted to `4.0.0` and tagged `v4.0.0`, then
+patched to `4.0.1` (JitPack JDK-8 default fix — see L11) and `4.0.2`
+(IAClassLibrary `v2.0.1` re-pin) for JitPack consumption by
+ADAPT/`AdaptDataProcessing`. The malformed SCM URL (`github.com/github.com/…`)
+was corrected in the same change. `maven-release-plugin`
+`tagNameFormat=v@{project.version}` is in place for future releases; the first
+tags were cut manually.
+
 ### B3. TrackMate version web (blocks the coordinated move)
 
 This repo pins `sc.fiji:TrackMate:7.10.0` explicitly, while IAClassLibrary now
@@ -206,6 +237,12 @@ this repo still uses that are now `@Deprecated`:
   `TrajectoryBridger`) — migrate to ImageJ's native progress mechanism.
 
 These migrations are prerequisites for the re-pin, not merely cleanup.
+
+**Done (2026-09-28):** re-pinned to the latest JitPack tag `v2.0.1` (`v2.0.0`
+builds `Error` on JitPack). Both deprecated-class migrations landed in the same
+pass — `DataStatistics` → `DescriptiveStatistics` (population std-dev via
+`Math.sqrt(getPopulationVariance())`) and `ProgressDialog` → `IJ.showProgress`.
+See `REVISION_LOG.md` 2026-09-28.
 
 ---
 
@@ -324,13 +361,192 @@ ADAPT, so several items are prerequisites for, or follow from, the sibling plans
 
 | Sibling plan item | TrackerLibrary action | This plan |
 |---|---|---|
-| IAClassLibrary B1 (license) | adopt GPL-3.0-or-later | B1 |
-| IAClassLibrary B2 (tag) | re-pin IAClassLibrary to `v2.0.0` | B4 |
-| IAClassLibrary B3 (TrackMate 8 / Java 21) | bump TrackMate to 8.0.0, Java 21 | A2, B3 |
-| ADAPT G2 (tag all three) | tag `v4.0.0` (or agreed version) | B2 |
+| IAClassLibrary B1 (license) | adopt GPL-3.0-or-later | B1 (done) |
+| IAClassLibrary B2 (tag) | re-pin IAClassLibrary to `v2.0.1` | B4 (done) |
+| IAClassLibrary B3 (TrackMate 8 / Java 21) | bump TrackMate to 8.0.0, Java 21 | A2, B3 (done) |
+| IAClassLibrary Decision 7 (namespace rename) | rename `net.calm.trackerlibrary` → `io.github.djpbarry.trackerlibrary` and update every `net.calm.iaclasslibrary.*` import, in lockstep | **NEW** — see below |
+| ADAPT G2 (tag all three) | tag `v4.0.2` (or agreed version) | B2 (done) |
 
 Coordinate the Java-target and TrackMate-version decision with the maintainer of
 `IAClassLibrary` (already resolved there) and confirm the same applies here.
+
+### Namespace rename (`net.calm` → `io.github.djpbarry`) — the main open item
+
+IAClassLibrary's Decision 7 resolves to rename its package root
+`net.calm.iaclasslibrary` → `io.github.djpbarry.iaclasslibrary` (and Maven
+`groupId` `net.calm` → `io.github.djpbarry`), because `net.calm` was based on a
+non-existent domain. It is deferred to the coordinated hand-off, **not yet done**.
+
+For TrackerLibrary this means, in the same lockstep pass:
+
+- Rename our package root `net.calm.trackerlibrary` →
+  `io.github.djpbarry.trackerlibrary` (and `groupId` `net.calm` →
+  `io.github.djpbarry`; `artifactId` `trackerlibrary` unchanged).
+- Rewrite every `import net.calm.iaclasslibrary.*` to
+  `import io.github.djpbarry.iaclasslibrary.*`.
+- Coordinate with ADAPT and `AdaptDataProcessing` (which also use the
+  `net.calm.*` umbrella), and with the IAClassLibrary release that actually ships
+  the rename.
+
+This is the largest remaining cross-repo coordination item and is currently
+**absent from this plan's milestones** — tracked here rather than buried in M6.
+
+---
+
+## Phase G — Modern Java modernisation (Java 21)
+
+**Status: in progress (started 2026-10-04).** Mirror IAClassLibrary's Phase G.
+The core is over a decade old and predates most Java 21 language/API features.
+This is a self-contained pass (not blocked on the M6 namespace rename) and is the
+natural next milestone after M1–M5.
+
+**Guardrail — public API stays unchanged.** No public method signature, return
+type, field type, or class is changed or removed. `ParticleFilterUtil` and the
+`PFTracking3D` static delegates exist precisely so internal changes don't ripple
+into the public surface. Where a change would alter the API, deprecate and add a
+new symbol instead.
+
+### Test-first discipline (inherited from IAClassLibrary)
+
+Every behaviour-affecting step follows the sibling's order — **write or confirm a
+characterisation test that pins current behaviour first, then modify, then re-run
+the test to prove equivalence.** Specifically:
+
+- **G8 (math swaps):** `TailTracerTest` already pins `normalizedVector`/
+  `normalVector`/`intersections`; extend it to pin `intersections2`'s exact root
+  selection before the `Math.hypot`/`Math.sqrt` swap.
+- **G1 (race fix):** extract the work-stealing counter so its contract — every
+  index `0..N-1` returned exactly once — is asserted by a headless test before and
+  after the `AtomicInteger` change (mirrors IAClassLibrary's
+  `MultiThreadedProcessTest.testRunWorkersExecutesAllTasks`).
+- **G3/G4/G6:** mechanical/cosmetic, but re-run the full suite after each. Where
+  a path is not headless-testable (the `PFTracking3D` file I/O), review the
+  conversion carefully and note the gap rather than silently skipping a test.
+
+### G1. Modernise the hand-rolled thread model (highest value)
+
+`PFTracking3D` hand-rolls a `Thread[]` pool and a `Thread` subclass for the
+particle-likelihood pass:
+
+- `updateParticleWeights` (`PFTracking3D.java:611-625`) creates
+  `Thread[mNbThreads]`, `start()`s each, then `join()`s each.
+- `ParallelizedLikelihoodCalculator` (`:1370`) `extends Thread`; its `run()`
+  drains a shared work counter.
+
+**Data race (real bug found in review):** the shared counter
+`mControllingParticleIndex` is an *outer* instance field (`:1316`), but it is
+read/written by `getNewParticleIndex()` (`:1436`), which is `synchronized` on the
+*inner* `ParallelizedLikelihoodCalculator` instance — a different object per
+thread. The mutex therefore does **not** serialise access to the shared counter:
+two threads can return the same particle index or skip one.
+
+Plan:
+
+1. Convert `ParallelizedLikelihoodCalculator` from `extends Thread` to
+   `implements Runnable` (it is a `private` inner class — no API concern).
+2. Extract the work-stealing counter into a small headless-testable unit (an
+   `AtomicInteger`-backed counter whose contract "each index `0..N-1` is returned
+   exactly once" is asserted by a test — see test-first above), then use it from
+   `getNewParticleIndex()`.
+3. Replace the `Thread[]` + `start()`/`join()` block with a fixed
+   `ExecutorService` (`newFixedThreadPool(mNbThreads)`) + `submit` +
+   `awaitTermination` (or `invokeAll`). Likelihood is CPU-bound, so platform
+   threads in a bounded pool are correct (not virtual threads).
+
+`updateParticleWeights` itself needs an ImageJ `ImageStack` and is not
+headless-testable; the extracted counter *is*, so test that directly. Keep the
+rest mechanical, run the full 26-test suite plus a manual smoke, and record the
+race fix explicitly in `REVISION_LOG.md`.
+
+### G2. Static mutable state — already resolved (verify only)
+
+D6 (Option A) eliminated the mutable statics: `UserVariables` → instance holder,
+`ParticleTrajectory.scale` → instance field. The only remaining statics are
+
+- `ParticleTrajectory.msdPlot` / `plotLegend` / `globalMSD` — the **population
+  MSD accumulator**, global by design (same decision as IAClassLibrary's
+  `DiffusionAnalyser`), left static and documented.
+
+No further G2 work. The one remaining concurrency hazard was the
+`mControllingParticleIndex` race, addressed under G1.
+
+### G3. Deprecated boxing constructors
+
+20 `new Double(...)` calls in `TailTracer` (`:157-159`, `:290-296`, `:312-317`,
+`:396-401`, `:416-418`) use the `Double(double)` constructor, deprecated-for-
+removal in Java 21. Replace with autoboxing (`x.add(xcoord)`) or
+`Double.valueOf(...)`. Mechanical, no behaviour change.
+
+**Done (2026-10-04):** all 20 sites converted to autoboxing; the 20
+`Double(double)` compiler warnings are gone; 26/26 tests green.
+
+No raw types remain (checked in D5). `Vector` → `List`/`ArrayList` is **deferred**
+(public/protected API freeze — the state-vector fields and helpers expose
+`Vector`).
+
+### G4. Resource management (try-with-resources)
+
+`PFTracking3D`'s file I/O opens readers/writers and closes them manually via a
+`finally` + `null`-initialised local (leak/close-error risk):
+
+- `writeInitFile` (`:970`), `writeResultFile` (`:1002`) — `BufferedWriter`.
+- `readInitFile` (`:1029`), `readResultFile` (`:1089`) — `BufferedReader`.
+
+Convert to try-with-resources (`BufferedWriter`/`BufferedReader`/`FileWriter`/
+`FileReader` all implement `AutoCloseable`). These are `protected` methods; their
+signatures are unchanged, so no API impact.
+
+**Done (2026-10-04):** all four methods converted to try-with-resources. The
+`read*` methods fold the former open-`try`/`FileNotFoundException` catch into the
+resource clause and add `catch (FileNotFoundException)` before `catch
+(IOException)` (preserving the original silent-`false` vs logged-`false`
+distinction). 26/26 tests green.
+
+### G5. Logging / error handling — verify only
+
+D4 already normalised this (`printStackTrace` → `IJ.handleException`, `System.out`
+/`System.err` → `IJ.log`, documented intentional swallows). A re-scan found no
+remaining `System.out`/`System.err`/`printStackTrace` in `src/main`. No work.
+
+### G6. Modern language features
+
+- **`instanceof` pattern matching** (3 sites, `TrackMateTracker.java:92-96`):
+  the `Point`/`Blob`/`IsoGaussian` branches construct a `Particle` from a `Spot`.
+  Pattern variables remove the repeated `s.getFeature(...)` lookups.
+- No `switch` statements, no record-eligible data holders (all extend a class),
+  no further anonymous-`Thread`→lambda sites beyond G1. Small, cosmetic pass.
+
+### G7. Sequencing & risk
+
+1. **G3 (boxing)** — mechanical, zero risk.
+2. **G4 (try-with-resources)** — low risk; file-I/O paths are not exercised by
+   the headless tests, so review each conversion carefully.
+3. **G8 (redundant math)** — mechanical clarity swaps, behind `TailTracerTest`.
+4. **G1 (threading + race fix)** — the only behavioural change; extract + test the
+   counter first (test-first discipline), keep the rest mechanical, run the full
+   suite.
+5. **G6 (language features)** — cosmetic, last.
+
+Each step compiles + 26 tests green and bumps `pom.xml` `<version>` per the
+Conventional Commits rule (patch for `refactor`/`chore`/`fix`).
+
+### G8. Redundant reimplementations (small)
+
+- `Math.pow(x*x + y*y, 0.5)` → `Math.hypot(x, y)` (`TailTracer.normalizedVector`
+  `:52`, `TailTracer.normalVector` `:63`).
+- `Math.pow(..., 0.5)` → `Math.sqrt(...)` (`TailTracer.intersections2` `:102-103`).
+- `Math.pow(x, 2.0)` → `x * x` (`ParticleTrajectory.calcMSD` `:559-560`,
+  `NonIsoGaussian` `:27-53` — micro-opt, low value; do only if trivial).
+
+**Investigate:** the pre-existing `-Xlint:deprecation` note in
+`ProbabilisticTracker` ("uses or overrides a deprecated API") — identify the
+deprecated symbol (likely an IAClassLibrary `Utils` or ImageJ method) and either
+migrate or document why it is retained.
+
+### G9. (none)
+
+No equivalent to IAClassLibrary's `RiemannianDistanceTransform` — this library has
+no distance transform to optimise.
 
 ---
 
@@ -349,10 +565,24 @@ confirmed, not re-derived:
    from Decision 3).
 4. **Static mutable state — decide Options A vs B** (see D6). This is
    TrackerLibrary-specific and needs a maintainer call.
+   **Note (post-M4):** Decision made — **Option A** adopted (instance-based
+   state). `ParticleTrajectory.scale` is now an instance field and `UserVariables`
+   is an instance holder with `getInstance()`/`setInstance(...)`. See the
+   milestone-status table and `REVISION_LOG.md` 2026-09-26 "D6 (Option A)".
+   D2 is thereby unblocked.
 5. **Public API — "no in-repo reference" ≠ "dead code".** The simulation classes
    and `TailTracer` may be consumed externally (inherited from IAClassLibrary
    Decision 0). Removal of public symbols requires a deprecation window and an
    external-usage check.
+6. **Namespace — `io.github.djpbarry`** *(inherited from IAClassLibrary Decision
+   7, pending coordination)*. Rename `net.calm.*` → `io.github.djpbarry.*`
+   (package root and Maven `groupId`) in lockstep with IAClassLibrary, ADAPT, and
+   `AdaptDataProcessing`. Not yet executed anywhere.
+7. **Versioning — Conventional Commits** *(resolved 2026-10-04 — adopt)*.
+   Conventional Commits (`fix:`, `feat:`, `chore:`, `refactor:`, `docs:`, `test:`;
+   `BREAKING CHANGE:`/`!`), with `pom.xml` `<version>` bumped on **every** code
+   change (patch/minor/major) and no `-SNAPSHOT` suffix. Matches IAClassLibrary
+   Decision 2 / L14. Release tags stay `vX.Y.Z`.
 
 ---
 
@@ -370,6 +600,76 @@ confirmed, not re-derived:
    and Javadoc. (Phase E)
 6. **M6 — Upstream hand-off:** confirm Java 21 / TrackMate 8 / tag with ADAPT and
    `AdaptDataProcessing`. (Phase F)
+7. **M7 — Java 21 modernisation:** boxing + try-with-resources + threading (incl.
+   the `mControllingParticleIndex` race fix) + language features. (Phase G)
 
 Each milestone is independently shippable. M1 is the immediate next step and
 unblocks the coordinated downstream modernization.
+
+---
+
+## Milestone status
+
+| Milestone | Status | Notes |
+|---|---|---|
+| **M1 — Foundations** | ✅ **Done** | A1 wrapper (Maven 3.9.9, matching IAClassLibrary), A2 CI (JDK 21 + cache + wrapper), A3 `.gitignore`, B1 license → GPL-3.0-or-later, B2 version → `4.0.0-SNAPSHOT`, B3 parent `pom-scijava:45.1.0` + Java 21 + TrackMate parent-managed (resolves 8.0.0). `mvn verify` passes on JDK 21. |
+| M1 — B4 (IAClassLibrary re-pin) | ✅ **Done** | Re-pinned `37a1be016a` → `v2.0.1` (latest JitPack tag; `v2.0.0` builds `Error`). Deprecated `DataStatistics`/`ProgressDialog` migrations landed in the same pass — see `REVISION_LOG.md` 2026-09-28. |
+| **M2** — Dead-code removal | ✅ **Done** | Stripped the commented-out combinatorial scoring (`getMinScores`, `getMinScoreIndices`, `calcScore`, `getNCombs`, `getFirstResult`, `increment`, `allUnique`, `calcAllPossibleCombs`) and scattered debug `println`s in `TrajectoryBuilder`; removed the commented-out `main` + `mouseReleased` in `ProbabilisticTracker`; removed six commented-out debug blocks in `PFTracking3D`; removed commented-out `UserVariables` fields/methods. Deliberately left the *live* `System.out`/`System.err` in `PFTracking3D` (deferred to D4) and the now-unused public `RED`/`GREEN`/`BLUE`/`FOREGROUND` constants (public API — Lesson L4). |
+| **M3** — Test harness | ✅ **Done** | Added JUnit 5 (`junit-jupiter-api`/`-engine`, test scope, version-managed by parent 5.13.4). 4 test classes / 16 tests, all headless-safe: `NonIsoGaussianTest`, `FluorophoreTest`, `DecayingFluorophoreTest`, `ParticleTrajectoryTest`. |
+| **M4** — Refactor core | 🔶 **Partly done** | D3, D4, D5 complete. D2: `ParticleTrajectory` MSD math extracted (→ `calcMSDValues`), `TailTracer` geometry static + tested, `PFTracking3D` static helpers extracted to `ParticleFilterUtil` (with delegating shims). `PFTracking3D` file-I/O + GUI inner classes remain in place (field-coupled/protected-API, lower-value). |
+| **M5** — Static-state + docs | ✅ **Done** | D6 (Option A) landed: `UserVariables` → instance holder, `ParticleTrajectory.scale` → instance field. Remaining `msdPlot`/`globalMSD` statics are UI-global by design (documented, not refactored). `README.md` expanded (overview, build, deps, package map, license) with Build/Javadoc/JitPack/commit-activity/license badges. Javadoc added to `TrajectoryBuilder`, `TrackMateTracker`, `TrajectoryBridger`, `UserVariables`; `maven-javadoc-plugin` configured (`doclint none`) and a `javadoc.yml` workflow added to publish to `djpbarry.github.io/TrackerLibrary/`. |
+| **M6** — Upstream hand-off | 🔶 **In progress** | Released `4.0.2` (tags `v4.0.0`/`v4.0.1`/`v4.0.2`) for JitPack consumption by ADAPT/`AdaptDataProcessing`. JitPack build now green (via `jitpack.yml` JDK 21 pin — L11). Remaining: the `net.calm.*` → `io.github.djpbarry.*` namespace rename (IAClassLibrary Decision 7), and coordinating Java 21 / TrackMate 8 / the `v4.0.2` coordinate with ADAPT and `AdaptDataProcessing`. |
+| **M7** — Java 21 modernisation | 🔶 **In progress** | Phase G scoped above. G3 (boxing) **done**, G4 (try-with-resources) **done**. Remaining: G8 (redundant math) → G1 (threading + race fix) → G6 (pattern matching). G2/G5 already done. Not blocked on M6. |
+
+### M4 progress (D3–D5 done; D2 begun after D6)
+
+- **D4 (error handling):** 8× `printStackTrace()` → `IJ.handleException(...)`;
+  live `System.out`/`System.err` diagnostics → `IJ.log(...)`; no-op
+  `e.toString()` in `ParticleTrajectory.projectVelocity` and the
+  `catch (NullPointerException) { /*do nothing*/ }` in `paint()` now carry
+  comments explaining the intentional swallow.
+- **D3 (dedupe):** `addBackgroundToImage`, `addFeaturePointTo3DImage`, and
+  `calculateExpectedZPositionAt` promoted to `PFTracking3D` as `protected` and
+  removed from `FPTracker3D`, `LinearMovementFPTracker3D`, `ProbabilisticTracker`.
+  The promoted `addFeaturePointTo3DImage` uses the defensively-bounded loop
+  variant (a strict superset of the others), so behaviour is unchanged. The
+  unused `aGhostImage` parameter was retained for call-site compatibility.
+- **D5 (surface):** 9 missing `@Override`s added to `ProbabilisticTracker`;
+  no raw types found; `LinearMovementFPTracker3D` converted tabs → 4 spaces.
+- **D2 (partly done):** extracted the pure MSD computation
+  (`calcMSDValues`) out of `ParticleTrajectory.calcMSD`, leaving the `Plot`
+  rendering/accumulation as a thin layer. Made `TailTracer`'s pure geometry
+  helpers (`normalizedVector`, `normalVector`, `intersections`,
+  `intersections2`) `static` and unit-tested them (`TailTracerTest`, 4 tests).
+  Extracted the eight `public static` helpers from `PFTracking3D` (copy/sum/
+  fill/stack-crop utilities) into a new `ParticleFilterUtil` class with thin
+  delegating methods left in place for API compatibility; added
+  `ParticleFilterUtilTest` (4 tests). `PFTracking3D` shrunk ~2206 → ~2095 lines.
+  Remaining D2 work: split the `PFTracking3D` file-I/O and GUI inner classes, if
+  warranted (they are field-coupled and protected-API, so lower-value).
+
+### M1 deviations from the original plan
+
+These were discovered during M1 and are worth recording so the sibling projects
+benefit:
+
+1. **`pom-scijava:45.1.0` drops the implicit Maven Central repo.** After the
+   parent bump, JitPack began intercepting `xml-apis-ext` and returned empty
+   (0 B) artifacts, failing the enforcer's `BanDuplicateClasses` rule. Fix:
+   declare `central` (`https://repo.maven.apache.org/maven2`) explicitly in
+   `<repositories>`. *(Keep this in mind for IAClassLibrary/ADAPT if they hit
+   the same on their parent bump.)*
+2. **TrackMate is parent-managed — no pin needed.** The original plan proposed
+   "bump to 8.0.0"; in practice the explicit `7.10.0` pin was simply removed and
+   the parent `pom-scijava:45.1.0` resolves TrackMate to `8.0.0`. Matches
+   IAClassLibrary's approach.
+3. **Maven wrapper pins 3.9.9** (mirroring IAClassLibrary), not the machine's
+   installed 3.9.16. The pin is a reproducibility convenience, not a real
+   version floor — the enforcer's `RequireMavenVersion` is the actual gate.
+4. **`.gitattributes` was added** to force `mvnw` → LF and `mvnw.cmd` → CRLF,
+   otherwise the wrapper shell script would have CRLF endings and fail on Linux
+   CI. *(The plan did not anticipate this.)*
+5. **`mvn_settings.xml` is now unused** by CI (the private GitHub Packages flow
+   was dropped as vestigial — both public deps resolve publicly). Left in place
+   pending an explicit decision to delete it.
+

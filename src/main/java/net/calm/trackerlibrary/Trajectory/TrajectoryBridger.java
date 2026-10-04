@@ -21,19 +21,27 @@ import net.calm.trackerlibrary.ParticleTracking.ParticleTrajectory;
 import net.calm.trackerlibrary.ParticleTracking.UserVariables;
 import java.util.ArrayList;
 
-import net.calm.iaclasslibrary.IAClasses.ProgressDialog;
+import ij.IJ;
 import net.calm.iaclasslibrary.IAClasses.Region;
 import net.calm.iaclasslibrary.Particle.Particle;
 import org.apache.commons.math3.linear.ArrayRealVector;
 
 public class TrajectoryBridger {
 
+    /**
+     * Re-links trajectory segments whose end/start fall within {@code maxStep}
+     * frames, using the same position + projected-velocity + morphology scoring
+     * as {@code TrajectoryBuilder}. Segments are spliced in place.
+     *
+     * @param trajectories the segments to bridge (mutated in place).
+     * @param scoreWeightings the {@code {morphology, velocity, position}}
+     * weights applied to each score term.
+     * @param maxStep the maximum frame gap across which to attempt a bridge.
+     */
     public static void bridgeTrajectories(ArrayList<ParticleTrajectory> trajectories, double[] scoreWeightings, int maxStep) {
         int size = trajectories.size();
-        ProgressDialog progress = new ProgressDialog(null, "Processing Trajectories...", false, "net.calm.trackerlibrary.Trajectory Builder", false);
-        progress.setVisible(true);
         for (int m = 0; m < size; m++) {
-            progress.updateProgress(m, size);
+            IJ.showProgress(m, size);
             ParticleTrajectory traj1 = trajectories.get(m);
             Particle traj1End = traj1.getEnd();
             if (traj1End == null) {
@@ -61,8 +69,8 @@ public class TrajectoryBridger {
                         ArrayRealVector vector2 = new ArrayRealVector(new double[]{traj1End.getX(), traj1End.getY()});
                         double posScore = vector1.getDistance(vector2);
                         double projScore = 1.0;
-                        if (UserVariables.getMotionModel() != UserVariables.RANDOM) {
-                            double deltaT = traj2Start.getFrameNumber() * UserVariables.getTimeRes() - traj1End.getFrameNumber() * UserVariables.getTimeRes();
+                        if (UserVariables.getInstance().getMotionModel() != UserVariables.RANDOM) {
+                            double deltaT = traj2Start.getFrameNumber() * UserVariables.getInstance().getTimeRes() - traj1End.getFrameNumber() * UserVariables.getInstance().getTimeRes();
                             ArrayRealVector vector3 = new ArrayRealVector(new double[]{x, y});
                             ArrayRealVector vector4 = new ArrayRealVector(new double[]{traj1End.getX() + traj1.getXVelocity() * deltaT, traj1End.getY() + traj1.getYVelocity() * deltaT});
                             projScore = 1.0 - vector3.getDistance(vector4) / vector3.getL1Norm();
@@ -77,7 +85,7 @@ public class TrajectoryBridger {
             }
             if (minIndex > -1) {
                 ParticleTrajectory traj = (ParticleTrajectory) trajectories.get(minIndex);
-                if (minScore < UserVariables.getTrajMaxStep()) {
+                if (minScore < UserVariables.getInstance().getTrajMaxStep()) {
                     traj1.addTrajectory(traj);
                     trajectories.remove(minIndex);
                     size--;
@@ -85,6 +93,6 @@ public class TrajectoryBridger {
                 }
             }
         }
-        progress.dispose();
+        IJ.showProgress(1.0);
     }
 }

@@ -428,7 +428,6 @@ public abstract class PFTracking3D implements PlugInFilter {
 
                 if (mDoResampling) {
                     if (!resample(mParticles)) {//further iterations are not necessary.
-//						System.out.println("number of iterations needed at this frame: " + vRepStep);
                         break;
                     }
                 }
@@ -556,13 +555,11 @@ public abstract class PFTracking3D implements PlugInFilter {
             vNeff = 1 / vNeff;
 
             if (vNeff > mResamplingThreshold) {
-//				System.out.println("no resampling");
                 return false; //we won't do the resampling
             }
             //
             // Begin resampling
             //
-//			System.out.println("Resampling");
             float VNBPARTICLES_1 = 1f / (float) mNbParticles;
             double[] vC = new double[mNbParticles + 1];
             vC[0] = 0;
@@ -747,20 +744,18 @@ public abstract class PFTracking3D implements PlugInFilter {
         //we need all processors anyway. Profiling showed that the method getProcessor needs a lot of time. Store them
         //in an Array.
 
-//		long vTime1 = System.currentTimeMillis();
         for (int vZ = 0; vZ < mNSlices; vZ++) {
             for (int vY = 0; vY < mHeight; vY++) {
                 for (int vX = 0; vX < mWidth; vX++) {
                     if (aBitmap[vZ][vY][vX]) {
                         vLogLikelihood += -aGivenImage[vZ][vY][vX] + (float) aStackProcs[vZ][vY * mWidth + vX] * (float) Math.log(aGivenImage[vZ][vY][vX]);
                         if (Float.isNaN(vLogLikelihood)) {
-                            System.out.println("NAN at vz = " + vZ + ", vY = " + vY + ", vX = " + vX);
+                            IJ.log("NAN at vz = " + vZ + ", vY = " + vY + ", vX = " + vX);
                         }
                     }
                 }
             }
         }
-//		System.out.println("used time for loglik = " + (System.currentTimeMillis() - vTime1));
         //IJ.showStatus("likelihood finshed");
         return vLogLikelihood;
     }
@@ -778,6 +773,111 @@ public abstract class PFTracking3D implements PlugInFilter {
     abstract protected void drawFromProposalDistribution(float[] aParticle, float aPxWidthInNm, float aPxDepthInNm);
 
     /**
+     * Fills every pixel of {@code aImage} with {@code aBackground}.
+     *
+     * @param aImage the 3D intensity image (z, y, x) to fill.
+     * @param aBackground the constant added to every pixel.
+     */
+    protected void addBackgroundToImage(float[][][] aImage, float aBackground) {
+        for (float[][] vSlice : aImage) {
+            for (float[] vRow : vSlice) {
+                for (int vI = 0; vI < vRow.length; vI++) {
+                    vRow[vI] += aBackground;
+                }
+            }
+        }
+    }
+
+    /**
+     * Adds the PSF of a single feature point to {@code aImage}.
+     *
+     * @param aImage the 3D intensity image (z, y, x) to accumulate into.
+     * @param aPoint the feature point position (in pixels).
+     * @param aIntensity the point's intensity.
+     * @param aW image width, {@code aH} height, {@code aS} depth (pixels).
+     * @param aPxWidthInNm pixel width, {@code aPxDepthInNm} pixel depth.
+     */
+    protected void addFeaturePointTo3DImage(float[][][] aImage, Point3D aPoint, float aIntensity, int aW, int aH, int aS, float aPxWidthInNm, float aPxDepthInNm, float aGhostImage[][]) {
+        float vVarianceXYinPx = mSigmaPSFxy * mSigmaPSFxy / (aPxWidthInNm * aPxWidthInNm);
+        float vVarianceZinPx = mSigmaPSFz * mSigmaPSFz / (aPxDepthInNm * aPxDepthInNm);
+        float vMaxDistancexy = 3 * mSigmaPSFxy / aPxWidthInNm;
+        float vMaxDistancez = 3 * mSigmaPSFz / aPxDepthInNm; //in pixel!
+
+        int vXStart, vXEnd, vYStart, vYEnd, vZStart, vZEnd; //defines a bounding box around the tip
+        if (aPoint.mX + .5f - (vMaxDistancexy + .5f) < 0) {
+            vXStart = 0;
+        } else {
+            vXStart = (int) (aPoint.mX + .5f) - (int) (vMaxDistancexy + .5f);
+        }
+        if (aPoint.mY + .5f - (vMaxDistancexy + .5f) < 0) {
+            vYStart = 0;
+        } else {
+            vYStart = (int) (aPoint.mY + .5f) - (int) (vMaxDistancexy + .5f);
+        }
+        if (aPoint.mZ + .5f - (vMaxDistancez + .5f) < 0) {
+            vZStart = 0;
+        } else {
+            vZStart = (int) (aPoint.mZ + .5f) - (int) (vMaxDistancez + .5f);
+        }
+        if (aPoint.mX + .5f + (vMaxDistancexy + .5f) >= aW) {
+            vXEnd = aW - 1;
+        } else {
+            vXEnd = (int) (aPoint.mX + .5f) + (int) (vMaxDistancexy + .5f);
+        }
+        if (aPoint.mY + .5f + (vMaxDistancexy + .5f) >= aH) {
+            vYEnd = aH - 1;
+        } else {
+            vYEnd = (int) (aPoint.mY + .5f) + (int) (vMaxDistancexy + .5f);
+        }
+        if (aPoint.mZ + .5f + (vMaxDistancez + .5f) >= aS) {
+            vZEnd = aS - 1;
+        } else {
+            vZEnd = (int) (aPoint.mZ + .5f) + (int) (vMaxDistancez + .5f);
+        }
+
+        for (int vZ = vZStart; vZ <= vZEnd && vZ < aImage.length; vZ++) {
+            for (int vY = vYStart; vY <= vYEnd && vY < aImage[vZ].length; vY++) {
+                for (int vX = vXStart; vX <= vXEnd && vX < aImage[vZ][vY].length; vX++) {
+                    aImage[vZ][vY][vX] += (float) (aIntensity
+                            * Math.pow(Math.E, -(Math.pow(vX - aPoint.mX + .5f, 2) + Math.pow(vY - aPoint.mY + .5f, 2)) / (2 * vVarianceXYinPx))
+                            * Math.pow(Math.E, -Math.pow(vZ - aPoint.mZ + .5f, 2) / 2 * vVarianceZinPx));
+                }
+            }
+        }
+    }
+
+    /**
+     * Calculates the expected mean of a Gaussian fitted to a ray through the
+     * image stack.
+     *
+     * @param aX the x position of the ray.
+     * @param aY the y position of the ray.
+     * @param aIS the image stack from which intensities are read.
+     * @return the expected z position of a Gaussian in {@code [1; aIS.getSize()]}
+     * at index 0 and the maximal intensity at position {@code (aX, aY)} at index 1.
+     */
+    protected float[] calculateExpectedZPositionAt(int aX, int aY, ImageStack aIS) {
+        float vMaxInt = 0;
+        int vMaxSlice = 0;
+        for (int vZ = 0; vZ < mNSlices; vZ++) {
+            float vThisInt;
+            if ((vThisInt = aIS.getProcessor(vZ + 1).getf(aX, aY)) > vMaxInt) {
+                vMaxInt = vThisInt;
+                vMaxSlice = vZ;
+            }
+        }
+        float vSumOfIntensities = 0f;
+        float vRes = 0f;
+        int vStartSlice = Math.max(0, vMaxSlice - 2);
+        int vStopSlice = Math.min(mNSlices - 1, vMaxSlice + 2);
+        for (int vZ = vStartSlice; vZ <= vStopSlice; vZ++) {
+            vSumOfIntensities += aIS.getProcessor(vZ + 1).getf(aX, aY);
+            vRes += (vZ + 1) * aIS.getProcessor(vZ + 1).getf(aX, aY);
+        }
+        return new float[]{vRes / vSumOfIntensities, vMaxInt};
+    }
+
+    /**
      * Converts a slice index to a frame index using the parameters of the image
      * defined by the user.
      *
@@ -786,7 +886,7 @@ public abstract class PFTracking3D implements PlugInFilter {
      */
     protected int sliceToFrame(int aSlice) {
         if (aSlice < 1) {
-            System.err.println("wrong argument in particle filter in SliceToFrame: < 1");
+            IJ.log("wrong argument in particle filter in sliceToFrame: < 1");
         }
         return (int) (aSlice - 1) / mOriginalImagePlus.getNSlices() + 1;
     }
@@ -867,9 +967,7 @@ public abstract class PFTracking3D implements PlugInFilter {
      * @return true if successful, false if not.
      */
     protected boolean writeInitFile(File aFile) {
-        BufferedWriter vW = null;
-        try {
-            vW = new BufferedWriter(new FileWriter(aFile));
+        try (BufferedWriter vW = new BufferedWriter(new FileWriter(aFile))) {
             for (float[] vState : mStateVectors) {
                 String vS = mFrameOfInitialization + " ";
                 for (int vI = 0; vI < vState.length; vI++) {
@@ -878,15 +976,8 @@ public abstract class PFTracking3D implements PlugInFilter {
                 vW.write(vS + "\n");
             }
         } catch (IOException aIOE) {
-            aIOE.printStackTrace();
+            IJ.handleException(aIOE);
             return false;
-        } finally {
-            try {
-                vW.close();
-            } catch (IOException aIOE) {
-                aIOE.printStackTrace();
-                return false;
-            }
         }
         return true;
     }
@@ -899,20 +990,11 @@ public abstract class PFTracking3D implements PlugInFilter {
      * @return true if successful, false if not.
      */
     protected boolean writeResultFile(File aFile) {
-        BufferedWriter vW = null;
-        try {
-            vW = new BufferedWriter(new FileWriter(aFile));
+        try (BufferedWriter vW = new BufferedWriter(new FileWriter(aFile))) {
             vW.write(generateOutputString(mStateVectorsMemory, ",", true));
         } catch (IOException aIOE) {
-            aIOE.printStackTrace();
+            IJ.handleException(aIOE);
             return false;
-        } finally {
-            try {
-                vW.close();
-            } catch (IOException aIOE) {
-                aIOE.printStackTrace();
-                return false;
-            }
         }
         return true;
     }
@@ -926,14 +1008,8 @@ public abstract class PFTracking3D implements PlugInFilter {
      * @return true if successful. false if not.
      */
     protected boolean readInitFile(File aFile) {
-        BufferedReader vR = null;
-        try {
-            vR = new BufferedReader(new FileReader(aFile));
-        } catch (FileNotFoundException aFNFE) {
-            return false;
-        }
-        String vLine;
-        try {
+        try (BufferedReader vR = new BufferedReader(new FileReader(aFile))) {
+            String vLine;
             while ((vLine = vR.readLine()) != null) {
                 if (vLine.startsWith("#")) {
                     continue; //comment
@@ -962,16 +1038,11 @@ public abstract class PFTracking3D implements PlugInFilter {
                 mStateVectors.add(vState);
 
             }
-        } catch (IOException aIOE) {
-            aIOE.printStackTrace();
+        } catch (FileNotFoundException aFNFE) {
             return false;
-        } finally {
-            try {
-                vR.close();
-            } catch (IOException aIOE) {
-                aIOE.printStackTrace();
-                return false;
-            }
+        } catch (IOException aIOE) {
+            IJ.handleException(aIOE);
+            return false;
         }
 
         return true;
@@ -986,14 +1057,8 @@ public abstract class PFTracking3D implements PlugInFilter {
      * @return true if successful. false if not.
      */
     protected boolean readResultFile(File aFile) {
-        BufferedReader vR = null;
-        try {
-            vR = new BufferedReader(new FileReader(aFile));
-        } catch (FileNotFoundException aFNFE) {
-            return false;
-        }
-        String vLine;
-        try {
+        try (BufferedReader vR = new BufferedReader(new FileReader(aFile))) {
+            String vLine;
             while ((vLine = vR.readLine()) != null) {
                 if (vLine.startsWith("#")) {
                     continue; //ignore
@@ -1042,16 +1107,11 @@ public abstract class PFTracking3D implements PlugInFilter {
                 mStateVectorsMemory.setElementAt(vFrameStates, vFrame);
 
             }
-        } catch (IOException aIOE) {
-            aIOE.printStackTrace();
+        } catch (FileNotFoundException aFNFE) {
             return false;
-        } finally {
-            try {
-                vR.close();
-            } catch (IOException aIOE) {
-                aIOE.printStackTrace();
-                return false;
-            }
+        } catch (IOException aIOE) {
+            IJ.handleException(aIOE);
+            return false;
         }
 
         return true;
@@ -1182,148 +1242,37 @@ public abstract class PFTracking3D implements PlugInFilter {
      * @return the copy.
      */
     public static Vector<float[]> copyStateVector(Vector<float[]> aOrig) {
-        Vector<float[]> vResVector = new Vector<float[]>(aOrig.size());
-        for (float[] vA : aOrig) {
-            float[] vResA = new float[vA.length];
-            for (int vI = 0; vI < vA.length; vI++) {
-                vResA[vI] = vA[vI];
-            }
-            vResVector.add(vResA);
-        }
-        return vResVector;
+        return ParticleFilterUtil.copyStateVector(aOrig);
     }
 
-    /**
-     * Copies a
-     * <code>Vector&lt;Vector&lt;float[]&gt;&gt;</code> data structure. Used to
-     * copy the particle vector here.
-     *
-     * @param aOrig
-     * @return the copy.
-     */
     public static Vector<Vector<float[]>> copyParticleVector(Vector<Vector<float[]>> aOrig) {
-        Vector<Vector<float[]>> vResVector = new Vector<Vector<float[]>>(aOrig.size());
-        for (Vector<float[]> vP : aOrig) {
-            vResVector.add(copyStateVector(vP));
-        }
-        return vResVector;
+        return ParticleFilterUtil.copyParticleVector(aOrig);
     }
 
-    /**
-     * Recursively searches the brightest voxel in the neighborhood. Might be
-     * used for the initialization.
-     *
-     * @param aStartX
-     * @param aStartY
-     * @param aStartZ
-     * @param aImageStack
-     * @return a int array with 3 entries: x,y and z coordinate.
-     */
     public static int[] searchLocalMaximumIntensityWithSteepestAscent(int aStartX, int aStartY, int aStartZ, ImageStack aImageStack) {
-        int[] vRes = new int[]{aStartX, aStartY, aStartZ};
-        float vMaxValue = aImageStack.getProcessor(aStartZ).getPixelValue(aStartX, aStartY);
-        for (int vZi = -1; vZi < 2; vZi++) {
-            if (aStartZ + vZi > 0 && aStartZ + vZi <= aImageStack.getSize()) {
-                for (int vXi = -1; vXi < 2; vXi++) {
-                    for (int vYi = -1; vYi < 2; vYi++) {
-                        if (aImageStack.getProcessor(aStartZ + vZi).getPixelValue(aStartX + vXi, aStartY + vYi) > vMaxValue) {
-                            vMaxValue = aImageStack.getProcessor(aStartZ + vZi).getPixelValue(aStartX + vXi, aStartY + vYi);
-                            vRes[0] = aStartX + vXi;
-                            vRes[1] = aStartY + vYi;
-                            vRes[2] = aStartZ + vZi;
-                        }
-                    }
-                }
-            }
-        }
-        if (vMaxValue > aImageStack.getProcessor(aStartZ).getPixelValue(aStartX, aStartY)) {
-            return searchLocalMaximumIntensityWithSteepestAscent(vRes[0], vRes[1], vRes[2], aImageStack);
-        }
-        return vRes;
+        return ParticleFilterUtil.searchLocalMaximumIntensityWithSteepestAscent(aStartX, aStartY, aStartZ, aImageStack);
     }
 
-    /**
-     * Add the intensities of 2 2D arrays.
-     *
-     * @param aResult here the first image is stored in.
-     * @param aImageToAdd a Image that is added to
-     * <code>aResult</code>
-     */
     public static void addImage(float[][] aResult, float[][] aImageToAdd) {
-        int vIMax = Math.min(aResult.length, aImageToAdd.length);
-        int vJMax = Math.min(aResult[0].length, aImageToAdd[0].length);
-        for (int vI = 0; vI < vIMax; vI++) {
-            for (int vJ = 0; vJ < vJMax; vJ++) {
-                aResult[vI][vJ] += aImageToAdd[vI][vJ];
-            }
-        }
+        ParticleFilterUtil.addImage(aResult, aImageToAdd);
     }
 
-    /**
-     * Sets all values in the array to
-     * <code>aValue</code>
-     *
-     * @param aArray
-     * @param aValue
-     */
     public static void initArrayToValue(float[][] aArray, float aValue) {
-        for (int vI = 0; vI < aArray.length; vI++) {
-            for (int vJ = 0; vJ < aArray[0].length; vJ++) {
-                aArray[vI][vJ] = aValue;
-            }
-        }
+        ParticleFilterUtil.initArrayToValue(aArray, aValue);
     }
 
-    /**
-     * Returns a copy of a single frame. Note that the properties of the
-     * ImagePlus have to be correct
-     *
-     * @param aMovie
-     * @param aFrameNumber
-     * @return The frame copy.
-     */
     public static ImageStack getAFrameCopy(ImagePlus aMovie, int aFrameNumber) {
-        if (aFrameNumber > aMovie.getNFrames() || aFrameNumber < 1) {
-            throw new IllegalArgumentException();
-        }
-        int vS = aMovie.getNSlices();
-        return getSubStackFloatCopy(aMovie.getStack(), (aFrameNumber - 1) * vS + 1, aFrameNumber * vS);
+        return ParticleFilterUtil.getAFrameCopy(aMovie, aFrameNumber);
     }
 
-    /**
-     * Rerurns a copy of a substack (i.e.frames)
-     *
-     * @param aImageStack: the stack to crop
-     * @param aStartPos: 1 &le; aStartPos &le; aImageStack.size()
-     * @param aEndPos: 1 &le; aStartPos &le; aEndPos &le; aImageStack.size()
-     * @return a Copy of the supstack
-     */
     public static ImageStack getSubStackFloatCopy(ImageStack aImageStack, int aStartPos, int aEndPos) {
-        ImageStack res = new ImageStack(aImageStack.getWidth(), aImageStack.getHeight());
-        if (!(aStartPos < 1 || aEndPos < 0)) {
-            for (int vI = aStartPos; vI <= aEndPos; vI++) {
-                res.addSlice(aImageStack.getSliceLabel(vI), aImageStack.getProcessor(vI).convertToFloat().duplicate());
-            }
-        }
-        return res;
+        return ParticleFilterUtil.getSubStackFloatCopy(aImageStack, aStartPos, aEndPos);
     }
 
-    /**
-     *
-     * @param aImageStack: the stack to crop
-     * @param aStartPos: 1 &le; aStartPos &le; aImageStack.size()
-     * @param aEndPos: 1 &le; aStartPos &le; aEndPos &le; aImageStack.size()
-     * @return
-     */
     public static ImageStack getSubStackFloat(ImageStack aImageStack, int aStartPos, int aEndPos) {
-        ImageStack res = new ImageStack(aImageStack.getWidth(), aImageStack.getHeight());
-        if (!(aStartPos < 1 || aEndPos < 0)) {
-            for (int vI = aStartPos; vI <= aEndPos; vI++) {
-                res.addSlice(aImageStack.getSliceLabel(vI), aImageStack.getProcessor(vI).convertToFloat());
-            }
-        }
-        return res;
+        return ParticleFilterUtil.getSubStackFloat(aImageStack, aStartPos, aEndPos);
     }
+
     private int mControllingParticleIndex = 0;
 
     @SuppressWarnings("serial")
@@ -1360,7 +1309,9 @@ public abstract class PFTracking3D implements PlugInFilter {
                     }
                 }
             } catch (java.lang.NullPointerException vE) {
-                //do nothing
+                // The particle monitor may not yet hold a frame for the current
+                // slice (e.g. before tracking starts or under partial updates).
+                // Rendering is best-effort, so skip drawing rather than fail.
             }
         }
     }
@@ -1425,9 +1376,6 @@ public abstract class PFTracking3D implements PlugInFilter {
         public void run() {
             int vI;
             while ((vI = getNewParticleIndex()) != -1) {
-//								if(vI == 2) {
-//									System.out.println("run stop");
-//								}
                 //get the particle
                 float[] vParticle = mParticles.elementAt(vI);
                 //calculate ideal image
@@ -1441,9 +1389,6 @@ public abstract class PFTracking3D implements PlugInFilter {
 
                 //calculate likelihood
                 mResultArray[vI] = calculateLogLikelihood_3D(mStackProcs, mFrameIndex, vIdealImage, mBitmap);
-//				if(Float.isNaN(mResultArray[vI])){
-//					System.out.println("NAN found! at particle index vI = " + vI);
-//				}
 
             }
         }

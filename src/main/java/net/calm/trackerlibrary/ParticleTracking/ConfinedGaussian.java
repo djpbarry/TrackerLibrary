@@ -28,15 +28,15 @@ import java.util.Random;
 public class ConfinedGaussian extends MotileGaussian {
 
     private Roi roi;
-    private double boundsRadius;
+    // --Commented out by Inspection (27/09/2026 08:56):private double boundsRadius;
     private double roiPostIncX, roiPosIncY;
 
     public ConfinedGaussian(double x0, double y0, double a, double xsig, double ysig,
             double fit, double sens, boolean persistent, boolean changeState, double boundsRadius) {
         super(x0, y0, a, xsig, ysig, fit, sens, persistent, changeState, 0.001, 0.0);
-        this.boundsRadius = boundsRadius;
+//        this.boundsRadius = boundsRadius;
         this.roi = new Roi(x0 - boundsRadius, y0 - boundsRadius, 2.0 * boundsRadius + 1.0, 2.0 * boundsRadius + 1.0);
-        Random r = new Random();
+        new Random();
         roiPostIncX = 0.133 / 10.0;
         roiPosIncY = 0.133 / 10.0;
     }

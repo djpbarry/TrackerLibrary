@@ -1,0 +1,5 @@
+# Ensure the Maven wrapper shell script keeps LF endings for Linux CI,
+# while the .cmd wrapper keeps CRLF for Windows.
+mvnw        text eol=lf
+mvnw.cmd    text eol=crlf
+*.bat       text eol=crlf

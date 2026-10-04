@@ -14,38 +14,53 @@ Two independent tracking approaches coexist here:
 - `ProbabilisticTracking` — a particle-filter (sequential Monte Carlo) tracker
   ported from ETH Zurich (Janick Cardinale).
 
+## Keep documentation in sync
+
+Every change to this repository (code, build, CI, or docs) must be followed, in
+the same pass, by a review of `DEVELOPMENT_PLAN.md` and `REVISION_LOG.md`,
+updating one or both as necessary — mark a milestone/phase done, record a new
+decision, or log a lesson. Never leave them describing the pre-change state. Do
+not wait for a separate prompt.
+
 ## Build
 
-Maven project, JDK 11. Parent POM is `org.scijava:pom-scijava:35.0.0`.
+Maven project, JDK 21 (via `scijava.jvm.version`). Parent POM is
+`org.scijava:pom-scijava:45.1.0`. Build/toolchain is pinned by a committed
+Maven wrapper (`mvnw` / `mvnw.cmd`) at Maven 3.9.9, matching IAClassLibrary.
 
 ```bash
-mvn verify
+./mvnw verify
 ```
 
 The canonical CI command (`.github/workflows/maven.yml`) is:
 
 ```bash
-mvn --batch-mode --update-snapshots \
-    -Dinternal.repo.password="$PAT" \
-    --settings mvn_settings.xml verify
+./mvnw --batch-mode --update-snapshots verify
 ```
 
 Notes:
 
-- `mvn_settings.xml` activates a `github` profile that adds a GitHub Packages
-  repository (`maven.pkg.github.com/djpbarry/*`) authenticated by the
-  `-Dinternal.repo.password` property. Local `mvn verify` works without it for
-  the public dependencies; only run with `--settings` if you actually need the
-  private repo.
-- There is **no test suite** — `src/test/java/` and `src/main/resources/` are
-  empty. `mvn verify` effectively just compiles and packages.
+- CI builds on JDK 21 with Maven dependency caching; the wrapper is used
+  directly. The old private-repo `mvn_settings.xml` / `-Dinternal.repo.password`
+  flow is no longer used (both dependencies — TrackMate via SciJava and
+  IAClassLibrary via JitPack — are public). `mvn_settings.xml` still exists but
+  is not referenced by CI.
+- A `.gitattributes` forces `mvnw` to LF and `mvnw.cmd` to CRLF so the wrapper
+  runs on both Linux CI and Windows.
+- The explicit `central` repository was added to `pom.xml` because
+  `pom-scijava:45.1.0` drops the implicit Maven Central; without it JitPack
+  returned empty artifacts for some transitive deps.
+- `jitpack.yml` pins `jdk: [openjdk21]` — JitPack otherwise defaults to JDK 8 and
+  the enforcer's `RequireJavaVersion` rule fails the build (see L11 in
+  `REVISION_LOG.md`).
 
 ## Dependencies
 
 Declared in `pom.xml`:
 
-- `sc.fiji:TrackMate:7.10.0` (Fiji's TrackMate)
-- `com.github.djpbarry:IAClassLibrary:37a1be016a` (from **JitPack**, with
+- `sc.fiji:TrackMate` (Fiji's TrackMate, version parent-managed; currently
+  resolves to 8.0.0)
+- `com.github.djpbarry:IAClassLibrary:v2.0.1` (from **JitPack**, with
   TrackMate excluded) — a sibling library by the same author providing
   `net.calm.iaclasslibrary` (`Particle.Particle`, `Particle.IsoGaussian`,
   `IAClasses.Utils`, `IAClasses.Region`, `IAClasses.ProgressDialog`,
@@ -63,18 +78,16 @@ The current IAClassLibrary API is browsable at
 Treat this Javadoc as the **authoritative source** for the
 `net.calm.iaclasslibrary.*` surface, not the raw IAClassLibrary source.
 
-Note the pin (`37a1be016a`) predates `2.0.0-SNAPSHOT`, so the Javadoc reflects
-the *target* API after the planned re-pin, not what the current build compiles
-against. Two classes this repo still uses are `@Deprecated` there:
+The pin is now the `v2.0.1` tag, so the Javadoc reflects the compiled-against
+API. The two `@Deprecated` classes this repo previously used have been migrated
+off:
 
-- `net.calm.iaclasslibrary.IAClasses.DataStatistics` — used in
-  `ParticleTrajectory.java` (3 sites). Prefer
-  `org.apache.commons.math3.stat.descriptive.DescriptiveStatistics`, which this
-  repo already imports elsewhere.
-- `net.calm.iaclasslibrary.IAClasses.ProgressDialog` — used in
-  `TrajectoryBuilder.java` and `TrajectoryBridger.java`.
-
-Both must be migrated off before/when re-pinning to `v2.0.0`.
+- `net.calm.iaclasslibrary.IAClasses.DataStatistics` → replaced by
+  `org.apache.commons.math3.stat.descriptive.DescriptiveStatistics` in
+  `ParticleTrajectory.java`.
+- `net.calm.iaclasslibrary.IAClasses.ProgressDialog` → replaced by ImageJ's
+  native `IJ.showProgress(...)` in `TrajectoryBuilder.java` and
+  `TrajectoryBridger.java`.
 
 ## Package layout
 
@@ -89,7 +102,7 @@ net.calm.trackerlibrary
 │   ├── ParticleTrajectory.java      # linked-list trajectory + analytics
 │   ├── TrajectoryBuilder.java       # nearest-neighbour linking of detections
 │   ├── TrackMateTracker.java        # wraps TrackMate's SparseLAPTracker
-│   ├── UserVariables.java           # global static configuration
+│   ├── UserVariables.java           # instance-based runtime configuration
 │   ├── Fluorophore.java             # simulation base class
 │   ├── BlinkingFluorophore.java     # simulation (on/off blinking)
 │   ├── DecayingFluorophore.java     # simulation (exponential decay)
@@ -102,7 +115,8 @@ net.calm.trackerlibrary
 │   ├── PFTracking3D.java            # abstract particle-filter base (PlugInFilter)
 │   ├── FPTracker3D.java             # random-walk feature point tracker
 │   ├── LinearMovementFPTracker3D.java # inertia-constrained tracker
-│   └── ProbabilisticTracker.java    # 7-dim state, intensity-aware tracker
+│   ├── ProbabilisticTracker.java    # 7-dim state, intensity-aware tracker
+│   └── ParticleFilterUtil.java      # shared static helpers
 └── Trajectory/
     └── TrajectoryBridger.java       # re-links broken trajectory segments
 ```
@@ -153,19 +167,18 @@ State-vector layout differs per subclass (e.g. `FPTracker3D` uses
 
 ## Conventions and gotchas
 
-### Global mutable static state
+### Mutable state (mostly instance-based since D6)
 
-- `UserVariables` is a **global static settings holder** (spatial/time
-  resolution, thresholds, motion model, detection mode, etc.). All access is via
-  static getters/setters. There is no per-instance configuration; code reads
-  `UserVariables.getX()` directly.
-- `ParticleTrajectory.scale` is a `public static` field overwritten in the
-  constructor from `spatialRes` — a hidden global side effect. The static
-  `msdPlot` / `globalMSD` fields accumulate state across instances until
-  `resetMSDPlot()`.
-
-Be careful: these make classes hard to unit-test in isolation and can leak state
-between operations.
+- `UserVariables` is an **instance-based settings holder**: fields are non-static
+  and accessed via a process-wide singleton (`UserVariables.getInstance()` /
+  `setInstance(...)`). The old static getters/setters were removed in D6; code
+  reads `UserVariables.getInstance().getX()`.
+- `ParticleTrajectory.scale` is now a per-instance `protected double` field
+  (defaulting to `1.0`), no longer a shared static.
+- `msdPlot` / `plotLegend` / `globalMSD` remain `static`: they form the
+  **population MSD accumulator** (one shared chart aggregating across a run,
+  exposed via `drawGlobalMSDPlot()` / `getMsdPlot()` / `resetMSDPlot()`). Global
+  by design, and `ij.gui.Plot`-bound.
 
 ### Magic-int constants, not enums
 
@@ -176,33 +189,45 @@ between operations.
 
 ### ImageJ UI is woven throughout
 
-`IJ.log`, `IJ.showMessage`, `GenericDialog`, `ProgressDialog`, `Plot`,
+`IJ.log`, `IJ.showMessage`, `IJ.showProgress`, `GenericDialog`, `Plot`,
 `TextWindow`, and `Roi` appear in the "business logic", not just UI layers.
-This means most code **cannot run headless**; it expects an ImageJ runtime. There
-is no test harness to work around this.
+This means most code **cannot run headless**; it expects an ImageJ runtime. The
+JUnit 5 test harness therefore targets only headless-safe units (pure math and
+state), not the ImageJ-bound classes.
 
 ### Dead / commented-out code
 
-`TrajectoryBuilder` contains large blocks of commented-out legacy scoring code
-(the old `getMinScoreIndices` / `getMinScores` combinatorial approach). Don't
-assume commented code is unused because of a bug; it was superseded by the
-greedy `addTempPoint` approach. `UserVariables` also has many commented-out
-fields/methods.
+The large blocks of commented-out legacy code (the combinatorial scoring path in
+`TrajectoryBuilder`, the hardcoded `main` in `ProbabilisticTracker`, the debug
+`println`s in `PFTracking3D`, and the commented-out `UserVariables` fields) were
+removed in M2 (Phase D1) and are recoverable from git. Don't re-introduce
+experimental code or machine-specific paths.
 
 ### Licensing is inconsistent — verify before relying on it
 
-- `pom.xml` declares **Simplified BSD License**.
+- `pom.xml` declares **GPL-3.0-or-later** (`license.licenseName=gpl_v3`), fixed
+  in M1 (was BSD-2).
 - `LICENSE` file is **GPLv3**.
-- Many source file headers say **GPLv2**.
+- Many source file headers still say **GPLv2** (source-header cleanup is a
+  deferred, non-blocking item — see `DEVELOPMENT_PLAN.md` B1).
 
 If licensing matters, flag this discrepancy rather than asserting a single
 license.
 
 ### Style
 
-- Indentation is 4 spaces; tabs appear in the older ETH-ported
-  `LinearMovementFPTracker3D.java` (mixed — preserve locally).
+- Indentation is 4 spaces throughout (the older ETH-ported
+  `LinearMovementFPTracker3D.java` was converted from tabs to 4 spaces in D5).
 - Class headers vary (NetBeans auto-template, GPL boilerplate, or none). Do not
   normalize them unless asked.
 - `@author` tags reference `barry05` / `David Barry` / `Dave Barry` / Janick
   Cardinale (ETH).
+
+### Versioning & commit conventions
+
+- Commit messages follow **Conventional Commits**: `fix:`, `feat:`, `chore:`,
+  `refactor:`, `docs:`, `test:`; `BREAKING CHANGE:`/`!` for breaking changes.
+- Bump `pom.xml` `<version>` on **every** code change — `fix`/`refactor`/`chore`/
+  `docs`/`test` → patch, `feat` → minor, breaking → major. **No `-SNAPSHOT`
+  suffix.**
+- Release tags use `vX.Y.Z` (never elide the patch zero).
