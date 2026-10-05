@@ -684,4 +684,10 @@ benefit:
 5. **`mvn_settings.xml` is now unused** by CI (the private GitHub Packages flow
    was dropped as vestigial — both public deps resolve publicly). Left in place
    pending an explicit decision to delete it.
+6. **Maven wrapper script was downgraded 3.3.4 → 3.3.2** (2026-10-05) after the
+   `v4.0.7` JitPack build failed with `Could not find or load main class
+   org.codehaus.plexus.classworlds.launcher.Launcher`. The 3.3.3/3.3.4 wrapper
+   regressed on JitPack's Linux image; aligned `mvnw`/`mvnw.cmd`/
+   `maven-wrapper.properties` to IAClassLibrary master's 3.3.2
+   (`distributionType=only-script`). See REVISION_LOG 2026-10-05 and L15.
 

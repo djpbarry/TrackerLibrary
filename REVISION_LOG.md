@@ -19,6 +19,30 @@ dated narrative plus the "what not to do again" notes.
 
 ---
 
+## 2026-10-05 — JitPack build fix: Maven wrapper 3.3.4 → 3.3.2
+
+The `v4.0.7` JitPack build failed with `Error: Could not find or load main class
+org.codehaus.plexus.classworlds.launcher.Launcher`. This was the Maven wrapper
+version: `TrackerLibrary` had a `3.3.4` "only-script" wrapper, while the
+known-good `IAClassLibrary` (master) wrapper is `3.3.2`. The 3.3.4 script's
+"find extracted directory" logic (or an adjacent 3.3.3/3.3.4 regression) breaks
+on JitPack's Linux image.
+
+Fix: aligned all three wrapper files to `IAClassLibrary` master's `3.3.2`
+(`distributionType=only-script`):
+
+- `mvnw` (shell, Linux) — reverted from 3.3.4 to 3.3.2.
+- `mvnw.cmd` (PowerShell hybrid, Windows) — reverted to 3.3.2.
+- `.mvn/wrapper/maven-wrapper.properties` — added `wrapperVersion=3.3.2` and
+  `distributionType=only-script` (so a future `mvn wrapper:wrapper` regenerates
+  the pinned type, not the plugin default).
+
+`./mvnw test` passes locally on JDK 21 (29/29). Version → `4.0.8` (patch,
+`fix`). **A fresh tag `v4.0.8` is required** — do not force-move `v4.0.7`
+(JitPack caches build results by ref name; see L10 corollary).
+
+---
+
 ## 2026-10-04 — G6: `instanceof` pattern matching (M7 complete)
 
 Final Phase G item landed. The three `instanceof` sites in
@@ -643,3 +667,18 @@ thin delegation).
 **Rule:** before replacing a "copied from X" method, confirm X's replacement is
 public/callable and equivalent — inspect the dependency's class/source (e.g.
 `javap`), don't trust a grep-only redundancy verdict.
+
+### L15 — Pin the Maven wrapper version (3.3.2), not just the Maven version
+
+`TrackerLibrary` adopted a `3.3.4` "only-script" Maven wrapper, which works
+locally (Windows) but failed on JitPack's Linux image with
+`Could not find or load main class org.codehaus.plexus.classworlds.launcher.Launcher`.
+The `3.3.3`/`3.3.4` wrapper has a regression (its "find extracted directory"
+logic) that does not manifest on Windows but breaks on JitPack. `IAClassLibrary`
+master pins `3.3.2`, which works.
+
+**Rule:** align the *wrapper script version* (the `mvnw`/`mvnw.cmd` files and the
+`wrapperVersion`/`distributionType` in `maven-wrapper.properties`) to the known-
+good sibling, not just the Maven distribution version (`distributionUrl`). The
+`distributionUrl` ("Maven 3.9.9") can be identical while the wrapper *script*
+(3.3.2 vs 3.3.4) is what actually breaks the remote build.
